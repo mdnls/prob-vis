@@ -1,5 +1,6 @@
 import {ModelListener} from 'view';
 import {CONF} from 'main';
+import { max } from 'd3';
 
 /**
  * Represents an Item in a Bin. Its position is on the scale [0, 100],
@@ -24,6 +25,155 @@ export interface Bins {
     addListener(listener: ModelListener): void;
     
     numBins(): number;
+}
+
+
+/**
+ * Represents items in a binary tree. These can be either nodes or leafs.
+ */
+export interface TreeItem extends Item {
+  /**
+   * Return the number of leafs in this tree.
+   */
+  numLeaves(): number;
+
+  /**
+   * Return the depth of this tree. Leafs have depth 0.
+   */
+  depth(): number;
+
+  /**
+   * Return all TreeItems in this tree which are n-th children of this TreeItem.
+   * 
+   * This method introduces potential mutation bugs, since constants like depth and number of leaves
+   * cannot be updated to reflect external children mutation. Instance access to children is necessary
+   * for d3 data binding.
+   */
+  layer(n: number): TreeItem[];
+
+  /**
+   * Run a bottom-up map operation against items in the tree, treating separately the leafs and nodes.
+   * 
+   * @param layerIdx the relative index of this item in its layer.
+   * @param nodeFn function to be applied to a node in the tree, given the node's heap index
+   * @param leafFn function to be applied to a leaf in the tree, given the leaf's heap index
+   */
+  treeMap(layerIdx: number, nodeFn: (layerIdx: number, node: TreeNode) => any,
+          leafFn: (layerIdx: number, left: TreeLeaf) => any): void;
+}
+
+/**
+ * Represents an item that can be stored in a tree as a node.
+ */
+export class TreeNode implements TreeItem {
+  /**
+   * Generate a full tree of depth d.
+   * @param d depth of the full tree.
+   */
+  public static fullTree(d: number): TreeItem {
+    if(d == 1) {
+      return new TreeLeaf();
+    }
+    else {
+      return new TreeNode(this.fullTree(d - 1), this.fullTree(d-1));
+    } 
+  }
+
+  x: number;
+  y: number; 
+  itemType: string;
+
+  private leftChild: TreeItem;
+  private rightChild: TreeItem;
+  private leafs: number;
+  private d: number;
+
+  /**
+   * Create a new tree node.
+   * @param leftChild the left child of this node.
+   * @param rightChild the right child of this node.
+   */
+  constructor(leftChild: TreeItem, rightChild: TreeItem) {
+    this.leftChild = leftChild;
+    this.rightChild = rightChild;
+    this.leafs = this.leftChild.numLeaves() + this.rightChild.numLeaves();
+    this.d = 1 + Math.max(this.leftChild.depth() + this.rightChild.depth());
+  }
+
+  numLeaves() {
+    return this.leafs;
+  }
+
+  depth() {
+    return this.d;
+  }
+  
+  layer(n: number): TreeItem[] {
+    if(n == 0) {
+      return [this];
+    }
+    else {
+      return this.leftChild.layer(n - 1).concat(this.rightChild.layer(n - 1));
+    }
+  }
+
+  /**
+   * Return the left child of this node.
+   * 
+   * This method introduces potential mutation bugs, since constants like depth and number of leaves
+   * cannot be updated to reflect external children mutation. Instance access to children is necessary
+   * for d3 data binding.
+   */
+  left(): TreeItem {
+    return this.leftChild;
+  }
+
+  /**
+   * Return the right child of this node.
+   * 
+   * This method introduces potential mutation bugs, since constants like depth and number of leaves
+   * cannot be updated to reflect external children mutation. Instance access to children is necessary
+   * for d3 data binding.
+   */
+  right(): TreeItem {
+    return this.rightChild;
+  }
+
+  treeMap(layerIdx: number, nodeFn: (layerIdx: number, node: TreeNode) => any, leafFn: (layerIdx: number, left: TreeLeaf) => any) {
+    this.leftChild.treeMap(2 * layerIdx, nodeFn, leafFn);
+    this.rightChild.treeMap(2 * layerIdx + 1, nodeFn, leafFn);
+    nodeFn(layerIdx, this);
+  }
+}
+
+/**
+ * Represents an item that can be stored in a tree as a leaf.
+ */
+export class TreeLeaf implements Item {
+  x: number;
+  y: number;
+  itemType: string;
+
+  numLeaves(): number {
+    return 1;
+  }
+
+  depth(): number {
+    return 1;
+  }
+
+  layer(n: number): TreeItem[] {
+    if(n == 0) {
+      return [this];
+    }
+    else {
+      return [];
+    }
+  }
+
+  treeMap(layerIdx: number, nodeFn: (layerIdx: number, node: TreeNode) => any, leafFn: (layerIdx: number, leaf: TreeLeaf) => any) {
+    leafFn(layerIdx, this);
+  }
 }
 
 /**
@@ -65,7 +215,7 @@ export class BinItem implements Item {
  */
 export class Histogram implements Bins {
     private histBins: BinItem[][];
-    listeners: ModelListener[];
+    private listeners: ModelListener[];
     private itemType: string = "default";
 
     /**

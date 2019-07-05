@@ -1,6 +1,7 @@
 <head>
     <script data-main="setup" src="https://requirejs.org/docs/release/2.3.6/minified/require.js"></script>
     <script src="bundle.js"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
     <div>    
@@ -9,7 +10,16 @@
         </h1>
 
         <div id="plain-histogram0">
-            <svg id="svg" style="width: 100%">
+            <svg id="svg" style="width: 100%; height: 400px;">
+
+            </svg>
+            
+            <button class="addItem">+</button>
+            <button class="rmItem">-</button>
+        </div>
+
+        <div id="plain-tree0">
+            <svg id="treesvg" style="width: 100%; height: 400px;">
 
             </svg>
         </div>
