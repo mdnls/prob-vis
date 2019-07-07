@@ -81,11 +81,11 @@ export class TreeNode implements TreeItem {
    * @param d depth of the full tree.
    */
   public static fullTree(d: number): TreeItem {
-    if(d == 1) {
+    if(d <= 1) {
       return new TreeLeaf();
     }
     else {
-      return new TreeNode(this.fullTree(d - 1), this.fullTree(d-1));
+      return new TreeNode(this.fullTree(d - 1), this.fullTree(d - 1));
     } 
   }
 
@@ -259,6 +259,7 @@ export class Histogram implements Bins {
     constructor(numBins: number) {
       this.histBins = Array.from({length: numBins}, () => new Array<BinItem>());
       this.listeners = new Array<ModelListener>();
+      this.selection = -1;
     }
 
     /**
@@ -346,6 +347,6 @@ export class Histogram implements Bins {
      * If a bin is selected, returns the index of that bin. Otherwise returns -1.
      */
     selectedBin() {
-      return Boolean(this.selection) ? this.selection : -1;
+      return this.selection;
     }
 }

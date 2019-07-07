@@ -22,11 +22,7 @@ export function main() {
     let conf: CONF = new CONF(7, colors, 30);
     let m = new model.Histogram(15);
 
-    let ch1 = new model.TreeLeaf();
-    let ch2 = new model.TreeLeaf();
-
     let vt = new view.SVGBinaryTree("#treesvg", 4, conf);
-
     vt.setDepth(6);
 
     let i = 0;
@@ -42,9 +38,9 @@ export function main() {
 
     let v = new view.SVGHistogram("#svg", m, conf);
 
+    let both = new view.SVGEntropy("#plain-entropy0", m, conf);
 
     window.addEventListener("resize", () =>  { m.refresh(); vt.refresh(); } );
-
     $("#plain-histogram0 > .addItem").click(() => v.incrSelectedBin());
     $("#plain-histogram0 > .rmItem").click(() => v.decrSelectedBin())
 }

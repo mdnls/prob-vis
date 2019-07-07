@@ -68,7 +68,6 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
             }
             d3.select(this.svg)
                 .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / s)));
-            ;
             if (this.model.selectedBin() != -1) {
                 let binHeight = this.model.bins(this.model.selectedBin()).length;
                 d3.select(this.svg)
@@ -194,20 +193,40 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
     exports.SVGBinaryTree = SVGBinaryTree;
     class SVGEntropy {
         constructor(divElement, model, conf) {
-            let defaultIDs = ["svgTree", "svgBar", "svgHist"];
-            this.svgTree = divElement + " > #" + defaultIDs[0];
+            let defaultIDs = ["svgHist", "svgBar", "svgTree"];
+            this.div = divElement;
+            this.svgHist = divElement + " > #" + defaultIDs[0];
             this.svgBar = divElement + " > #" + defaultIDs[1];
-            this.svgHist = divElement + " > #" + defaultIDs[2];
+            this.svgTree = divElement + " > #" + defaultIDs[2];
             let d = d3.select(divElement);
             d.append("svg").attr("id", defaultIDs[0]);
             d.append("svg").attr("id", defaultIDs[1]);
             d.append("svg").attr("id", defaultIDs[2]);
-            this.bins = model;
+            this.model = model;
             this.tree = new SVGBinaryTree(this.svgTree, 0, conf);
-            this.hist = new SVGHistogram(this.svgHist, this.bins, conf);
-            model.addListener(this);
+            this.hist = new SVGHistogram(this.svgHist, this.model, conf);
+            this.model.addListener(this);
         }
         refresh() {
+            let svgHeight = $(this.div).height();
+            let sideLens = [svgHeight * (7 / 16), svgHeight * (1 / 8), svgHeight * (7 / 16)];
+            d3.select(this.svgHist).attr("height", sideLens[0]).attr("width", sideLens[0]);
+            d3.select(this.svgBar).attr("height", sideLens[1]).attr("width", "100%");
+            d3.select(this.svgTree).attr("height", sideLens[2]).attr("width", sideLens[2]);
+            let selectedBin = this.model.selectedBin();
+            if (selectedBin != -1 && this.model.bins(selectedBin).length > 0) {
+                d3.select(this.svgTree).attr("style", "display: initial");
+                let items = this.model.bins(selectedBin).length;
+                let total = Array.from({ length: this.model.numBins() }, (value, key) => this.model.bins(key))
+                    .reduce((running, cur) => (running + cur.length), 0);
+                let distinct = total / items;
+                this.tree.setDepth(Math.ceil(Math.log2(distinct)) + 1);
+                this.tree.refresh();
+            }
+            else {
+                d3.select(this.svgTree).attr("style", "display: none;");
+            }
+            this.hist.refresh();
         }
     }
     exports.SVGEntropy = SVGEntropy;
@@ -217,7 +236,7 @@ define("model", ["require", "exports"], function (require, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
     class TreeNode {
         static fullTree(d) {
-            if (d == 1) {
+            if (d <= 1) {
                 return new TreeLeaf();
             }
             else {
@@ -305,6 +324,7 @@ define("model", ["require", "exports"], function (require, exports) {
             this.itemType = "default";
             this.histBins = Array.from({ length: numBins }, () => new Array());
             this.listeners = new Array();
+            this.selection = -1;
         }
         addItem(bin) {
             this.histBins[bin].push(new BinItem(bin, this.histBins[bin].length, this.itemType));
@@ -346,7 +366,7 @@ define("model", ["require", "exports"], function (require, exports) {
             }
         }
         selectedBin() {
-            return Boolean(this.selection) ? this.selection : -1;
+            return this.selection;
         }
     }
     exports.Histogram = Histogram;
@@ -369,8 +389,6 @@ define("main", ["require", "exports", "model", "view"], function (require, expor
         };
         let conf = new CONF(7, colors, 30);
         let m = new model.Histogram(15);
-        let ch1 = new model.TreeLeaf();
-        let ch2 = new model.TreeLeaf();
         let vt = new view.SVGBinaryTree("#treesvg", 4, conf);
         vt.setDepth(6);
         let i = 0;
@@ -383,6 +401,7 @@ define("main", ["require", "exports", "model", "view"], function (require, expor
         m.addItem(2);
         m.addItem(4);
         let v = new view.SVGHistogram("#svg", m, conf);
+        let both = new view.SVGEntropy("#plain-entropy0", m, conf);
         window.addEventListener("resize", () => { m.refresh(); vt.refresh(); });
         $("#plain-histogram0 > .addItem").click(() => v.incrSelectedBin());
         $("#plain-histogram0 > .rmItem").click(() => v.decrSelectedBin());

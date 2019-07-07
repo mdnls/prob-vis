@@ -110,7 +110,7 @@ export class SVGHistogram implements ModelListener {
       }
 
       d3.select(this.svg)
-        .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / s)));;
+        .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / s)));
 
       if(this.model.selectedBin() != -1) {
          let binHeight = this.model.bins(this.model.selectedBin()).length;
@@ -315,29 +315,31 @@ export class SVGBinaryTree implements ModelListener {
 }
 
 export class SVGEntropy implements ModelListener {
-   private bins: Bins;
+   private model: Bins;
    private tree: SVGBinaryTree;
    private hist: SVGHistogram;
    private svgTree: string;
    private svgBar: string;
    private svgHist: string;
+   private div: string;
 
    constructor(divElement: string, model: Bins, conf: CONF) {
-      let defaultIDs = ["svgTree", "svgBar", "svgHist"]; // single point of change for default ids. 
-      this.svgTree = divElement + " > #" + defaultIDs[0];
+      let defaultIDs = ["svgHist", "svgBar", "svgTree"]; // single point of change for default ids. 
+      this.div = divElement;
+      this.svgHist = divElement + " > #" + defaultIDs[0];
       this.svgBar = divElement + " > #" + defaultIDs[1];
-      this.svgHist = divElement + " > #" + defaultIDs[2];
+      this.svgTree = divElement + " > #" + defaultIDs[2];
 
       let d = d3.select(divElement);
       d.append("svg").attr("id", defaultIDs[0]);
       d.append("svg").attr("id", defaultIDs[1]);
       d.append("svg").attr("id", defaultIDs[2]);
 
-      this.bins = model;
+      this.model = model;
       this.tree = new SVGBinaryTree(this.svgTree, 0, conf);
-      this.hist = new SVGHistogram(this.svgHist, this.bins, conf);
+      this.hist = new SVGHistogram(this.svgHist, this.model, conf);
 
-      model.addListener(this);
+      this.model.addListener(this);
    }
 
    refresh() {
@@ -352,5 +354,31 @@ export class SVGEntropy implements ModelListener {
       8. refresh the tree
       */
 
+      let svgHeight = $(this.div).height();
+
+      // again, single point of control for the magic numbers that determine sub-element sizing
+      // 0 -> histogram, 1 -> bar, 2 -> tree
+      let sideLens = [svgHeight * (7/16), svgHeight * (1/8), svgHeight * (7/16)];
+      
+      d3.select(this.svgHist).attr("height", sideLens[0]).attr("width", sideLens[0]);
+      d3.select(this.svgBar).attr("height", sideLens[1]).attr("width", "100%");
+      d3.select(this.svgTree).attr("height", sideLens[2]).attr("width", sideLens[2]);
+
+      let selectedBin = this.model.selectedBin();
+
+      if(selectedBin != -1 && this.model.bins(selectedBin).length > 0) {
+         d3.select(this.svgTree).attr("style", "display: initial");
+         let items = this.model.bins(selectedBin).length;
+         let total = Array.from({length: this.model.numBins()}, (value, key) => this.model.bins(key))
+                          .reduce((running, cur) => (running + cur.length), 0);
+         let distinct = total / items;
+         this.tree.setDepth(Math.ceil(Math.log2(distinct)) + 1);
+         this.tree.refresh();
+      }
+      else { 
+         d3.select(this.svgTree).attr("style", "display: none;");
+      }
+
+      this.hist.refresh();
    }
 }
