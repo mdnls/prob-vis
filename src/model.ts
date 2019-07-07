@@ -54,12 +54,14 @@ export interface TreeItem extends Item {
   /**
    * Run a bottom-up map operation against items in the tree, treating separately the leafs and nodes.
    * 
-   * @param layerIdx the relative index of this item in its layer.
+   * @param layerIdx the relative index of this item's layer with respect to root.
+   * @param nodeIdx the relative index of this item within its layer.
    * @param nodeFn function to be applied to a node in the tree, given the node's heap index
    * @param leafFn function to be applied to a leaf in the tree, given the leaf's heap index
    */
-  treeMap(layerIdx: number, nodeFn: (layerIdx: number, node: TreeNode) => any,
-          leafFn: (layerIdx: number, left: TreeLeaf) => any): void;
+  treeMap(layerIdx: number, nodeIdx: number, 
+    nodeFn: (layerIdx: number, nodeIdx: number, node: TreeNode) => any,
+    leafFn: (layerIdx: number, nodeIdx: number, left: TreeLeaf) => any): void;
 }
 
 /**
@@ -139,11 +141,15 @@ export class TreeNode implements TreeItem {
     return this.rightChild;
   }
 
-  treeMap(layerIdx: number, nodeFn: (layerIdx: number, node: TreeNode) => any, leafFn: (layerIdx: number, left: TreeLeaf) => any) {
-    this.leftChild.treeMap(2 * layerIdx, nodeFn, leafFn);
-    this.rightChild.treeMap(2 * layerIdx + 1, nodeFn, leafFn);
-    nodeFn(layerIdx, this);
+
+  treeMap(layerIdx: number, nodeIdx: number, 
+   nodeFn: (layerIdx: number, nodeIdx: number, node: TreeNode) => any,
+   leafFn: (layerIdx: number, nodeIdx: number, left: TreeLeaf) => any) {
+    this.leftChild.treeMap(layerIdx + 1, 2 * nodeIdx, nodeFn, leafFn);
+    this.rightChild.treeMap(layerIdx + 1, 2 * nodeIdx + 1, nodeFn, leafFn);
+    nodeFn(layerIdx, nodeIdx, this);
   }
+  
 }
 
 /**
@@ -171,8 +177,10 @@ export class TreeLeaf implements Item {
     }
   }
 
-  treeMap(layerIdx: number, nodeFn: (layerIdx: number, node: TreeNode) => any, leafFn: (layerIdx: number, leaf: TreeLeaf) => any) {
-    leafFn(layerIdx, this);
+  treeMap(layerIdx: number, nodeIdx: number,
+    nodeFn: (layerIdx: number, nodeIdx: number, node: TreeNode) => any,
+    leafFn: (layerIdx: number, nodeIdx: number, leaf: TreeLeaf) => any) {
+    leafFn(layerIdx, nodeIdx, this);
   }
 }
 

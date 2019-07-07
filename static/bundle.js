@@ -1,4 +1,4 @@
-define("view", ["require", "exports", "d3", "jquery"], function (require, exports, d3, $) {
+define("view", ["require", "exports", "model", "d3", "jquery"], function (require, exports, model_1, d3, $) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class SVGHistogram {
@@ -109,28 +109,42 @@ define("view", ["require", "exports", "d3", "jquery"], function (require, export
             this.tree = tree;
             this.conf = conf;
         }
+        attention(layerIdx, nodeIdx) {
+            this.attnNode = [layerIdx, nodeIdx];
+            this.refresh();
+        }
+        noAttention() {
+            delete this.attnNode;
+            this.refresh();
+        }
+        setDepth(n) {
+            this.tree = model_1.TreeNode.fullTree(n);
+            this.refresh();
+        }
         refresh() {
             let numLeafs = this.tree.numLeaves();
             let itemSize = 100 / (2 * numLeafs - 1);
             let pad = 0.2 * itemSize;
             let svgWidth = $(this.svg).width();
             let svgHeight = $(this.svg).height();
-            let viewBoxSideLength = Math.min(svgWidth, svgHeight) - 2 * pad;
-            let xOffset = (svgWidth - viewBoxSideLength) / 2;
-            let yOffset = (svgHeight - viewBoxSideLength) / 2;
-            let scale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxSideLength]);
+            let viewBoxWidth = svgWidth - 2 * pad;
+            let viewBoxHeight = svgHeight - 2 * pad;
+            let xOffset = pad;
+            let yOffset = pad;
+            let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth]);
+            let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
             function absX(relX) {
-                return xOffset + pad + scale(relX);
+                return xOffset + pad + wScale(relX);
             }
             function absY(relY) {
-                return yOffset + pad + scale(relY);
+                return yOffset + pad + hScale(relY);
             }
-            this.tree.treeMap(0, (layerIdx, node) => {
+            this.tree.treeMap(0, 0, (layerIdx, nodeIdx, node) => {
                 node.x = (node.left().x + node.right().x) / 2;
                 node.y = node.left().y + 2 * itemSize;
                 node.itemType = "treeNode";
-            }, (layerIdx, leaf) => {
-                leaf.x = 2 * layerIdx * itemSize;
+            }, (layerIdx, nodeIdx, leaf) => {
+                leaf.x = 2 * nodeIdx * itemSize;
                 leaf.y = 0;
                 leaf.itemType = "treeLeaf";
             });
@@ -148,29 +162,38 @@ define("view", ["require", "exports", "d3", "jquery"], function (require, export
                     .attr("x2", (d) => absX(child.x + itemSize / 2))
                     .attr("y1", (d) => absY(parent.y + itemSize / 2))
                     .attr("y2", (d) => absY(child.y + itemSize / 2))
-                    .attr("stroke-width", scale(itemSize / 10))
+                    .attr("stroke-width", hScale(itemSize / 10))
                     .attr("stroke", "gray");
             }
-            this.tree.treeMap(0, (layerIdx, node) => {
+            this.tree.treeMap(0, 0, (layerIdx, nodeIdx, node) => {
                 addEdge(this.svg, node, node.left());
                 addEdge(this.svg, node, node.right());
             }, (layerIdx, leaf) => { });
-            this.tree.treeMap(0, (layerIdx, node) => {
+            function attnChecker(targetLayer, targetNode) {
+                return (layerIdx, nodeIdx) => {
+                    let diff = targetLayer - layerIdx;
+                    return diff >= 0 && Math.floor(targetNode / (Math.pow(2, diff))) == nodeIdx;
+                };
+            }
+            let hasAttn = Boolean(this.attnNode) ? attnChecker(this.attnNode[0], this.attnNode[1]) : () => false;
+            this.tree.treeMap(1, 0, (layerIdx, nodeIdx, node) => {
                 d3.select(this.svg)
                     .append("circle")
                     .data([node])
                     .attr("id", "treeItem")
-                    .attr("r", scale(itemSize / 2))
+                    .attr("r", hScale(itemSize / 2))
                     .attr("cx", (d) => absX(d.x + itemSize / 2))
-                    .attr("cy", (d) => absY(d.y + itemSize / 2));
-            }, (layerIdx, leaf) => {
+                    .attr("cy", (d) => absY(d.y + itemSize / 2))
+                    .attr("fill", (d) => { return hasAttn(layerIdx, nodeIdx) ? "red" : "black"; });
+            }, (layerIdx, nodeIdx, leaf) => {
                 d3.select(this.svg)
                     .append("circle")
                     .data([leaf])
                     .attr("id", "treeItem")
-                    .attr("r", scale(itemSize / 2))
+                    .attr("r", hScale(itemSize / 2))
                     .attr("cx", (d) => absX(d.x + itemSize / 2))
-                    .attr("cy", (d) => absY(d.y + itemSize / 2));
+                    .attr("cy", (d) => absY(d.y + itemSize / 2))
+                    .attr("fill", (d) => { return hasAttn(layerIdx, nodeIdx) ? "red" : "black"; });
             });
         }
     }
@@ -214,10 +237,10 @@ define("model", ["require", "exports"], function (require, exports) {
         right() {
             return this.rightChild;
         }
-        treeMap(layerIdx, nodeFn, leafFn) {
-            this.leftChild.treeMap(2 * layerIdx, nodeFn, leafFn);
-            this.rightChild.treeMap(2 * layerIdx + 1, nodeFn, leafFn);
-            nodeFn(layerIdx, this);
+        treeMap(layerIdx, nodeIdx, nodeFn, leafFn) {
+            this.leftChild.treeMap(layerIdx + 1, 2 * nodeIdx, nodeFn, leafFn);
+            this.rightChild.treeMap(layerIdx + 1, 2 * nodeIdx + 1, nodeFn, leafFn);
+            nodeFn(layerIdx, nodeIdx, this);
         }
     }
     exports.TreeNode = TreeNode;
@@ -236,8 +259,8 @@ define("model", ["require", "exports"], function (require, exports) {
                 return [];
             }
         }
-        treeMap(layerIdx, nodeFn, leafFn) {
-            leafFn(layerIdx, this);
+        treeMap(layerIdx, nodeIdx, nodeFn, leafFn) {
+            leafFn(layerIdx, nodeIdx, this);
         }
     }
     exports.TreeLeaf = TreeLeaf;
@@ -313,7 +336,9 @@ define("main", ["require", "exports", "model", "view"], function (require, expor
         let ch2 = new model.TreeLeaf();
         let p = model.TreeNode.fullTree(4);
         let vt = new view.SVGBinaryTree("#treesvg", p, conf);
-        vt.refresh();
+        vt.setDepth(6);
+        let i = 0;
+        setInterval(() => { vt.setDepth(i % 6); }, 200);
         m.addItem(0);
         m.addItem(0);
         m.addItem(0);

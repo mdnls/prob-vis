@@ -27,7 +27,11 @@ export function main() {
     let p: model.TreeItem = model.TreeNode.fullTree(4);
 
     let vt = new view.SVGBinaryTree("#treesvg", p, conf);
-    vt.refresh();
+
+    vt.setDepth(6);
+
+    let i = 0;
+    setInterval(() => {vt.setDepth(i % 6)}, 200);
 
     m.addItem(0);
     m.addItem(0);
@@ -43,6 +47,6 @@ export function main() {
     window.addEventListener("resize", () =>  { m.refresh(); vt.refresh(); } );
 
     $("#plain-histogram0 > .addItem").click(() => v.incrSelectedBin());
-    $("#plain-histogram0 > .rmItem").click(() => v.decrSelectedBin());
+    $("#plain-histogram0 > .rmItem").click(() => v.decrSelectedBin())
 }
 main();

@@ -172,6 +172,7 @@ export class SVGBinaryTree implements ModelListener {
 
    private tree: TreeItem;
    private svg: string;
+   private attnNode: number[];
    private conf: CONF;
 
    /**
@@ -187,6 +188,35 @@ export class SVGBinaryTree implements ModelListener {
    }
 
    /**
+    * Call attention to a node by highlighting the path to that node from the root node.
+    * 
+    * @param layerIdx layer index of node with attention, relative to the root node.
+    * @param nodeIdx left-to-right index of node with attention in its layer.
+    */
+   attention(layerIdx: number, nodeIdx: number) {
+      this.attnNode = [layerIdx, nodeIdx];
+      this.refresh();
+   }
+
+   /**
+    * Remove attention from all nodes.
+    */
+   noAttention() {
+      delete this.attnNode;
+      this.refresh();
+   }
+
+   /**
+    * Discard the current model, replace it with one of a given depth, and refresh the tree.
+    * 
+    * @param n the depth of the new tree model.
+    */
+   setDepth(n: number) {
+      this.tree = TreeNode.fullTree(n);
+      this.refresh();
+   }
+
+   /**
     * Redraw the binary tree.
     */
    refresh() {
@@ -198,26 +228,29 @@ export class SVGBinaryTree implements ModelListener {
       let svgWidth = $(this.svg).width();
       let svgHeight = $(this.svg).height();
 
-      let viewBoxSideLength = Math.min(svgWidth, svgHeight) - 2 * pad;
-      let xOffset = (svgWidth - viewBoxSideLength)/2;
-      let yOffset = (svgHeight - viewBoxSideLength)/2;
-      let scale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxSideLength]);
+      let viewBoxWidth = svgWidth - 2 * pad;
+      let viewBoxHeight = svgHeight - 2 * pad;
+      let xOffset = pad; // maintain var names for consistency
+      let yOffset = pad;
+      
+      let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth])
+      let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
 
       function absX(relX: number) {
-         return xOffset + pad + scale(relX);
+         return xOffset + pad + wScale(relX);
       }
       function absY(relY: number) {
-         return yOffset + pad + scale(relY);
+         return yOffset + pad + hScale(relY);
       }
 
-      this.tree.treeMap(0,
-         (layerIdx, node) => {
+      this.tree.treeMap(0, 0,
+         (layerIdx, nodeIdx, node) => {
             node.x = (node.left().x + node.right().x)/2;
             node.y = node.left().y + 2*itemSize;
             node.itemType = "treeNode";
          },
-         (layerIdx, leaf) => {
-            leaf.x = 2*layerIdx*itemSize;
+         (layerIdx, nodeIdx, leaf) => {
+            leaf.x = 2*nodeIdx*itemSize;
             leaf.y = 0;
             leaf.itemType = "treeLeaf";
          }
@@ -240,35 +273,50 @@ export class SVGBinaryTree implements ModelListener {
             .attr("x2", (d) => absX(child.x + itemSize/2))
             .attr("y1", (d) => absY(parent.y + itemSize/2))
             .attr("y2", (d) => absY(child.y + itemSize/2))
-            .attr("stroke-width", scale(itemSize/10))
+            .attr("stroke-width", hScale(itemSize/10))
             .attr("stroke", "gray");
       }
 
-      this.tree.treeMap(0,
-         (layerIdx, node) => {
+      this.tree.treeMap(0, 0,
+         (layerIdx, nodeIdx, node) => {
             addEdge(this.svg, node, node.left());
             addEdge(this.svg, node, node.right());
          },
          (layerIdx, leaf) => {});
 
-      this.tree.treeMap(0,
-         (layerIdx, node) => {
+      // jank currying
+      function attnChecker(targetLayer: number, targetNode: number) {
+         return (layerIdx: number, nodeIdx: number) => {
+            let diff = targetLayer - layerIdx;
+            // the nodeIdx of the parent of node k is Math.floor(k/2), similar to child equations for heap structures.
+            // it is a nontrivial proof that repeatedly taking the floor of k/2 is the same as taking the floor after
+            //    dividing all the 2s.
+            return diff >= 0 && Math.floor(targetNode / (2**diff)) == nodeIdx;
+         }
+      }
+
+      let hasAttn = Boolean(this.attnNode) ? attnChecker(this.attnNode[0], this.attnNode[1]) : () => false;
+
+      this.tree.treeMap(1, 0,
+         (layerIdx, nodeIdx, node) => {
             d3.select(this.svg)
                .append("circle")
                .data([node])
                .attr("id", "treeItem")
-               .attr("r", scale(itemSize/2))
+               .attr("r", hScale(itemSize/2))
                .attr("cx", (d) => absX(d.x + itemSize/2))
-               .attr("cy", (d) => absY(d.y + itemSize/2));
+               .attr("cy", (d) => absY(d.y + itemSize/2))
+               .attr("fill", (d) => { return hasAttn(layerIdx, nodeIdx) ? "red" : "black" });
          },
-         (layerIdx, leaf) => {
+         (layerIdx, nodeIdx, leaf) => {
             d3.select(this.svg)
                .append("circle")
                .data([leaf])
                .attr("id", "treeItem")
-               .attr("r", scale(itemSize/2))
+               .attr("r", hScale(itemSize/2))
                .attr("cx", (d) => absX(d.x + itemSize/2))
-               .attr("cy", (d) => absY(d.y + itemSize/2));
+               .attr("cy", (d) => absY(d.y + itemSize/2))
+               .attr("fill", (d) => { return hasAttn(layerIdx, nodeIdx) ? "red" : "black" });
          });
    }
 }
