@@ -198,6 +198,11 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
         }
     }
     exports.SVGBinaryTree = SVGBinaryTree;
+    class SVGEntropy {
+        refresh() {
+        }
+    }
+    exports.SVGEntropy = SVGEntropy;
 });
 define("model", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -216,6 +221,12 @@ define("model", ["require", "exports"], function (require, exports) {
             this.rightChild = rightChild;
             this.leafs = this.leftChild.numLeaves() + this.rightChild.numLeaves();
             this.d = 1 + Math.max(this.leftChild.depth() + this.rightChild.depth());
+        }
+        addListener(listener) {
+            this.listeners.push(listener);
+        }
+        refresh() {
+            this.listeners.forEach((listener) => listener.refresh());
         }
         numLeaves() {
             return this.leafs;
@@ -245,6 +256,12 @@ define("model", ["require", "exports"], function (require, exports) {
     }
     exports.TreeNode = TreeNode;
     class TreeLeaf {
+        addListener(listener) {
+            this.listeners.push(listener);
+        }
+        refresh() {
+            this.listeners.forEach((listener) => listener.refresh());
+        }
         numLeaves() {
             return 1;
         }

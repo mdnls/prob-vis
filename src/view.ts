@@ -320,3 +320,11 @@ export class SVGBinaryTree implements ModelListener {
          });
    }
 }
+
+export class SVGEntropy implements ModelListener {
+
+   //constructor()
+   refresh() {
+
+   }
+}

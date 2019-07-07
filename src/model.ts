@@ -2,6 +2,15 @@ import {ModelListener} from 'view';
 import {CONF} from 'main';
 import { max } from 'd3';
 
+
+/**
+ * Represents a model, which views can use to draw information.
+ */
+export interface Model {
+  addListener(listener: ModelListener): void;
+  refresh(): void;
+}
+
 /**
  * Represents an Item in a Bin. Its position is on the scale [0, 100],
  * size is in px, and colors is a hex string.
@@ -15,15 +24,12 @@ export interface Item {
 /**
  * Represents a set of bins containing items.
  */
-export interface Bins {
+export interface Bins extends Model {
     addItem(bin: number): void;
     removeItem(bin: number): void;
     addBin(): void;
     removeBin(): void;
     bins(bin: number): Item[];
-    refresh(): void;
-    addListener(listener: ModelListener): void;
-    
     numBins(): number;
 }
 
@@ -31,7 +37,7 @@ export interface Bins {
 /**
  * Represents items in a binary tree. These can be either nodes or leafs.
  */
-export interface TreeItem extends Item {
+export interface TreeItem extends Item, Model {
   /**
    * Return the number of leafs in this tree.
    */
@@ -89,6 +95,7 @@ export class TreeNode implements TreeItem {
   private rightChild: TreeItem;
   private leafs: number;
   private d: number;
+  private listeners: ModelListener[];
 
   /**
    * Create a new tree node.
@@ -102,6 +109,14 @@ export class TreeNode implements TreeItem {
     this.d = 1 + Math.max(this.leftChild.depth() + this.rightChild.depth());
   }
 
+  addListener(listener: ModelListener) {
+    this.listeners.push(listener);
+  }
+
+  refresh() {
+    this.listeners.forEach((listener) => listener.refresh());
+  }
+  
   numLeaves() {
     return this.leafs;
   }
@@ -141,7 +156,6 @@ export class TreeNode implements TreeItem {
     return this.rightChild;
   }
 
-
   treeMap(layerIdx: number, nodeIdx: number, 
    nodeFn: (layerIdx: number, nodeIdx: number, node: TreeNode) => any,
    leafFn: (layerIdx: number, nodeIdx: number, left: TreeLeaf) => any) {
@@ -159,7 +173,16 @@ export class TreeLeaf implements Item {
   x: number;
   y: number;
   itemType: string;
+  private listeners: ModelListener[];
 
+  addListener(listener: ModelListener) {
+    this.listeners.push(listener);
+  }
+
+  refresh() {
+    this.listeners.forEach((listener) => listener.refresh());
+  }
+  
   numLeaves(): number {
     return 1;
   }
