@@ -6,7 +6,6 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
             this.svg = svgElement;
             this.model = model;
             this.conf = conf;
-            this.selectedBin = -1;
             this.model.addListener(this);
             d3.select(this.svg)
                 .append("rect")
@@ -70,43 +69,38 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
             d3.select(this.svg)
                 .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / s)));
             ;
-            if (this.selectedBin != -1) {
-                let binHeight = this.model.bins(this.selectedBin).length;
+            if (this.model.selectedBin() != -1) {
+                let binHeight = this.model.bins(this.model.selectedBin()).length;
                 d3.select(this.svg)
                     .selectAll(".colHighlight")
-                    .attr("x", (d) => absX(s * this.selectedBin + 0.85 * s / 2))
+                    .attr("x", (d) => absX(s * this.model.selectedBin() + 0.85 * s / 2))
                     .attr("y", (d) => absY(s * binHeight))
                     .attr("style", "font-size: " + scale(s) + "px;");
             }
         }
         selectCol(bin) {
-            if (bin < this.model.numBins()) {
-                this.selectedBin = bin;
-                this.refresh();
-            }
+            this.model.selectBin(bin);
         }
         incrSelectedBin() {
             let s = this.conf.gridBoxSize;
-            if (this.selectedBin != -1 && this.model.bins(this.selectedBin).length * s < 100) {
-                let curItems = this.model.bins(this.selectedBin).length;
+            if (this.model.selectedBin() != -1 && this.model.bins(this.model.selectedBin()).length * s < 100) {
+                let curItems = this.model.bins(this.model.selectedBin()).length;
                 if ((curItems + 2) * s < 100) {
-                    this.model.addItem(this.selectedBin);
+                    this.model.addItem(this.model.selectedBin());
                 }
             }
-            this.refresh();
         }
         decrSelectedBin() {
-            if (this.selectedBin != -1) {
-                this.model.removeItem(this.selectedBin);
+            if (this.model.selectedBin() != -1) {
+                this.model.removeItem(this.model.selectedBin());
             }
-            this.refresh();
         }
     }
     exports.SVGHistogram = SVGHistogram;
     class SVGBinaryTree {
-        constructor(svgElement, tree, conf) {
+        constructor(svgElement, initialDepth, conf) {
             this.svg = svgElement;
-            this.tree = tree;
+            this.tree = model_1.TreeNode.fullTree(initialDepth);
             this.conf = conf;
         }
         attention(layerIdx, nodeIdx) {
@@ -199,6 +193,20 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
     }
     exports.SVGBinaryTree = SVGBinaryTree;
     class SVGEntropy {
+        constructor(divElement, model, conf) {
+            let defaultIDs = ["svgTree", "svgBar", "svgHist"];
+            this.svgTree = divElement + " > #" + defaultIDs[0];
+            this.svgBar = divElement + " > #" + defaultIDs[1];
+            this.svgHist = divElement + " > #" + defaultIDs[2];
+            let d = d3.select(divElement);
+            d.append("svg").attr("id", defaultIDs[0]);
+            d.append("svg").attr("id", defaultIDs[1]);
+            d.append("svg").attr("id", defaultIDs[2]);
+            this.bins = model;
+            this.tree = new SVGBinaryTree(this.svgTree, 0, conf);
+            this.hist = new SVGHistogram(this.svgHist, this.bins, conf);
+            model.addListener(this);
+        }
         refresh() {
         }
     }
@@ -312,6 +320,9 @@ define("model", ["require", "exports"], function (require, exports) {
         }
         removeBin() {
             this.histBins.pop();
+            if (this.selection == this.histBins.length) {
+                this.selection = -1;
+            }
             this.refresh();
         }
         bins(bin) {
@@ -327,6 +338,15 @@ define("model", ["require", "exports"], function (require, exports) {
         }
         numBins() {
             return this.histBins.length;
+        }
+        selectBin(selection) {
+            if (selection >= 0 && selection < this.histBins.length) {
+                this.selection = selection;
+                this.refresh();
+            }
+        }
+        selectedBin() {
+            return Boolean(this.selection) ? this.selection : -1;
         }
     }
     exports.Histogram = Histogram;
@@ -351,11 +371,10 @@ define("main", ["require", "exports", "model", "view"], function (require, expor
         let m = new model.Histogram(15);
         let ch1 = new model.TreeLeaf();
         let ch2 = new model.TreeLeaf();
-        let p = model.TreeNode.fullTree(4);
-        let vt = new view.SVGBinaryTree("#treesvg", p, conf);
+        let vt = new view.SVGBinaryTree("#treesvg", 4, conf);
         vt.setDepth(6);
         let i = 0;
-        setInterval(() => { vt.setDepth(i % 6); }, 200);
+        setInterval(() => { vt.setDepth((i++ % 6) + 1); }, 500);
         m.addItem(0);
         m.addItem(0);
         m.addItem(0);

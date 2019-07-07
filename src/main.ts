@@ -24,14 +24,13 @@ export function main() {
 
     let ch1 = new model.TreeLeaf();
     let ch2 = new model.TreeLeaf();
-    let p: model.TreeItem = model.TreeNode.fullTree(4);
 
-    let vt = new view.SVGBinaryTree("#treesvg", p, conf);
+    let vt = new view.SVGBinaryTree("#treesvg", 4, conf);
 
     vt.setDepth(6);
 
     let i = 0;
-    setInterval(() => {vt.setDepth(i % 6)}, 200);
+    setInterval(() => {vt.setDepth((i++ % 6) + 1)}, 500);
 
     m.addItem(0);
     m.addItem(0);

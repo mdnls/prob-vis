@@ -31,6 +31,8 @@ export interface Bins extends Model {
     removeBin(): void;
     bins(bin: number): Item[];
     numBins(): number;
+    selectBin(selection: number): void;
+    selectedBin(): number;
 }
 
 
@@ -182,7 +184,7 @@ export class TreeLeaf implements Item {
   refresh() {
     this.listeners.forEach((listener) => listener.refresh());
   }
-  
+
   numLeaves(): number {
     return 1;
   }
@@ -247,6 +249,7 @@ export class BinItem implements Item {
 export class Histogram implements Bins {
     private histBins: BinItem[][];
     private listeners: ModelListener[];
+    private selection: number;
     private itemType: string = "default";
 
     /**
@@ -289,6 +292,9 @@ export class Histogram implements Bins {
      */
     removeBin() {
       this.histBins.pop();
+      if(this.selection == this.histBins.length) {
+        this.selection = -1;
+      }
       this.refresh();
     }
 
@@ -324,5 +330,22 @@ export class Histogram implements Bins {
      */
     numBins() {
       return this.histBins.length;
+    }
+
+    /**
+     * Select the bin with the given index. If the index does not match a bin, the selection is discarded.
+     */
+    selectBin(selection: number) {
+      if(selection >= 0 && selection < this.histBins.length) {
+        this.selection = selection;
+        this.refresh();
+      }
+    }
+
+    /**
+     * If a bin is selected, returns the index of that bin. Otherwise returns -1.
+     */
+    selectedBin() {
+      return Boolean(this.selection) ? this.selection : -1;
     }
 }

@@ -20,7 +20,6 @@ export class SVGHistogram implements ModelListener {
    private svg: string;
    private model: Bins;
    private conf: CONF;
-   private selectedBin: number; 
 
    /**
     * Draw a histogram in the given div representing the given model.
@@ -31,7 +30,6 @@ export class SVGHistogram implements ModelListener {
       this.svg = svgElement;
       this.model = model;
       this.conf = conf;
-      this.selectedBin = -1;
 
       this.model.addListener(this);
 
@@ -114,11 +112,11 @@ export class SVGHistogram implements ModelListener {
       d3.select(this.svg)
         .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / s)));;
 
-      if(this.selectedBin != -1) {
-         let binHeight = this.model.bins(this.selectedBin).length;
+      if(this.model.selectedBin() != -1) {
+         let binHeight = this.model.bins(this.model.selectedBin()).length;
          d3.select(this.svg)
          .selectAll(".colHighlight")
-         .attr("x", (d) => absX(s * this.selectedBin + 0.85 * s/2))
+         .attr("x", (d) => absX(s * this.model.selectedBin() + 0.85 * s/2))
          .attr("y", (d) => absY(s * binHeight))
          .attr("style", "font-size: " + scale(s) + "px;");
       }
@@ -130,10 +128,7 @@ export class SVGHistogram implements ModelListener {
     * @param bin bin to select.
     */
    selectCol(bin: number) {
-         if(bin < this.model.numBins()) {
-         this.selectedBin = bin;
-         this.refresh();
-      }
+      this.model.selectBin(bin);
    }
 
    /**
@@ -141,25 +136,23 @@ export class SVGHistogram implements ModelListener {
     */
    incrSelectedBin() {
       let s = this.conf.gridBoxSize;
-      if(this.selectedBin != -1 && this.model.bins(this.selectedBin).length * s < 100) {
-         let curItems = this.model.bins(this.selectedBin).length;
+      if(this.model.selectedBin() != -1 && this.model.bins(this.model.selectedBin()).length * s < 100) {
+         let curItems = this.model.bins(this.model.selectedBin()).length;
          // curItems+2 * s marks the ending y position of the extra block above the column.
          // this leaves a place for the selected column indicator.
          if((curItems+2) * s < 100) {
-            this.model.addItem(this.selectedBin);
+            this.model.addItem(this.model.selectedBin());
          }
       }
-      this.refresh();
    }
 
    /**
     * Remove an item from the selected bin, if there is at least one item.
     */
    decrSelectedBin() {
-      if(this.selectedBin != -1) {
-         this.model.removeItem(this.selectedBin);
+      if(this.model.selectedBin() != -1) {
+         this.model.removeItem(this.model.selectedBin());
       }
-      this.refresh();
    }
 }
 
@@ -178,12 +171,12 @@ export class SVGBinaryTree implements ModelListener {
    /**
     * Draw a binary tree with some number of distinguishable (ie. tied to a leaf) outcomes.
     * @param svgElement the selector for the svg element to draw in.
-    * @param tree the tree to draw.
+    * @param initialDepth the depth of the tree to draw initially.
     * @param conf the config for this view.
     */
-   constructor(svgElement: string, tree: TreeItem, conf: CONF) {
+   constructor(svgElement: string, initialDepth: number, conf: CONF) {
       this.svg = svgElement;
-      this.tree = tree;
+      this.tree = TreeNode.fullTree(initialDepth);
       this.conf = conf;
    }
 
@@ -322,9 +315,42 @@ export class SVGBinaryTree implements ModelListener {
 }
 
 export class SVGEntropy implements ModelListener {
+   private bins: Bins;
+   private tree: SVGBinaryTree;
+   private hist: SVGHistogram;
+   private svgTree: string;
+   private svgBar: string;
+   private svgHist: string;
 
-   //constructor()
+   constructor(divElement: string, model: Bins, conf: CONF) {
+      let defaultIDs = ["svgTree", "svgBar", "svgHist"]; // single point of change for default ids. 
+      this.svgTree = divElement + " > #" + defaultIDs[0];
+      this.svgBar = divElement + " > #" + defaultIDs[1];
+      this.svgHist = divElement + " > #" + defaultIDs[2];
+
+      let d = d3.select(divElement);
+      d.append("svg").attr("id", defaultIDs[0]);
+      d.append("svg").attr("id", defaultIDs[1]);
+      d.append("svg").attr("id", defaultIDs[2]);
+
+      this.bins = model;
+      this.tree = new SVGBinaryTree(this.svgTree, 0, conf);
+      this.hist = new SVGHistogram(this.svgHist, this.bins, conf);
+
+      model.addListener(this);
+   }
+
    refresh() {
+      /*
+      1. get width of div
+      2. calculate width and heights of each sub element
+      3. set width and heights of each sub element
+      4. refresh histogram
+      5. get the selected column
+      6. calculate target depth of tree
+      7. set the depth of tree
+      8. refresh the tree
+      */
 
    }
 }
