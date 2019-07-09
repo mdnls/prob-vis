@@ -19,7 +19,6 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
             this.refresh();
         }
         refresh() {
-            let s = this.conf.gridBoxSize;
             let pad = this.conf.padding;
             let svgWidth = $(this.svg).width();
             let svgHeight = $(this.svg).height();
@@ -27,12 +26,14 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
             let xOffset = (svgWidth - viewBoxSideLength) / 2;
             let yOffset = (svgHeight - viewBoxSideLength) / 2;
             let scale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxSideLength]);
+            let s = scale.invert(viewBoxSideLength / this.model.numBins());
             this.pad = pad;
             this.width = svgWidth;
             this.height = svgHeight;
             this.viewBoxSideLength = viewBoxSideLength;
             this.xOffset = xOffset;
             this.yOffset = yOffset;
+            let colors = this.conf.colors["histogram"];
             function absX(relX) {
                 return xOffset + scale(relX);
             }
@@ -62,10 +63,9 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
                 .attr("id", "histItem")
                 .attr("width", scale(s * 0.85))
                 .attr("height", scale(s * 0.85))
-                .attr("x", (d) => absX(d.x * s))
-                .attr("y", (d) => absY((d.y + 1) * s))
-                .attr("fill", (d) => d3.schemePaired[2 * (d.x % 6)])
-                .attr("stroke", (d) => d3.schemePaired[2 * (d.x % 6) + 1]);
+                .attr("x", (d) => absX(d.x * s + s * 0.075))
+                .attr("y", (d) => absY((d.y + 1) * s + s * 0.075))
+                .attr("fill", (d) => colors[d.x % colors.length]);
             function handleClick() {
                 let absX = d3.event.x;
                 let col = Math.floor(invAbsX(absX) / s);
@@ -244,6 +244,7 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
                 let viewBoxWidth = sideLens[0] - 2 * pad;
                 let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
                 let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth]);
+                let colors = this.conf.colors["histogram"];
                 function absX(relX) {
                     return pad + wScale(relX);
                 }
@@ -262,7 +263,7 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
                     .attr("y", absY(0))
                     .attr("width", wScale(unit))
                     .attr("height", hScale(100))
-                    .attr("fill", (d) => (d == 0 ? d3.schemePaired[2 * (selectedBin % 6)] : "#FFF"))
+                    .attr("fill", (d) => (d == 0 ? colors[selectedBin % colors.length] : "#FFF"))
                     .attr("stroke", "#000")
                     .attr("stroke-width", sideLens[1] / 40);
             }
@@ -370,6 +371,16 @@ define("model", ["require", "exports"], function (require, exports) {
             this.listeners = new Array();
             this.selection = -1;
         }
+        setAll(count) {
+            for (let i = 0; i < this.histBins.length; i++) {
+                while (this.histBins[i].length > count) {
+                    this.removeItem(i);
+                }
+                while (this.histBins[i].length < count) {
+                    this.addItem(i);
+                }
+            }
+        }
         addItem(bin) {
             this.histBins[bin].push(new BinItem(bin, this.histBins[bin].length, this.itemType));
             this.refresh();
@@ -415,7 +426,7 @@ define("model", ["require", "exports"], function (require, exports) {
     }
     exports.Histogram = Histogram;
 });
-define("main", ["require", "exports", "model", "view"], function (require, exports, model, view) {
+define("main", ["require", "exports", "model", "view", "d3"], function (require, exports, model, view, d3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class CONF {
@@ -429,21 +440,16 @@ define("main", ["require", "exports", "model", "view"], function (require, expor
     function main() {
         let colors = {
             "default": ["#000", "#202020"],
-            "border": ["#505050",]
+            "border": ["#505050",],
+            "histogram": Array.from(d3.schemeSpectral[11])
         };
-        let conf = new CONF(7, colors, 5);
-        let m = new model.Histogram(15);
+        let conf = new CONF(8, colors, 5);
+        let m = new model.Histogram(11);
         let vt = new view.SVGBinaryTree("#treesvg", 4, conf);
         vt.setDepth(6);
         let i = 0;
         setInterval(() => { vt.setDepth((i++ % 6) + 1); }, 500);
-        m.addItem(0);
-        m.addItem(0);
-        m.addItem(0);
-        m.addItem(1);
-        m.addItem(2);
-        m.addItem(2);
-        m.addItem(4);
+        m.setAll(1);
         let v = new view.SVGHistogram("#svg", m, conf);
         let both = new view.SVGEntropy("#plain-entropy0", m, conf);
         window.addEventListener("resize", () => { m.refresh(); vt.refresh(); });

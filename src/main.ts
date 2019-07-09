@@ -1,5 +1,6 @@
 import model = require("model");
 import view = require("view");
+import d3 = require("d3");
 
 export class CONF {
     public gridBoxSize: number;
@@ -17,10 +18,11 @@ export class CONF {
 export function main() {
     let colors = {
         "default": ["#000", "#202020"],
-        "border": ["#505050",]
+        "border": ["#505050",],
+        "histogram": Array.from(d3.schemeSpectral[11])
     }
-    let conf: CONF = new CONF(7, colors, 5);
-    let m = new model.Histogram(15);
+    let conf: CONF = new CONF(8, colors, 5);
+    let m = new model.Histogram(11);
 
     let vt = new view.SVGBinaryTree("#treesvg", 4, conf);
     vt.setDepth(6);
@@ -28,13 +30,7 @@ export function main() {
     let i = 0;
     setInterval(() => {vt.setDepth((i++ % 6) + 1)}, 500);
 
-    m.addItem(0);
-    m.addItem(0);
-    m.addItem(0);
-    m.addItem(1);
-    m.addItem(2);
-    m.addItem(2);
-    m.addItem(4);
+    m.setAll(1);
 
     let v = new view.SVGHistogram("#svg", m, conf);
 

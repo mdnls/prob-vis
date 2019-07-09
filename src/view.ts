@@ -58,7 +58,6 @@ export class SVGHistogram implements ModelListener {
     * Redraw the histogram.
     */
    refresh(): void {
-      let s: number = this.conf.gridBoxSize;
       let pad: number = this.conf.padding;
 
       let svgWidth = $(this.svg).width();
@@ -69,6 +68,8 @@ export class SVGHistogram implements ModelListener {
       let yOffset = (svgHeight - viewBoxSideLength)/2;
       let scale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxSideLength]);
 
+      let s: number = scale.invert(viewBoxSideLength / this.model.numBins())
+
       this.pad = pad;
       this.width= svgWidth;
       this.height = svgHeight;
@@ -76,6 +77,8 @@ export class SVGHistogram implements ModelListener {
       this.xOffset = xOffset;
       this.yOffset = yOffset;
       
+      let colors = this.conf.colors["histogram"]
+
       function absX(relX: number) {
          return xOffset + scale(relX);
       }
@@ -112,10 +115,9 @@ export class SVGHistogram implements ModelListener {
          .attr("id", "histItem")
          .attr("width", scale(s * 0.85))
          .attr("height", scale(s * 0.85))
-         .attr("x", (d) => absX(d.x * s))
-         .attr("y", (d) => absY((d.y+1) * s))
-         .attr("fill", (d) => d3.schemePaired[2 * (d.x % 6)])
-         .attr("stroke", (d) => d3.schemePaired[2 * (d.x % 6) + 1]);
+         .attr("x", (d) => absX(d.x * s + s*0.075))
+         .attr("y", (d) => absY((d.y+1) * s + s*0.075))
+         .attr("fill", (d) => colors[d.x % colors.length]);
       
       // add click handler
       function handleClick() {
@@ -242,7 +244,7 @@ export class SVGBinaryTree implements ModelListener {
       let itemSize: number = 100 / (2 * numLeafs - 1);
 
       let pad = this.conf.padding;
-      
+
       let svgWidth = $(this.svg).width();
       let svgHeight = $(this.svg).height();
 
@@ -416,6 +418,8 @@ export class SVGEntropy implements ModelListener {
          let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
          let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth]);
 
+         let colors = this.conf.colors["histogram"];
+
          function absX(relX: number) {
             return pad + wScale(relX);
          }
@@ -436,7 +440,7 @@ export class SVGEntropy implements ModelListener {
            .attr("y", absY(0))
            .attr("width", wScale(unit))
            .attr("height", hScale(100))
-           .attr("fill", (d) => (d == 0 ? d3.schemePaired[2 * (selectedBin % 6)] : "#FFF"))
+           .attr("fill", (d) => (d == 0 ? colors[selectedBin % colors.length] : "#FFF"))
            .attr("stroke", "#000")
            .attr("stroke-width", sideLens[1]/40);
       }

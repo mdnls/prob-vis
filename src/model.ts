@@ -262,6 +262,17 @@ export class Histogram implements Bins {
       this.selection = -1;
     }
 
+    setAll(count: number) {
+      for(let i = 0; i < this.histBins.length; i++) {
+        while(this.histBins[i].length > count) {
+          this.removeItem(i);
+        }
+        while(this.histBins[i].length < count) {
+          this.addItem(i);
+        }
+      }
+    }
+
     /**
      * Adds an item to the given bin.
      * @param bin index of a bin.
