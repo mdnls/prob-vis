@@ -20,28 +20,34 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
         }
         refresh() {
             let s = this.conf.gridBoxSize;
-            let pad = 0.2 * s;
+            let pad = this.conf.padding;
             let svgWidth = $(this.svg).width();
             let svgHeight = $(this.svg).height();
             let viewBoxSideLength = Math.min(svgWidth, svgHeight) - 2 * pad;
             let xOffset = (svgWidth - viewBoxSideLength) / 2;
             let yOffset = (svgHeight - viewBoxSideLength) / 2;
             let scale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxSideLength]);
+            this.pad = pad;
+            this.width = svgWidth;
+            this.height = svgHeight;
+            this.viewBoxSideLength = viewBoxSideLength;
+            this.xOffset = xOffset;
+            this.yOffset = yOffset;
             function absX(relX) {
-                return xOffset + pad + scale(relX);
+                return xOffset + scale(relX);
             }
             function invAbsX(absX) {
-                return scale.invert(absX - xOffset - pad);
+                return scale.invert(absX - xOffset);
             }
             function absY(relY) {
-                return svgHeight - yOffset - pad - scale(relY);
+                return svgHeight - yOffset - scale(relY);
             }
             d3.select(this.svg)
                 .selectAll(".bottomBorder")
-                .attr("x", absX(0) - pad)
-                .attr("y", absY(0) + pad)
-                .attr("height", pad)
-                .attr("width", viewBoxSideLength + 2 * pad)
+                .attr("x", absX(0))
+                .attr("y", absY(-1))
+                .attr("height", scale(0.5))
+                .attr("width", viewBoxSideLength)
                 .attr("fill", this.conf.colors["border"][0])
                 .attr("rx", 0.2 * s);
             var allItems = [].concat(...Array.from({ length: this.model.numBins() }, (value, key) => this.model.bins(key)));
@@ -62,8 +68,7 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
                 .attr("stroke", (d) => d3.schemePaired[2 * (d.x % 6) + 1]);
             function handleClick() {
                 let absX = d3.event.x;
-                let relX = scale.invert(absX - xOffset - pad);
-                let col = Math.floor(relX / s);
+                let col = Math.floor(invAbsX(absX) / s);
                 this.selectCol(col);
             }
             d3.select(this.svg)
@@ -117,20 +122,24 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
         refresh() {
             let numLeafs = this.tree.numLeaves();
             let itemSize = 100 / (2 * numLeafs - 1);
-            let pad = 0.2 * itemSize;
+            let pad = this.conf.padding;
             let svgWidth = $(this.svg).width();
             let svgHeight = $(this.svg).height();
             let viewBoxWidth = svgWidth - 2 * pad;
             let viewBoxHeight = svgHeight - 2 * pad;
-            let xOffset = pad;
-            let yOffset = pad;
             let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth]);
             let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
+            this.numLeafs = numLeafs;
+            this.nodeRadius = hScale(itemSize / 2);
+            this.width = svgWidth;
+            this.height = svgHeight;
+            this.viewBoxWidth = viewBoxWidth;
+            this.viewBoxHeight = viewBoxHeight;
             function absX(relX) {
-                return xOffset + pad + wScale(relX);
+                return pad + wScale(relX);
             }
             function absY(relY) {
-                return yOffset + pad + hScale(relY);
+                return pad + hScale(relY);
             }
             this.tree.treeMap(0, 0, (layerIdx, nodeIdx, node) => {
                 node.x = (node.left().x + node.right().x) / 2;
@@ -193,6 +202,7 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
     exports.SVGBinaryTree = SVGBinaryTree;
     class SVGEntropy {
         constructor(divElement, model, conf) {
+            this.conf = conf;
             let defaultIDs = ["svgHist", "svgBar", "svgTree"];
             this.div = divElement;
             this.svgHist = divElement + " > #" + defaultIDs[0];
@@ -200,7 +210,9 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
             this.svgTree = divElement + " > #" + defaultIDs[2];
             let d = d3.select(divElement);
             d.append("svg").attr("id", defaultIDs[0]);
+            d.append("br");
             d.append("svg").attr("id", defaultIDs[1]);
+            d.append("br");
             d.append("svg").attr("id", defaultIDs[2]);
             this.model = model;
             this.tree = new SVGBinaryTree(this.svgTree, 0, conf);
@@ -209,22 +221,54 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
         }
         refresh() {
             let svgHeight = $(this.div).height();
+            let svgWidth = $(this.div).width();
             let sideLens = [svgHeight * (7 / 16), svgHeight * (1 / 8), svgHeight * (7 / 16)];
             d3.select(this.svgHist).attr("height", sideLens[0]).attr("width", sideLens[0]);
-            d3.select(this.svgBar).attr("height", sideLens[1]).attr("width", "100%");
+            d3.select(this.svgBar).attr("height", sideLens[1]).attr("width", sideLens[0]);
             d3.select(this.svgTree).attr("height", sideLens[2]).attr("width", sideLens[2]);
             let selectedBin = this.model.selectedBin();
             if (selectedBin != -1 && this.model.bins(selectedBin).length > 0) {
                 d3.select(this.svgTree).attr("style", "display: initial");
+                d3.select(this.svgBar).attr("style", "display: initial");
                 let items = this.model.bins(selectedBin).length;
                 let total = Array.from({ length: this.model.numBins() }, (value, key) => this.model.bins(key))
                     .reduce((running, cur) => (running + cur.length), 0);
                 let distinct = total / items;
-                this.tree.setDepth(Math.ceil(Math.log2(distinct)) + 1);
+                let depth = Math.ceil(Math.log2(distinct)) + 1;
+                this.tree.setDepth(depth);
                 this.tree.refresh();
+                let unit = 100 / (Math.pow(2, (depth - 1)));
+                let markerLocs = Array.from({ length: (Math.pow(2, (depth - 1))) }, (value, key) => key * unit);
+                let pad = this.conf.padding;
+                let viewBoxHeight = sideLens[1] - 2 * pad;
+                let viewBoxWidth = sideLens[0] - 2 * pad;
+                let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
+                let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth]);
+                function absX(relX) {
+                    return pad + wScale(relX);
+                }
+                function absY(relY) {
+                    return pad + hScale(relY);
+                }
+                d3.select(this.svgBar)
+                    .selectAll("rect, line")
+                    .remove();
+                d3.select(this.svgBar)
+                    .selectAll("rect")
+                    .data(markerLocs)
+                    .enter()
+                    .append("rect")
+                    .attr("x", (d) => absX(d))
+                    .attr("y", absY(0))
+                    .attr("width", wScale(unit))
+                    .attr("height", hScale(100))
+                    .attr("fill", (d) => (d == 0 ? d3.schemePaired[2 * (selectedBin % 6)] : "#FFF"))
+                    .attr("stroke", "#000")
+                    .attr("stroke-width", sideLens[1] / 40);
             }
             else {
                 d3.select(this.svgTree).attr("style", "display: none;");
+                d3.select(this.svgBar).attr("style", "display: none;");
             }
             this.hist.refresh();
         }
@@ -387,7 +431,7 @@ define("main", ["require", "exports", "model", "view"], function (require, expor
             "default": ["#000", "#202020"],
             "border": ["#505050",]
         };
-        let conf = new CONF(7, colors, 30);
+        let conf = new CONF(7, colors, 5);
         let m = new model.Histogram(15);
         let vt = new view.SVGBinaryTree("#treesvg", 4, conf);
         vt.setDepth(6);

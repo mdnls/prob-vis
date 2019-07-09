@@ -19,7 +19,7 @@ export function main() {
         "default": ["#000", "#202020"],
         "border": ["#505050",]
     }
-    let conf: CONF = new CONF(7, colors, 30);
+    let conf: CONF = new CONF(7, colors, 5);
     let m = new model.Histogram(15);
 
     let vt = new view.SVGBinaryTree("#treesvg", 4, conf);

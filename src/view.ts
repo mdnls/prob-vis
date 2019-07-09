@@ -21,6 +21,14 @@ export class SVGHistogram implements ModelListener {
    private model: Bins;
    private conf: CONF;
 
+   // public information about this view's visual configuration which can be helpful to have on the fly
+   width: number;
+   height: number;
+   viewBoxSideLength: number;
+   xOffset: number;
+   yOffset: number;
+   pad: number;
+
    /**
     * Draw a histogram in the given div representing the given model.
     * @param svgElement the id selector of the svg element that this view should draw in.
@@ -30,6 +38,7 @@ export class SVGHistogram implements ModelListener {
       this.svg = svgElement;
       this.model = model;
       this.conf = conf;
+
 
       this.model.addListener(this);
 
@@ -50,7 +59,7 @@ export class SVGHistogram implements ModelListener {
     */
    refresh(): void {
       let s: number = this.conf.gridBoxSize;
-      let pad: number = 0.2 * s;
+      let pad: number = this.conf.padding;
 
       let svgWidth = $(this.svg).width();
       let svgHeight = $(this.svg).height();
@@ -60,22 +69,29 @@ export class SVGHistogram implements ModelListener {
       let yOffset = (svgHeight - viewBoxSideLength)/2;
       let scale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxSideLength]);
 
+      this.pad = pad;
+      this.width= svgWidth;
+      this.height = svgHeight;
+      this.viewBoxSideLength = viewBoxSideLength;
+      this.xOffset = xOffset;
+      this.yOffset = yOffset;
+      
       function absX(relX: number) {
-         return xOffset + pad + scale(relX);
+         return xOffset + scale(relX);
       }
       function invAbsX(absX: number) {
-         return scale.invert(absX - xOffset - pad);
+         return scale.invert(absX - xOffset);
       }
       function absY(relY: number) {
-         return svgHeight - yOffset - pad - scale(relY);
+         return svgHeight - yOffset - scale(relY);
       }
 
       d3.select(this.svg)
          .selectAll(".bottomBorder")
-         .attr("x", absX(0) - pad)
-         .attr("y", absY(0) + pad)
-         .attr("height", pad)
-         .attr("width", viewBoxSideLength + 2 * pad)
+         .attr("x", absX(0))
+         .attr("y", absY(-1))
+         .attr("height", scale(0.5))
+         .attr("width", viewBoxSideLength)
          .attr("fill", this.conf.colors["border"][0])
          .attr("rx", 0.2 * s);
 
@@ -104,8 +120,7 @@ export class SVGHistogram implements ModelListener {
       // add click handler
       function handleClick() {
          let absX = d3.event.x;
-         let relX = scale.invert(absX - xOffset - pad);
-         let col = Math.floor(relX / s);
+         let col = Math.floor(invAbsX(absX) / s);
          this.selectCol(col);
       }
 
@@ -168,6 +183,15 @@ export class SVGBinaryTree implements ModelListener {
    private attnNode: number[];
    private conf: CONF;
 
+
+   // helpful public information about this view's visual configuration
+   numLeafs: number;
+   nodeRadius: number;
+   width: number;
+   height: number;
+   viewBoxWidth: number;
+   viewBoxHeight: number;
+
    /**
     * Draw a binary tree with some number of distinguishable (ie. tied to a leaf) outcomes.
     * @param svgElement the selector for the svg element to draw in.
@@ -179,6 +203,7 @@ export class SVGBinaryTree implements ModelListener {
       this.tree = TreeNode.fullTree(initialDepth);
       this.conf = conf;
    }
+
 
    /**
     * Call attention to a node by highlighting the path to that node from the root node.
@@ -216,24 +241,29 @@ export class SVGBinaryTree implements ModelListener {
       let numLeafs: number = this.tree.numLeaves();
       let itemSize: number = 100 / (2 * numLeafs - 1);
 
-      let pad: number = 0.2 * itemSize;
-
+      let pad = this.conf.padding;
+      
       let svgWidth = $(this.svg).width();
       let svgHeight = $(this.svg).height();
 
       let viewBoxWidth = svgWidth - 2 * pad;
       let viewBoxHeight = svgHeight - 2 * pad;
-      let xOffset = pad; // maintain var names for consistency
-      let yOffset = pad;
       
       let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth])
       let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
 
+      this.numLeafs = numLeafs;
+      this.nodeRadius = hScale(itemSize/2);
+      this.width = svgWidth;
+      this.height = svgHeight;
+      this.viewBoxWidth = viewBoxWidth;
+      this.viewBoxHeight = viewBoxHeight;
+
       function absX(relX: number) {
-         return xOffset + pad + wScale(relX);
+         return pad + wScale(relX);
       }
       function absY(relY: number) {
-         return yOffset + pad + hScale(relY);
+         return pad + hScale(relY);
       }
 
       this.tree.treeMap(0, 0,
@@ -322,8 +352,11 @@ export class SVGEntropy implements ModelListener {
    private svgBar: string;
    private svgHist: string;
    private div: string;
+   private conf: CONF;
 
    constructor(divElement: string, model: Bins, conf: CONF) {
+      this.conf = conf;
+
       let defaultIDs = ["svgHist", "svgBar", "svgTree"]; // single point of change for default ids. 
       this.div = divElement;
       this.svgHist = divElement + " > #" + defaultIDs[0];
@@ -332,7 +365,9 @@ export class SVGEntropy implements ModelListener {
 
       let d = d3.select(divElement);
       d.append("svg").attr("id", defaultIDs[0]);
+      d.append("br")
       d.append("svg").attr("id", defaultIDs[1]);
+      d.append("br")
       d.append("svg").attr("id", defaultIDs[2]);
 
       this.model = model;
@@ -343,40 +378,71 @@ export class SVGEntropy implements ModelListener {
    }
 
    refresh() {
-      /*
-      1. get width of div
-      2. calculate width and heights of each sub element
-      3. set width and heights of each sub element
-      4. refresh histogram
-      5. get the selected column
-      6. calculate target depth of tree
-      7. set the depth of tree
-      8. refresh the tree
-      */
-
       let svgHeight = $(this.div).height();
+      let svgWidth = $(this.div).width();
 
       // again, single point of control for the magic numbers that determine sub-element sizing
       // 0 -> histogram, 1 -> bar, 2 -> tree
       let sideLens = [svgHeight * (7/16), svgHeight * (1/8), svgHeight * (7/16)];
       
       d3.select(this.svgHist).attr("height", sideLens[0]).attr("width", sideLens[0]);
-      d3.select(this.svgBar).attr("height", sideLens[1]).attr("width", "100%");
+      d3.select(this.svgBar).attr("height", sideLens[1]).attr("width", sideLens[0]); // use same width as other elements
       d3.select(this.svgTree).attr("height", sideLens[2]).attr("width", sideLens[2]);
 
       let selectedBin = this.model.selectedBin();
 
       if(selectedBin != -1 && this.model.bins(selectedBin).length > 0) {
          d3.select(this.svgTree).attr("style", "display: initial");
+         d3.select(this.svgBar).attr("style", "display: initial");
+
+         // configure the tree for this selected item
          let items = this.model.bins(selectedBin).length;
          let total = Array.from({length: this.model.numBins()}, (value, key) => this.model.bins(key))
                           .reduce((running, cur) => (running + cur.length), 0);
          let distinct = total / items;
-         this.tree.setDepth(Math.ceil(Math.log2(distinct)) + 1);
+         let depth = Math.ceil(Math.log2(distinct)) + 1;
+         this.tree.setDepth(depth);
          this.tree.refresh();
+
+         let unit = 100 / (2**(depth-1));
+         let markerLocs = Array.from({length: (2**(depth-1)) }, (value, key) => key * unit);
+
+         // determine bar display information
+
+         // newPad + unit/2 = pad + absItemSize
+         let pad = this.conf.padding;
+         let viewBoxHeight = sideLens[1] - 2 * pad;
+         let viewBoxWidth = sideLens[0] - 2 * pad;
+         let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
+         let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth]);
+
+         function absX(relX: number) {
+            return pad + wScale(relX);
+         }
+         function absY(relY: number) {
+            return pad + hScale(relY);
+         }
+
+         d3.select(this.svgBar)
+           .selectAll("rect, line")
+           .remove();
+         
+         d3.select(this.svgBar)
+           .selectAll("rect")
+           .data(markerLocs)
+           .enter()
+           .append("rect")
+           .attr("x",  (d) => absX(d))
+           .attr("y", absY(0))
+           .attr("width", wScale(unit))
+           .attr("height", hScale(100))
+           .attr("fill", (d) => (d == 0 ? d3.schemePaired[2 * (selectedBin % 6)] : "#FFF"))
+           .attr("stroke", "#000")
+           .attr("stroke-width", sideLens[1]/40);
       }
       else { 
          d3.select(this.svgTree).attr("style", "display: none;");
+         d3.select(this.svgBar).attr("style", "display: none;");
       }
 
       this.hist.refresh();
