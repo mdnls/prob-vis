@@ -36,8 +36,25 @@ export function main() {
 
     let both = new view.SVGEntropy("#plain-entropy0", m, conf);
 
-    window.addEventListener("resize", () =>  { m.refresh(); vt.refresh(); } );
-    $("#plain-histogram0 > .addItem").click(() => v.incrSelectedBin());
-    $("#plain-histogram0 > .rmItem").click(() => v.decrSelectedBin())
+    window.addEventListener("resize", () =>  { m.refresh(); } );
+    $("#plain-entropy0 > .addItem").click(() => v.incrSelectedBin());
+    $("#plain-entropy0 > .rmItem").click(() => v.decrSelectedBin());
+
+    document.addEventListener("keydown", event => {
+        switch(event.key.toLowerCase()) {
+            case("h"):
+                v.selectCol(m.selectedBin() - 1);
+                break;
+            case("l"):
+                v.selectCol(m.selectedBin() + 1);
+                break;
+            case("k"):
+                v.incrSelectedBin();
+                break;
+            case("j"):
+                v.decrSelectedBin();
+                break;
+        }
+    });
 }
 main();

@@ -133,7 +133,7 @@ export class SVGHistogram implements ModelListener {
          let binHeight = this.model.bins(this.model.selectedBin()).length;
          d3.select(this.svg)
          .selectAll(".colHighlight")
-         .attr("x", (d) => absX(s * this.model.selectedBin() + 0.85 * s/2))
+         .attr("x", (d) => absX(s * this.model.selectedBin() + 0.5 * s ))
          .attr("y", (d) => absY(s * binHeight))
          .attr("style", "font-size: " + scale(s) + "px;");
       }
@@ -184,6 +184,7 @@ export class SVGBinaryTree implements ModelListener {
    private svg: string;
    private attnNode: number[];
    private conf: CONF;
+   private nodeColor: (layerIdx: number, nodeIdx: number) => string;
 
 
    // helpful public information about this view's visual configuration
@@ -204,25 +205,17 @@ export class SVGBinaryTree implements ModelListener {
       this.svg = svgElement;
       this.tree = TreeNode.fullTree(initialDepth);
       this.conf = conf;
+      this.nodeColor = () => "#000";
    }
 
 
    /**
-    * Call attention to a node by highlighting the path to that node from the root node.
+    * Color nodes with a function that maps node indices to their color.
     * 
-    * @param layerIdx layer index of node with attention, relative to the root node.
-    * @param nodeIdx left-to-right index of node with attention in its layer.
+    * @param lookup lookup the color for the node with the given coordinates
     */
-   attention(layerIdx: number, nodeIdx: number) {
-      this.attnNode = [layerIdx, nodeIdx];
-      this.refresh();
-   }
-
-   /**
-    * Remove attention from all nodes.
-    */
-   noAttention() {
-      delete this.attnNode;
+   colorNodes(lookup: (layerIdx: number, nodeIdx: number) => string) {
+      this.nodeColor = lookup;
       this.refresh();
    }
 
@@ -309,19 +302,6 @@ export class SVGBinaryTree implements ModelListener {
          },
          (layerIdx, leaf) => {});
 
-      // jank currying
-      function attnChecker(targetLayer: number, targetNode: number) {
-         return (layerIdx: number, nodeIdx: number) => {
-            let diff = targetLayer - layerIdx;
-            // the nodeIdx of the parent of node k is Math.floor(k/2), similar to child equations for heap structures.
-            // it is a nontrivial proof that repeatedly taking the floor of k/2 is the same as taking the floor after
-            //    dividing all the 2s.
-            return diff >= 0 && Math.floor(targetNode / (2**diff)) == nodeIdx;
-         }
-      }
-
-      let hasAttn = Boolean(this.attnNode) ? attnChecker(this.attnNode[0], this.attnNode[1]) : () => false;
-
       this.tree.treeMap(1, 0,
          (layerIdx, nodeIdx, node) => {
             d3.select(this.svg)
@@ -331,7 +311,7 @@ export class SVGBinaryTree implements ModelListener {
                .attr("r", hScale(itemSize/2))
                .attr("cx", (d) => absX(d.x + itemSize/2))
                .attr("cy", (d) => absY(d.y + itemSize/2))
-               .attr("fill", (d) => { return hasAttn(layerIdx, nodeIdx) ? "red" : "black" });
+               .attr("fill", (d) => this.nodeColor(layerIdx, nodeIdx));
          },
          (layerIdx, nodeIdx, leaf) => {
             d3.select(this.svg)
@@ -341,7 +321,7 @@ export class SVGBinaryTree implements ModelListener {
                .attr("r", hScale(itemSize/2))
                .attr("cx", (d) => absX(d.x + itemSize/2))
                .attr("cy", (d) => absY(d.y + itemSize/2))
-               .attr("fill", (d) => { return hasAttn(layerIdx, nodeIdx) ? "red" : "black" });
+               .attr("fill", (d) => this.nodeColor(layerIdx, nodeIdx));
          });
    }
 }
@@ -409,16 +389,29 @@ export class SVGEntropy implements ModelListener {
          let unit = 100 / (2**(depth-1));
          let markerLocs = Array.from({length: (2**(depth-1)) }, (value, key) => key * unit);
 
-         // determine bar display information
+         // set the colors for the tree
+         let colors = this.conf.colors["histogram"];
+         function isChildFn(targetLayer: number, targetNode: number) {
+            return (layerIdx: number, nodeIdx: number) => {
+               let diff = targetLayer - layerIdx;
+               // the nodeIdx of the parent of node k is Math.floor(k/2), similar to child equations for heap structures.
+               // it is a nontrivial proof that repeatedly taking the floor of k/2 is the same as taking the floor after
+               //    dividing all the 2s.
+               return diff >= 0 && Math.floor(targetNode / (2**diff)) == nodeIdx;
+            }
+         }
+         let childFn = isChildFn(depth, 0);
+         let color = (layerIdx: number, nodeIdx: number) => {
+            return childFn(layerIdx, nodeIdx) ? colors[selectedBin % colors.length] : "#000";
+         }
+         this.tree.colorNodes(color);
 
-         // newPad + unit/2 = pad + absItemSize
+         // determine bar display information
          let pad = this.conf.padding;
          let viewBoxHeight = sideLens[1] - 2 * pad;
          let viewBoxWidth = sideLens[0] - 2 * pad;
          let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
          let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth]);
-
-         let colors = this.conf.colors["histogram"];
 
          function absX(relX: number) {
             return pad + wScale(relX);

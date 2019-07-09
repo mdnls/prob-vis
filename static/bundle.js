@@ -77,7 +77,7 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
                 let binHeight = this.model.bins(this.model.selectedBin()).length;
                 d3.select(this.svg)
                     .selectAll(".colHighlight")
-                    .attr("x", (d) => absX(s * this.model.selectedBin() + 0.85 * s / 2))
+                    .attr("x", (d) => absX(s * this.model.selectedBin() + 0.5 * s))
                     .attr("y", (d) => absY(s * binHeight))
                     .attr("style", "font-size: " + scale(s) + "px;");
             }
@@ -106,13 +106,10 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
             this.svg = svgElement;
             this.tree = model_1.TreeNode.fullTree(initialDepth);
             this.conf = conf;
+            this.nodeColor = () => "#000";
         }
-        attention(layerIdx, nodeIdx) {
-            this.attnNode = [layerIdx, nodeIdx];
-            this.refresh();
-        }
-        noAttention() {
-            delete this.attnNode;
+        colorNodes(lookup) {
+            this.nodeColor = lookup;
             this.refresh();
         }
         setDepth(n) {
@@ -171,13 +168,6 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
                 addEdge(this.svg, node, node.left());
                 addEdge(this.svg, node, node.right());
             }, (layerIdx, leaf) => { });
-            function attnChecker(targetLayer, targetNode) {
-                return (layerIdx, nodeIdx) => {
-                    let diff = targetLayer - layerIdx;
-                    return diff >= 0 && Math.floor(targetNode / (Math.pow(2, diff))) == nodeIdx;
-                };
-            }
-            let hasAttn = Boolean(this.attnNode) ? attnChecker(this.attnNode[0], this.attnNode[1]) : () => false;
             this.tree.treeMap(1, 0, (layerIdx, nodeIdx, node) => {
                 d3.select(this.svg)
                     .append("circle")
@@ -186,7 +176,7 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
                     .attr("r", hScale(itemSize / 2))
                     .attr("cx", (d) => absX(d.x + itemSize / 2))
                     .attr("cy", (d) => absY(d.y + itemSize / 2))
-                    .attr("fill", (d) => { return hasAttn(layerIdx, nodeIdx) ? "red" : "black"; });
+                    .attr("fill", (d) => this.nodeColor(layerIdx, nodeIdx));
             }, (layerIdx, nodeIdx, leaf) => {
                 d3.select(this.svg)
                     .append("circle")
@@ -195,7 +185,7 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
                     .attr("r", hScale(itemSize / 2))
                     .attr("cx", (d) => absX(d.x + itemSize / 2))
                     .attr("cy", (d) => absY(d.y + itemSize / 2))
-                    .attr("fill", (d) => { return hasAttn(layerIdx, nodeIdx) ? "red" : "black"; });
+                    .attr("fill", (d) => this.nodeColor(layerIdx, nodeIdx));
             });
         }
     }
@@ -239,12 +229,23 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
                 this.tree.refresh();
                 let unit = 100 / (Math.pow(2, (depth - 1)));
                 let markerLocs = Array.from({ length: (Math.pow(2, (depth - 1))) }, (value, key) => key * unit);
+                let colors = this.conf.colors["histogram"];
+                function isChildFn(targetLayer, targetNode) {
+                    return (layerIdx, nodeIdx) => {
+                        let diff = targetLayer - layerIdx;
+                        return diff >= 0 && Math.floor(targetNode / (Math.pow(2, diff))) == nodeIdx;
+                    };
+                }
+                let childFn = isChildFn(depth, 0);
+                let color = (layerIdx, nodeIdx) => {
+                    return childFn(layerIdx, nodeIdx) ? colors[selectedBin % colors.length] : "#000";
+                };
+                this.tree.colorNodes(color);
                 let pad = this.conf.padding;
                 let viewBoxHeight = sideLens[1] - 2 * pad;
                 let viewBoxWidth = sideLens[0] - 2 * pad;
                 let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
                 let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth]);
-                let colors = this.conf.colors["histogram"];
                 function absX(relX) {
                     return pad + wScale(relX);
                 }
@@ -452,9 +453,25 @@ define("main", ["require", "exports", "model", "view", "d3"], function (require,
         m.setAll(1);
         let v = new view.SVGHistogram("#svg", m, conf);
         let both = new view.SVGEntropy("#plain-entropy0", m, conf);
-        window.addEventListener("resize", () => { m.refresh(); vt.refresh(); });
-        $("#plain-histogram0 > .addItem").click(() => v.incrSelectedBin());
-        $("#plain-histogram0 > .rmItem").click(() => v.decrSelectedBin());
+        window.addEventListener("resize", () => { m.refresh(); });
+        $("#plain-entropy0 > .addItem").click(() => v.incrSelectedBin());
+        $("#plain-entropy0 > .rmItem").click(() => v.decrSelectedBin());
+        document.addEventListener("keydown", event => {
+            switch (event.key.toLowerCase()) {
+                case ("h"):
+                    v.selectCol(m.selectedBin() - 1);
+                    break;
+                case ("l"):
+                    v.selectCol(m.selectedBin() + 1);
+                    break;
+                case ("k"):
+                    v.incrSelectedBin();
+                    break;
+                case ("j"):
+                    v.decrSelectedBin();
+                    break;
+            }
+        });
     }
     exports.main = main;
     main();
