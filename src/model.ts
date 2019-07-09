@@ -29,7 +29,8 @@ export interface Bins extends Model {
     removeItem(bin: number): void;
     addBin(): void;
     removeBin(): void;
-    bins(bin: number): Item[];
+    getBin(bin: number): Item[];
+    bins(): Item[][];
     numBins(): number;
     selectBin(selection: number): void;
     selectedBin(): number;
@@ -40,6 +41,12 @@ export interface Bins extends Model {
  * Represents items in a binary tree. These can be either nodes or leafs.
  */
 export interface TreeItem extends Item, Model {
+
+  /**
+   * The color of this tree item.
+   */
+  color: string;
+
   /**
    * Return the number of leafs in this tree.
    */
@@ -69,7 +76,7 @@ export interface TreeItem extends Item, Model {
    */
   treeMap(layerIdx: number, nodeIdx: number, 
     nodeFn: (layerIdx: number, nodeIdx: number, node: TreeNode) => any,
-    leafFn: (layerIdx: number, nodeIdx: number, left: TreeLeaf) => any): void;
+    leafFn: (layerIdx: number, nodeIdx: number, leaf: TreeLeaf) => any): void;
 }
 
 /**
@@ -89,8 +96,18 @@ export class TreeNode implements TreeItem {
     } 
   }
 
+  /**
+   * Create a huffman tree which encodes events corresponding to bins, with relative frequencies
+   * given by the relative number of items in each bin.
+   * @param hist a histogram.
+   */
+  public static huffTree(hist: Histogram) {
+    let leaves = Array.from({length: hist.numBins()}, (v, k) => k);
+  }
+
   x: number;
   y: number; 
+  color: string;
   itemType: string;
 
   private leftChild: TreeItem;
@@ -175,6 +192,7 @@ export class TreeLeaf implements Item {
   x: number;
   y: number;
   itemType: string;
+  color: string;
   private listeners: ModelListener[];
 
   addListener(listener: ModelListener) {
@@ -311,10 +329,16 @@ export class Histogram implements Bins {
     }
 
     /**
+     * Return all bins.
+     */
+    bins() {
+      return Array.from({length: this.histBins.length}, (v, k) => this.getBin(k));
+    }
+    /**
      * Return the bin with the given index.
      * @param bin index of a bin.
      */
-    bins(bin: number) {
+    getBin(bin: number) {
       var binArr = this.histBins[bin];
       return Array.from(binArr);
     }

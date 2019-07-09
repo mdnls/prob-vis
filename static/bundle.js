@@ -51,7 +51,7 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
                 .attr("width", viewBoxSideLength)
                 .attr("fill", this.conf.colors["border"][0])
                 .attr("rx", 0.2 * s);
-            var allItems = [].concat(...Array.from({ length: this.model.numBins() }, (value, key) => this.model.bins(key)));
+            var allItems = [].concat(...this.model.bins());
             d3.select(this.svg)
                 .selectAll("#histItem")
                 .remove();
@@ -74,7 +74,7 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
             d3.select(this.svg)
                 .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / s)));
             if (this.model.selectedBin() != -1) {
-                let binHeight = this.model.bins(this.model.selectedBin()).length;
+                let binHeight = this.model.getBin(this.model.selectedBin()).length;
                 d3.select(this.svg)
                     .selectAll(".colHighlight")
                     .attr("x", (d) => absX(s * this.model.selectedBin() + 0.5 * s))
@@ -87,8 +87,8 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
         }
         incrSelectedBin() {
             let s = this.conf.gridBoxSize;
-            if (this.model.selectedBin() != -1 && this.model.bins(this.model.selectedBin()).length * s < 100) {
-                let curItems = this.model.bins(this.model.selectedBin()).length;
+            if (this.model.selectedBin() != -1 && this.model.getBin(this.model.selectedBin()).length * s < 100) {
+                let curItems = this.model.getBin(this.model.selectedBin()).length;
                 if ((curItems + 2) * s < 100) {
                     this.model.addItem(this.model.selectedBin());
                 }
@@ -107,9 +107,15 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
             this.tree = model_1.TreeNode.fullTree(initialDepth);
             this.conf = conf;
             this.nodeColor = () => "#000";
+            this.leafColor = () => "#000";
         }
-        colorNodes(lookup) {
-            this.nodeColor = lookup;
+        colorMap(nodeColor, leafColor) {
+            this.nodeColor = (layerIdx, nodeIdx, node) => {
+                node.color = nodeColor(layerIdx, nodeIdx, node);
+            };
+            this.leafColor = (layerIdx, nodeIdx, leaf) => {
+                leaf.color = leafColor(layerIdx, nodeIdx, leaf);
+            };
             this.refresh();
         }
         setDepth(n) {
@@ -164,6 +170,7 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
                     .attr("stroke-width", hScale(itemSize / 10))
                     .attr("stroke", "gray");
             }
+            this.tree.treeMap(0, 0, this.nodeColor, this.leafColor);
             this.tree.treeMap(0, 0, (layerIdx, nodeIdx, node) => {
                 addEdge(this.svg, node, node.left());
                 addEdge(this.svg, node, node.right());
@@ -176,7 +183,7 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
                     .attr("r", hScale(itemSize / 2))
                     .attr("cx", (d) => absX(d.x + itemSize / 2))
                     .attr("cy", (d) => absY(d.y + itemSize / 2))
-                    .attr("fill", (d) => this.nodeColor(layerIdx, nodeIdx));
+                    .attr("fill", (d) => d.color);
             }, (layerIdx, nodeIdx, leaf) => {
                 d3.select(this.svg)
                     .append("circle")
@@ -185,11 +192,97 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
                     .attr("r", hScale(itemSize / 2))
                     .attr("cx", (d) => absX(d.x + itemSize / 2))
                     .attr("cy", (d) => absY(d.y + itemSize / 2))
-                    .attr("fill", (d) => this.nodeColor(layerIdx, nodeIdx));
+                    .attr("fill", (d) => d.color);
             });
         }
     }
     exports.SVGBinaryTree = SVGBinaryTree;
+    class SVGSoloEntropy {
+        constructor(divElement, model, conf) {
+            this.conf = conf;
+            let defaultIDs = ["svgHist", "svgBar", "svgTree"];
+            this.div = divElement;
+            this.svgHist = divElement + " > #" + defaultIDs[0];
+            this.svgBar = divElement + " > #" + defaultIDs[1];
+            this.svgTree = divElement + " > #" + defaultIDs[2];
+            let d = d3.select(divElement);
+            d.append("svg").attr("id", defaultIDs[0]);
+            d.append("br");
+            d.append("svg").attr("id", defaultIDs[1]);
+            d.append("br");
+            d.append("svg").attr("id", defaultIDs[2]);
+            this.model = model;
+            this.tree = new SVGBinaryTree(this.svgTree, 0, conf);
+            this.hist = new SVGHistogram(this.svgHist, this.model, conf);
+            this.model.addListener(this);
+        }
+        refresh() {
+            let svgHeight = $(this.div).height();
+            let svgWidth = $(this.div).width();
+            let sideLens = [svgHeight * (7 / 16), svgHeight * (1 / 8), svgHeight * (7 / 16)];
+            d3.select(this.svgHist).attr("height", sideLens[0]).attr("width", sideLens[0]);
+            d3.select(this.svgBar).attr("height", sideLens[1]).attr("width", sideLens[0]);
+            d3.select(this.svgTree).attr("height", sideLens[2]).attr("width", sideLens[2]);
+            let selectedBin = this.model.selectedBin();
+            if (selectedBin != -1 && this.model.getBin(selectedBin).length > 0) {
+                d3.select(this.svgTree).attr("style", "display: initial");
+                d3.select(this.svgBar).attr("style", "display: initial");
+                let items = this.model.getBin(selectedBin).length;
+                let total = this.model.bins()
+                    .reduce((running, cur) => (running + cur.length), 0);
+                let distinct = total / items;
+                let depth = Math.ceil(Math.log2(distinct)) + 1;
+                this.tree.setDepth(depth);
+                this.tree.refresh();
+                let unit = 100 / (Math.pow(2, (depth - 1)));
+                let markerLocs = Array.from({ length: (Math.pow(2, (depth - 1))) }, (value, key) => key * unit);
+                let colors = this.conf.colors["histogram"];
+                function isChildFn(targetLayer, targetNode) {
+                    return (layerIdx, nodeIdx) => {
+                        let diff = targetLayer - layerIdx;
+                        return diff >= 0 && Math.floor(targetNode / (Math.pow(2, diff))) == nodeIdx;
+                    };
+                }
+                let childFn = isChildFn(depth, 0);
+                let color = (layerIdx, nodeIdx, node) => {
+                    return childFn(layerIdx, nodeIdx) ? colors[selectedBin % colors.length] : "#000";
+                };
+                this.tree.colorMap(color, color);
+                let pad = this.conf.padding;
+                let viewBoxHeight = sideLens[1] - 2 * pad;
+                let viewBoxWidth = sideLens[0] - 2 * pad;
+                let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
+                let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth]);
+                function absX(relX) {
+                    return pad + wScale(relX);
+                }
+                function absY(relY) {
+                    return pad + hScale(relY);
+                }
+                d3.select(this.svgBar)
+                    .selectAll("rect, line")
+                    .remove();
+                d3.select(this.svgBar)
+                    .selectAll("rect")
+                    .data(markerLocs)
+                    .enter()
+                    .append("rect")
+                    .attr("x", (d) => absX(d))
+                    .attr("y", absY(0))
+                    .attr("width", wScale(unit))
+                    .attr("height", hScale(100))
+                    .attr("fill", (d) => (d == 0 ? colors[selectedBin % colors.length] : "#FFF"))
+                    .attr("stroke", "#000")
+                    .attr("stroke-width", sideLens[1] / 40);
+            }
+            else {
+                d3.select(this.svgTree).attr("style", "display: none;");
+                d3.select(this.svgBar).attr("style", "display: none;");
+            }
+            this.hist.refresh();
+        }
+    }
+    exports.SVGSoloEntropy = SVGSoloEntropy;
     class SVGEntropy {
         constructor(divElement, model, conf) {
             this.conf = conf;
@@ -217,12 +310,12 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
             d3.select(this.svgBar).attr("height", sideLens[1]).attr("width", sideLens[0]);
             d3.select(this.svgTree).attr("height", sideLens[2]).attr("width", sideLens[2]);
             let selectedBin = this.model.selectedBin();
-            if (selectedBin != -1 && this.model.bins(selectedBin).length > 0) {
+            if (selectedBin != -1 && this.model.getBin(selectedBin).length > 0) {
                 d3.select(this.svgTree).attr("style", "display: initial");
                 d3.select(this.svgBar).attr("style", "display: initial");
-                let items = this.model.bins(selectedBin).length;
-                let total = Array.from({ length: this.model.numBins() }, (value, key) => this.model.bins(key))
-                    .reduce((running, cur) => (running + cur.length), 0);
+                let allBins = this.model.bins();
+                let total = allBins.reduce((running, cur) => (running + cur.length), 0);
+                let items = allBins.reduce((running, cur) => cur.length > 0 ? Math.min(running, cur.length) : running, Infinity);
                 let distinct = total / items;
                 let depth = Math.ceil(Math.log2(distinct)) + 1;
                 this.tree.setDepth(depth);
@@ -230,17 +323,18 @@ define("view", ["require", "exports", "model", "d3", "jquery"], function (requir
                 let unit = 100 / (Math.pow(2, (depth - 1)));
                 let markerLocs = Array.from({ length: (Math.pow(2, (depth - 1))) }, (value, key) => key * unit);
                 let colors = this.conf.colors["histogram"];
-                function isChildFn(targetLayer, targetNode) {
-                    return (layerIdx, nodeIdx) => {
-                        let diff = targetLayer - layerIdx;
-                        return diff >= 0 && Math.floor(targetNode / (Math.pow(2, diff))) == nodeIdx;
-                    };
-                }
-                let childFn = isChildFn(depth, 0);
-                let color = (layerIdx, nodeIdx) => {
-                    return childFn(layerIdx, nodeIdx) ? colors[selectedBin % colors.length] : "#000";
+                let colorsPerBin = [].concat(...Array.from({ length: this.model.numBins() }, (value, key) => key)
+                    .map((idx) => this.model.getBin(idx).map(() => colors[idx % colors.length])));
+                let leafColor = (layerIdx, nodeIdx) => nodeIdx < colorsPerBin.length ? colorsPerBin[nodeIdx] : "#000";
+                let nodeColor = (layerIdx, nodeIdx, node) => {
+                    if (node.left().color == node.right().color) {
+                        return node.left().color;
+                    }
+                    else {
+                        return "#000";
+                    }
                 };
-                this.tree.colorNodes(color);
+                this.tree.colorMap(nodeColor, leafColor);
                 let pad = this.conf.padding;
                 let viewBoxHeight = sideLens[1] - 2 * pad;
                 let viewBoxWidth = sideLens[0] - 2 * pad;
@@ -288,6 +382,9 @@ define("model", ["require", "exports"], function (require, exports) {
             else {
                 return new TreeNode(this.fullTree(d - 1), this.fullTree(d - 1));
             }
+        }
+        static huffTree(hist) {
+            let leaves = Array.from({ length: hist.numBins() }, (v, k) => k);
         }
         constructor(leftChild, rightChild) {
             this.leftChild = leftChild;
@@ -401,7 +498,10 @@ define("model", ["require", "exports"], function (require, exports) {
             }
             this.refresh();
         }
-        bins(bin) {
+        bins() {
+            return Array.from({ length: this.histBins.length }, (v, k) => this.getBin(k));
+        }
+        getBin(bin) {
             var binArr = this.histBins[bin];
             return Array.from(binArr);
         }

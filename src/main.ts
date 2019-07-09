@@ -56,5 +56,9 @@ export function main() {
                 break;
         }
     });
+    // TODO: currently, low entropy distributions with many items allocate extra nodes (1 per item) when fewer should be allocated
+    // potentially the fix is to divide the number of items by the # in bin with the fewest items as normalization
+    // but this would require changing the array which contains colors to match.
+    // TODO: the color generation has to use a huffman tree
 }
 main();
