@@ -71,6 +71,18 @@ export class Histogram implements Bins {
     private itemType: string = "default";
 
     /**
+     * Return a histogram with one bin for every element in the input integer array. This bin contains as many items as specified
+     * by the array at that index.
+     * 
+     * @param arr an array of integers describing how many items should be in each bin.
+     */
+    public static fromArray(arr: number[]) {
+      let hist = new Histogram(arr.length);
+      arr.forEach((numItems, index) => { for(let i = 0; i < numItems; i++) { hist.addItem(index)} });
+      return hist;
+    }
+
+    /**
      * Represents a histogram containing different bins with unique items.
      * @param numBins Create a histogram with the specified number of bins.
      */
