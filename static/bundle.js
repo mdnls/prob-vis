@@ -1,456 +1,10 @@
-define("view", ["require", "exports", "model", "d3", "jquery"], function (require, exports, model_1, d3, $) {
+define("model/model", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class SVGHistogram {
-        constructor(svgElement, model, conf) {
-            this.svg = svgElement;
-            this.model = model;
-            this.conf = conf;
-            this.model.addListener(this);
-            d3.select(this.svg)
-                .append("rect")
-                .attr("class", "bottomBorder");
-            d3.select(this.svg)
-                .append("text")
-                .text("*")
-                .attr("class", "colHighlight")
-                .attr("text-anchor", "middle")
-                .attr("dominant-baseline", "middle");
-            this.refresh();
-        }
-        refresh() {
-            let pad = this.conf.padding;
-            let svgWidth = $(this.svg).width();
-            let svgHeight = $(this.svg).height();
-            let viewBoxSideLength = Math.min(svgWidth, svgHeight) - 2 * pad;
-            let xOffset = (svgWidth - viewBoxSideLength) / 2;
-            let yOffset = (svgHeight - viewBoxSideLength) / 2;
-            let scale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxSideLength]);
-            let s = scale.invert(viewBoxSideLength / this.model.numBins());
-            this.pad = pad;
-            this.width = svgWidth;
-            this.height = svgHeight;
-            this.viewBoxSideLength = viewBoxSideLength;
-            this.xOffset = xOffset;
-            this.yOffset = yOffset;
-            let colors = this.conf.colors["histogram"];
-            function absX(relX) {
-                return xOffset + scale(relX);
-            }
-            function invAbsX(absX) {
-                return scale.invert(absX - xOffset);
-            }
-            function absY(relY) {
-                return svgHeight - yOffset - scale(relY);
-            }
-            d3.select(this.svg)
-                .selectAll(".bottomBorder")
-                .attr("x", absX(0))
-                .attr("y", absY(-1))
-                .attr("height", scale(0.5))
-                .attr("width", viewBoxSideLength)
-                .attr("fill", this.conf.colors["border"][0])
-                .attr("rx", 0.2 * s);
-            var allItems = [].concat(...this.model.bins());
-            d3.select(this.svg)
-                .selectAll("#histItem")
-                .remove();
-            d3.select(this.svg)
-                .selectAll("rect #histItem")
-                .data(allItems)
-                .enter()
-                .append("rect")
-                .attr("id", "histItem")
-                .attr("width", scale(s * 0.85))
-                .attr("height", scale(s * 0.85))
-                .attr("x", (d) => absX(d.x * s + s * 0.075))
-                .attr("y", (d) => absY((d.y + 1) * s + s * 0.075))
-                .attr("fill", (d) => colors[d.x % colors.length]);
-            function handleClick() {
-                let absX = d3.event.x;
-                let col = Math.floor(invAbsX(absX) / s);
-                this.selectCol(col);
-            }
-            d3.select(this.svg)
-                .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / s)));
-            if (this.model.selectedBin() != -1) {
-                let binHeight = this.model.getBin(this.model.selectedBin()).length;
-                d3.select(this.svg)
-                    .selectAll(".colHighlight")
-                    .attr("x", (d) => absX(s * this.model.selectedBin() + 0.5 * s))
-                    .attr("y", (d) => absY(s * binHeight))
-                    .attr("style", "font-size: " + scale(s) + "px;");
-            }
-        }
-        selectCol(bin) {
-            this.model.selectBin(bin);
-        }
-        incrSelectedBin() {
-            let s = this.conf.gridBoxSize;
-            if (this.model.selectedBin() != -1 && this.model.getBin(this.model.selectedBin()).length * s < 100) {
-                let curItems = this.model.getBin(this.model.selectedBin()).length;
-                if ((curItems + 2) * s < 100) {
-                    this.model.addItem(this.model.selectedBin());
-                }
-            }
-        }
-        decrSelectedBin() {
-            if (this.model.selectedBin() != -1) {
-                this.model.removeItem(this.model.selectedBin());
-            }
-        }
-    }
-    exports.SVGHistogram = SVGHistogram;
-    class SVGBinaryTree {
-        constructor(svgElement, initialDepth, conf) {
-            this.svg = svgElement;
-            this.tree = model_1.TreeNode.fullTree(initialDepth);
-            this.conf = conf;
-            this.nodeColor = () => "#000";
-            this.leafColor = () => "#000";
-        }
-        colorMap(nodeColor, leafColor) {
-            this.nodeColor = (layerIdx, nodeIdx, node) => {
-                node.color = nodeColor(layerIdx, nodeIdx, node);
-            };
-            this.leafColor = (layerIdx, nodeIdx, leaf) => {
-                leaf.color = leafColor(layerIdx, nodeIdx, leaf);
-            };
-            this.refresh();
-        }
-        setDepth(n) {
-            this.tree = model_1.TreeNode.fullTree(n);
-            this.refresh();
-        }
-        refresh() {
-            let numLeafs = this.tree.numLeaves();
-            let itemSize = 100 / (2 * numLeafs - 1);
-            let pad = this.conf.padding;
-            let svgWidth = $(this.svg).width();
-            let svgHeight = $(this.svg).height();
-            let viewBoxWidth = svgWidth - 2 * pad;
-            let viewBoxHeight = svgHeight - 2 * pad;
-            let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth]);
-            let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
-            this.numLeafs = numLeafs;
-            this.nodeRadius = hScale(itemSize / 2);
-            this.width = svgWidth;
-            this.height = svgHeight;
-            this.viewBoxWidth = viewBoxWidth;
-            this.viewBoxHeight = viewBoxHeight;
-            function absX(relX) {
-                return pad + wScale(relX);
-            }
-            function absY(relY) {
-                return pad + hScale(relY);
-            }
-            this.tree.treeMap(0, 0, (layerIdx, nodeIdx, node) => {
-                node.x = (node.left().x + node.right().x) / 2;
-                node.y = node.left().y + 2 * itemSize;
-                node.itemType = "treeNode";
-            }, (layerIdx, nodeIdx, leaf) => {
-                leaf.x = 2 * nodeIdx * itemSize;
-                leaf.y = 0;
-                leaf.itemType = "treeLeaf";
-            });
-            d3.select(this.svg)
-                .selectAll("#treeItem")
-                .remove();
-            d3.select(this.svg)
-                .selectAll("#treeEdge")
-                .remove();
-            function addEdge(svg, parent, child) {
-                d3.select(svg)
-                    .append("line")
-                    .attr("id", "treeEdge")
-                    .attr("x1", (d) => absX(parent.x + itemSize / 2))
-                    .attr("x2", (d) => absX(child.x + itemSize / 2))
-                    .attr("y1", (d) => absY(parent.y + itemSize / 2))
-                    .attr("y2", (d) => absY(child.y + itemSize / 2))
-                    .attr("stroke-width", hScale(itemSize / 10))
-                    .attr("stroke", "gray");
-            }
-            this.tree.treeMap(0, 0, this.nodeColor, this.leafColor);
-            this.tree.treeMap(0, 0, (layerIdx, nodeIdx, node) => {
-                addEdge(this.svg, node, node.left());
-                addEdge(this.svg, node, node.right());
-            }, (layerIdx, leaf) => { });
-            this.tree.treeMap(1, 0, (layerIdx, nodeIdx, node) => {
-                d3.select(this.svg)
-                    .append("circle")
-                    .data([node])
-                    .attr("id", "treeItem")
-                    .attr("r", hScale(itemSize / 2))
-                    .attr("cx", (d) => absX(d.x + itemSize / 2))
-                    .attr("cy", (d) => absY(d.y + itemSize / 2))
-                    .attr("fill", (d) => d.color);
-            }, (layerIdx, nodeIdx, leaf) => {
-                d3.select(this.svg)
-                    .append("circle")
-                    .data([leaf])
-                    .attr("id", "treeItem")
-                    .attr("r", hScale(itemSize / 2))
-                    .attr("cx", (d) => absX(d.x + itemSize / 2))
-                    .attr("cy", (d) => absY(d.y + itemSize / 2))
-                    .attr("fill", (d) => d.color);
-            });
-        }
-    }
-    exports.SVGBinaryTree = SVGBinaryTree;
-    class SVGSoloEntropy {
-        constructor(divElement, model, conf) {
-            this.conf = conf;
-            let defaultIDs = ["svgHist", "svgBar", "svgTree"];
-            this.div = divElement;
-            this.svgHist = divElement + " > #" + defaultIDs[0];
-            this.svgBar = divElement + " > #" + defaultIDs[1];
-            this.svgTree = divElement + " > #" + defaultIDs[2];
-            let d = d3.select(divElement);
-            d.append("svg").attr("id", defaultIDs[0]);
-            d.append("br");
-            d.append("svg").attr("id", defaultIDs[1]);
-            d.append("br");
-            d.append("svg").attr("id", defaultIDs[2]);
-            this.model = model;
-            this.tree = new SVGBinaryTree(this.svgTree, 0, conf);
-            this.hist = new SVGHistogram(this.svgHist, this.model, conf);
-            this.model.addListener(this);
-        }
-        refresh() {
-            let svgHeight = $(this.div).height();
-            let svgWidth = $(this.div).width();
-            let sideLens = [svgHeight * (7 / 16), svgHeight * (1 / 8), svgHeight * (7 / 16)];
-            d3.select(this.svgHist).attr("height", sideLens[0]).attr("width", sideLens[0]);
-            d3.select(this.svgBar).attr("height", sideLens[1]).attr("width", sideLens[0]);
-            d3.select(this.svgTree).attr("height", sideLens[2]).attr("width", sideLens[2]);
-            let selectedBin = this.model.selectedBin();
-            if (selectedBin != -1 && this.model.getBin(selectedBin).length > 0) {
-                d3.select(this.svgTree).attr("style", "display: initial");
-                d3.select(this.svgBar).attr("style", "display: initial");
-                let items = this.model.getBin(selectedBin).length;
-                let total = this.model.bins()
-                    .reduce((running, cur) => (running + cur.length), 0);
-                let distinct = total / items;
-                let depth = Math.ceil(Math.log2(distinct)) + 1;
-                this.tree.setDepth(depth);
-                this.tree.refresh();
-                let unit = 100 / (Math.pow(2, (depth - 1)));
-                let markerLocs = Array.from({ length: (Math.pow(2, (depth - 1))) }, (value, key) => key * unit);
-                let colors = this.conf.colors["histogram"];
-                function isChildFn(targetLayer, targetNode) {
-                    return (layerIdx, nodeIdx) => {
-                        let diff = targetLayer - layerIdx;
-                        return diff >= 0 && Math.floor(targetNode / (Math.pow(2, diff))) == nodeIdx;
-                    };
-                }
-                let childFn = isChildFn(depth, 0);
-                let color = (layerIdx, nodeIdx, node) => {
-                    return childFn(layerIdx, nodeIdx) ? colors[selectedBin % colors.length] : "#000";
-                };
-                this.tree.colorMap(color, color);
-                let pad = this.conf.padding;
-                let viewBoxHeight = sideLens[1] - 2 * pad;
-                let viewBoxWidth = sideLens[0] - 2 * pad;
-                let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
-                let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth]);
-                function absX(relX) {
-                    return pad + wScale(relX);
-                }
-                function absY(relY) {
-                    return pad + hScale(relY);
-                }
-                d3.select(this.svgBar)
-                    .selectAll("rect, line")
-                    .remove();
-                d3.select(this.svgBar)
-                    .selectAll("rect")
-                    .data(markerLocs)
-                    .enter()
-                    .append("rect")
-                    .attr("x", (d) => absX(d))
-                    .attr("y", absY(0))
-                    .attr("width", wScale(unit))
-                    .attr("height", hScale(100))
-                    .attr("fill", (d) => (d == 0 ? colors[selectedBin % colors.length] : "#FFF"))
-                    .attr("stroke", "#000")
-                    .attr("stroke-width", sideLens[1] / 40);
-            }
-            else {
-                d3.select(this.svgTree).attr("style", "display: none;");
-                d3.select(this.svgBar).attr("style", "display: none;");
-            }
-            this.hist.refresh();
-        }
-    }
-    exports.SVGSoloEntropy = SVGSoloEntropy;
-    class SVGEntropy {
-        constructor(divElement, model, conf) {
-            this.conf = conf;
-            let defaultIDs = ["svgHist", "svgBar", "svgTree"];
-            this.div = divElement;
-            this.svgHist = divElement + " > #" + defaultIDs[0];
-            this.svgBar = divElement + " > #" + defaultIDs[1];
-            this.svgTree = divElement + " > #" + defaultIDs[2];
-            let d = d3.select(divElement);
-            d.append("svg").attr("id", defaultIDs[0]);
-            d.append("br");
-            d.append("svg").attr("id", defaultIDs[1]);
-            d.append("br");
-            d.append("svg").attr("id", defaultIDs[2]);
-            this.model = model;
-            this.tree = new SVGBinaryTree(this.svgTree, 0, conf);
-            this.hist = new SVGHistogram(this.svgHist, this.model, conf);
-            this.model.addListener(this);
-        }
-        refresh() {
-            let svgHeight = $(this.div).height();
-            let svgWidth = $(this.div).width();
-            let sideLens = [svgHeight * (7 / 16), svgHeight * (1 / 8), svgHeight * (7 / 16)];
-            d3.select(this.svgHist).attr("height", sideLens[0]).attr("width", sideLens[0]);
-            d3.select(this.svgBar).attr("height", sideLens[1]).attr("width", sideLens[0]);
-            d3.select(this.svgTree).attr("height", sideLens[2]).attr("width", sideLens[2]);
-            let selectedBin = this.model.selectedBin();
-            if (selectedBin != -1 && this.model.getBin(selectedBin).length > 0) {
-                d3.select(this.svgTree).attr("style", "display: initial");
-                d3.select(this.svgBar).attr("style", "display: initial");
-                let allBins = this.model.bins();
-                let total = allBins.reduce((running, cur) => (running + cur.length), 0);
-                let items = allBins.reduce((running, cur) => cur.length > 0 ? Math.min(running, cur.length) : running, Infinity);
-                let distinct = total / items;
-                let depth = Math.ceil(Math.log2(distinct)) + 1;
-                this.tree.setDepth(depth);
-                this.tree.refresh();
-                let unit = 100 / (Math.pow(2, (depth - 1)));
-                let markerLocs = Array.from({ length: (Math.pow(2, (depth - 1))) }, (value, key) => key * unit);
-                let colors = this.conf.colors["histogram"];
-                let colorsPerBin = [].concat(...Array.from({ length: this.model.numBins() }, (value, key) => key)
-                    .map((idx) => this.model.getBin(idx).map(() => colors[idx % colors.length])));
-                let leafColor = (layerIdx, nodeIdx) => nodeIdx < colorsPerBin.length ? colorsPerBin[nodeIdx] : "#000";
-                let nodeColor = (layerIdx, nodeIdx, node) => {
-                    if (node.left().color == node.right().color) {
-                        return node.left().color;
-                    }
-                    else {
-                        return "#000";
-                    }
-                };
-                this.tree.colorMap(nodeColor, leafColor);
-                let pad = this.conf.padding;
-                let viewBoxHeight = sideLens[1] - 2 * pad;
-                let viewBoxWidth = sideLens[0] - 2 * pad;
-                let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
-                let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth]);
-                function absX(relX) {
-                    return pad + wScale(relX);
-                }
-                function absY(relY) {
-                    return pad + hScale(relY);
-                }
-                d3.select(this.svgBar)
-                    .selectAll("rect, line")
-                    .remove();
-                d3.select(this.svgBar)
-                    .selectAll("rect")
-                    .data(markerLocs)
-                    .enter()
-                    .append("rect")
-                    .attr("x", (d) => absX(d))
-                    .attr("y", absY(0))
-                    .attr("width", wScale(unit))
-                    .attr("height", hScale(100))
-                    .attr("fill", (d) => (d == 0 ? colors[selectedBin % colors.length] : "#FFF"))
-                    .attr("stroke", "#000")
-                    .attr("stroke-width", sideLens[1] / 40);
-            }
-            else {
-                d3.select(this.svgTree).attr("style", "display: none;");
-                d3.select(this.svgBar).attr("style", "display: none;");
-            }
-            this.hist.refresh();
-        }
-    }
-    exports.SVGEntropy = SVGEntropy;
 });
-define("model", ["require", "exports"], function (require, exports) {
+define("model/bins", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class TreeNode {
-        static fullTree(d) {
-            if (d <= 1) {
-                return new TreeLeaf();
-            }
-            else {
-                return new TreeNode(this.fullTree(d - 1), this.fullTree(d - 1));
-            }
-        }
-        static huffTree(hist) {
-            let leaves = Array.from({ length: hist.numBins() }, (v, k) => k);
-        }
-        constructor(leftChild, rightChild) {
-            this.leftChild = leftChild;
-            this.rightChild = rightChild;
-            this.leafs = this.leftChild.numLeaves() + this.rightChild.numLeaves();
-            this.d = 1 + Math.max(this.leftChild.depth() + this.rightChild.depth());
-        }
-        addListener(listener) {
-            this.listeners.push(listener);
-        }
-        refresh() {
-            this.listeners.forEach((listener) => listener.refresh());
-        }
-        numLeaves() {
-            return this.leafs;
-        }
-        depth() {
-            return this.d;
-        }
-        layer(n) {
-            if (n == 0) {
-                return [this];
-            }
-            else {
-                return this.leftChild.layer(n - 1).concat(this.rightChild.layer(n - 1));
-            }
-        }
-        left() {
-            return this.leftChild;
-        }
-        right() {
-            return this.rightChild;
-        }
-        treeMap(layerIdx, nodeIdx, nodeFn, leafFn) {
-            this.leftChild.treeMap(layerIdx + 1, 2 * nodeIdx, nodeFn, leafFn);
-            this.rightChild.treeMap(layerIdx + 1, 2 * nodeIdx + 1, nodeFn, leafFn);
-            nodeFn(layerIdx, nodeIdx, this);
-        }
-    }
-    exports.TreeNode = TreeNode;
-    class TreeLeaf {
-        addListener(listener) {
-            this.listeners.push(listener);
-        }
-        refresh() {
-            this.listeners.forEach((listener) => listener.refresh());
-        }
-        numLeaves() {
-            return 1;
-        }
-        depth() {
-            return 1;
-        }
-        layer(n) {
-            if (n == 0) {
-                return [this];
-            }
-            else {
-                return [];
-            }
-        }
-        treeMap(layerIdx, nodeIdx, nodeFn, leafFn) {
-            leafFn(layerIdx, nodeIdx, this);
-        }
-    }
-    exports.TreeLeaf = TreeLeaf;
     class BinItem {
         constructor(x, y, itemType) {
             this.populate(x, y, itemType);
@@ -527,7 +81,506 @@ define("model", ["require", "exports"], function (require, exports) {
     }
     exports.Histogram = Histogram;
 });
-define("main", ["require", "exports", "model", "view", "d3"], function (require, exports, model, view, d3) {
+define("model/trees", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class TreeNode {
+        static fullTree(d) {
+            if (d <= 1) {
+                return new TreeLeaf();
+            }
+            else {
+                return new TreeNode(this.fullTree(d - 1), this.fullTree(d - 1));
+            }
+        }
+        static huffTree(binModel) {
+            let bins = binModel.bins();
+            let total = bins.reduce((prev, cur) => prev + cur.length, 0);
+            let binFreqs = bins.map((k) => k.length / total);
+            let binNodes = Array.from({ length: bins.length }, (v, k) => {
+                let tl = new TreeLeaf();
+                tl.itemType = String(k);
+                return tl;
+            });
+            let binSortKeys = Array.from({ length: bins.length }, (v, k) => [0, k]);
+            let sort = function () {
+                let idxs = Array.from({ length: binFreqs.length }, (v, k) => k);
+                idxs.sort((a, b) => {
+                    return (binFreqs[b] - binFreqs[a] != 0) ? (binFreqs[b] - binFreqs[a]) : (b - a);
+                });
+                let newBinFreqs = Array.from({ length: binFreqs.length }, (v, k) => binFreqs[idxs[k]]);
+                let newBinNodes = Array.from({ length: binNodes.length }, (v, k) => binNodes[idxs[k]]);
+                let newBinSortKeys = Array.from({ length: binSortKeys.length }, (v, k) => binSortKeys[idxs[k]]);
+                binFreqs = newBinFreqs;
+                binNodes = newBinNodes;
+                binSortKeys = newBinSortKeys;
+            };
+            while (binFreqs.length > 1) {
+                sort();
+                binFreqs.push(binFreqs.pop() + binFreqs.pop());
+                let a = binNodes.pop();
+                let ak = binSortKeys.pop();
+                let b = binNodes.pop();
+                let bk = binSortKeys.pop();
+                if (ak[0] < bk[0]) {
+                    let lk = [ak[0] + 1, ak[1]];
+                    binNodes.push(new TreeNode(b, a));
+                    binSortKeys.push(lk);
+                }
+                else if (ak[0] > bk[0]) {
+                    let lk = [bk[0] + 1, bk[1]];
+                    binNodes.push(new TreeNode(a, b));
+                    binSortKeys.push(lk);
+                }
+                else {
+                    if (ak[1] > bk[1]) {
+                        let lk = [ak[0] + 1, ak[1]];
+                        binNodes.push(new TreeNode(b, a));
+                        binSortKeys.push(lk);
+                    }
+                    else {
+                        let lk = [bk[0] + 1, bk[1]];
+                        binNodes.push(new TreeNode(a, b));
+                        binSortKeys.push(lk);
+                    }
+                }
+            }
+            let huffTree = binNodes[0];
+            let balance = (layerIdx, nodeIdx, node) => {
+                if (node.left().itemType && huffTree.depth() - (layerIdx + 1) > 1) {
+                    let target = TreeNode.fullTree(huffTree.depth() - (layerIdx + 1));
+                    let type = node.left().itemType;
+                    target.treeMap((l, k, n) => { n.itemType = type; }, (l, k, n) => { n.itemType = type; });
+                    node.leftChild = target;
+                }
+                if (node.right().itemType && huffTree.depth() - (layerIdx + 1) > 1) {
+                    let target = TreeNode.fullTree(huffTree.depth() - (layerIdx + 1));
+                    let type = node.right().itemType;
+                    target.treeMap((l, k, n) => { n.itemType = type; }, (l, k, n) => { n.itemType = type; });
+                    node.rightChild = target;
+                }
+            };
+            huffTree.treeMap(balance, x => x);
+            return huffTree;
+        }
+        constructor(leftChild, rightChild) {
+            this.leftChild = leftChild;
+            this.rightChild = rightChild;
+            this.updateState();
+        }
+        addListener(listener) {
+            this.listeners.push(listener);
+        }
+        refresh() {
+            this.listeners.forEach((listener) => listener.refresh());
+        }
+        numLeaves() {
+            return this.leafs;
+        }
+        depth() {
+            return this.d;
+        }
+        layer(n) {
+            if (n == 0) {
+                return [this];
+            }
+            else {
+                return this.leftChild.layer(n - 1).concat(this.rightChild.layer(n - 1));
+            }
+        }
+        left() {
+            return this.leftChild;
+        }
+        right() {
+            return this.rightChild;
+        }
+        updateState() {
+            this.leafs = this.leftChild.numLeaves() + this.rightChild.numLeaves();
+            this.d = 1 + Math.max(this.leftChild.depth(), this.rightChild.depth());
+        }
+        _treeMap(layerIdx, nodeIdx, nodeFn, leafFn) {
+            this.leftChild._treeMap(layerIdx + 1, 2 * nodeIdx, nodeFn, leafFn);
+            this.rightChild._treeMap(layerIdx + 1, 2 * nodeIdx + 1, nodeFn, leafFn);
+            nodeFn(layerIdx, nodeIdx, this);
+            this.updateState();
+        }
+        treeMap(nodeFn, leafFn) {
+            this._treeMap(0, 0, nodeFn, leafFn);
+        }
+    }
+    exports.TreeNode = TreeNode;
+    class TreeLeaf {
+        addListener(listener) {
+            this.listeners.push(listener);
+        }
+        refresh() {
+            this.listeners.forEach((listener) => listener.refresh());
+        }
+        numLeaves() {
+            return 1;
+        }
+        depth() {
+            return 1;
+        }
+        layer(n) {
+            if (n == 0) {
+                return [this];
+            }
+            else {
+                return [];
+            }
+        }
+        _treeMap(layerIdx, nodeIdx, nodeFn, leafFn) {
+            leafFn(layerIdx, nodeIdx, this);
+        }
+        treeMap(nodeFn, leafFn) {
+            this._treeMap(0, 0, nodeFn, leafFn);
+        }
+    }
+    exports.TreeLeaf = TreeLeaf;
+});
+define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"], function (require, exports, trees_1, d3, $) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class SVGBinaryTree {
+        constructor(svgElement, initialDepth, conf) {
+            this.svg = svgElement;
+            this.tree = trees_1.TreeNode.fullTree(initialDepth);
+            this.conf = conf;
+            this.nodeColor = () => "#000";
+            this.leafColor = () => "#000";
+        }
+        colorMap(nodeColor, leafColor) {
+            this.nodeColor = (layerIdx, nodeIdx, node) => {
+                node.color = nodeColor(layerIdx, nodeIdx, node);
+            };
+            this.leafColor = (layerIdx, nodeIdx, leaf) => {
+                leaf.color = leafColor(layerIdx, nodeIdx, leaf);
+            };
+            this.refresh();
+        }
+        setDepth(n) {
+            this.tree = trees_1.TreeNode.fullTree(n);
+            this.refresh();
+        }
+        setTree(tree) {
+            this.tree = tree;
+            this.refresh();
+        }
+        refresh() {
+            let numLeafs = this.tree.numLeaves();
+            let itemSize = 100 / (2 * numLeafs - 1);
+            let pad = this.conf.padding;
+            let svgWidth = $(this.svg).width();
+            let svgHeight = $(this.svg).height();
+            let viewBoxWidth = svgWidth - 2 * pad;
+            let viewBoxHeight = svgHeight - 2 * pad;
+            let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth]);
+            let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
+            this.numLeafs = numLeafs;
+            this.nodeRadius = hScale(itemSize / 2);
+            this.width = svgWidth;
+            this.height = svgHeight;
+            this.viewBoxWidth = viewBoxWidth;
+            this.viewBoxHeight = viewBoxHeight;
+            function absX(relX) {
+                return pad + wScale(relX);
+            }
+            function absY(relY) {
+                return pad + hScale(relY);
+            }
+            let d = this.tree.depth();
+            this.tree.treeMap((layerIdx, nodeIdx, node) => {
+                node.x = (node.left().x + node.right().x) / 2;
+                node.y = 100 * (d - (layerIdx + 1)) / d;
+            }, (layerIdx, nodeIdx, leaf) => {
+                leaf.x = 2 * nodeIdx * itemSize;
+                leaf.y = 0;
+            });
+            d3.select(this.svg)
+                .selectAll("#treeItem")
+                .remove();
+            d3.select(this.svg)
+                .selectAll("#treeEdge")
+                .remove();
+            function addEdge(svg, parent, child) {
+                d3.select(svg)
+                    .append("line")
+                    .attr("id", "treeEdge")
+                    .attr("x1", (d) => absX(parent.x + itemSize / 2))
+                    .attr("x2", (d) => absX(child.x + itemSize / 2))
+                    .attr("y1", (d) => absY(parent.y + itemSize / 2))
+                    .attr("y2", (d) => absY(child.y + itemSize / 2))
+                    .attr("stroke-width", hScale(itemSize / 5))
+                    .attr("stroke", "gray");
+            }
+            this.tree.treeMap(this.nodeColor, this.leafColor);
+            this.tree.treeMap((layerIdx, nodeIdx, node) => {
+                addEdge(this.svg, node, node.left());
+                addEdge(this.svg, node, node.right());
+            }, (layerIdx, leaf) => { });
+            this.tree._treeMap(1, 0, (layerIdx, nodeIdx, node) => {
+                d3.select(this.svg)
+                    .append("circle")
+                    .data([node])
+                    .attr("id", "treeItem")
+                    .attr("r", wScale(itemSize / 2))
+                    .attr("cx", (d) => absX(d.x + itemSize / 2))
+                    .attr("cy", (d) => absY(d.y + itemSize / 2))
+                    .attr("fill", (d) => d.color);
+            }, (layerIdx, nodeIdx, leaf) => {
+                d3.select(this.svg)
+                    .append("circle")
+                    .data([leaf])
+                    .attr("id", "treeItem")
+                    .attr("r", wScale(itemSize / 2))
+                    .attr("cx", (d) => absX(d.x + itemSize / 2))
+                    .attr("cy", (d) => absY(d.y + itemSize / 2))
+                    .attr("fill", (d) => d.color);
+            });
+        }
+    }
+    exports.SVGBinaryTree = SVGBinaryTree;
+});
+define("view/histogram", ["require", "exports", "d3", "jquery"], function (require, exports, d3, $) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class SVGHistogram {
+        constructor(svgElement, model, conf) {
+            this.svg = svgElement;
+            this.model = model;
+            this.conf = conf;
+            this.model.addListener(this);
+            d3.select(this.svg)
+                .append("rect")
+                .attr("class", "bottomBorder");
+            d3.select(this.svg)
+                .append("text")
+                .text("*")
+                .attr("class", "colHighlight")
+                .attr("text-anchor", "middle")
+                .attr("dominant-baseline", "middle");
+            this.refresh();
+        }
+        refresh() {
+            let pad = this.conf.padding;
+            let svgWidth = $(this.svg).width();
+            let svgHeight = $(this.svg).height();
+            let viewBoxSideLength = Math.min(svgWidth, svgHeight) - 2 * pad;
+            let xOffset = (svgWidth - viewBoxSideLength) / 2;
+            let yOffset = (svgHeight - viewBoxSideLength) / 2;
+            let scale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxSideLength]);
+            let s = scale.invert(viewBoxSideLength / this.model.numBins());
+            this.s = s;
+            this.pad = pad;
+            this.width = svgWidth;
+            this.height = svgHeight;
+            this.viewBoxSideLength = viewBoxSideLength;
+            this.xOffset = xOffset;
+            this.yOffset = yOffset;
+            let colors = this.conf.colors["histogram"];
+            function absX(relX) {
+                return xOffset + scale(relX);
+            }
+            function invAbsX(absX) {
+                return scale.invert(absX - xOffset);
+            }
+            function absY(relY) {
+                return svgHeight - yOffset - scale(relY);
+            }
+            d3.select(this.svg)
+                .selectAll(".bottomBorder")
+                .attr("x", absX(0))
+                .attr("y", absY(-1))
+                .attr("height", scale(0.5))
+                .attr("width", viewBoxSideLength)
+                .attr("fill", this.conf.colors["border"][0])
+                .attr("rx", 0.2 * s);
+            var allItems = [].concat(...this.model.bins());
+            d3.select(this.svg)
+                .selectAll("#histItem")
+                .remove();
+            d3.select(this.svg)
+                .selectAll("rect #histItem")
+                .data(allItems)
+                .enter()
+                .append("rect")
+                .attr("id", "histItem")
+                .attr("width", scale(s * 0.85))
+                .attr("height", scale(s * 0.85))
+                .attr("x", (d) => absX(d.x * s + s * 0.075))
+                .attr("y", (d) => absY((d.y + 1) * s + s * 0.075))
+                .attr("fill", (d) => colors[d.x % colors.length]);
+            function handleClick() {
+                let absX = d3.event.x;
+                let col = Math.floor(invAbsX(absX) / s);
+                this.selectCol(col);
+            }
+            d3.select(this.svg)
+                .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / s)));
+            if (this.model.selectedBin() != -1) {
+                let binHeight = this.model.getBin(this.model.selectedBin()).length;
+                d3.select(this.svg)
+                    .selectAll(".colHighlight")
+                    .attr("x", (d) => absX(s * this.model.selectedBin() + 0.5 * s))
+                    .attr("y", (d) => absY(s * binHeight))
+                    .attr("style", "font-size: " + scale(s) + "px;");
+            }
+        }
+        selectCol(bin) {
+            this.model.selectBin(bin);
+        }
+        incrSelectedBin() {
+            if (this.model.selectedBin() != -1) {
+                let curItems = this.model.getBin(this.model.selectedBin()).length;
+                if ((curItems + 1) * this.s < 100) {
+                    this.model.addItem(this.model.selectedBin());
+                }
+            }
+        }
+        decrSelectedBin() {
+            if (this.model.selectedBin() != -1) {
+                let curItems = this.model.getBin(this.model.selectedBin()).length;
+                if (curItems > 1) {
+                    this.model.removeItem(this.model.selectedBin());
+                }
+            }
+        }
+    }
+    exports.SVGHistogram = SVGHistogram;
+});
+define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "view/binarytree", "d3", "jquery"], function (require, exports, trees_2, histogram_1, binarytree_1, d3, $) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class SVGSoloEntropy {
+        constructor(divElement, model, conf) {
+            this.conf = conf;
+            let defaultIDs = ["svgHist", "svgBar", "svgTree"];
+            this.div = divElement;
+            this.svgHist = divElement + " > #" + defaultIDs[0];
+            this.svgBar = divElement + " > #" + defaultIDs[1];
+            this.svgTree = divElement + " > #" + defaultIDs[2];
+            let d = d3.select(divElement);
+            d.append("svg").attr("id", defaultIDs[0]);
+            d.append("br");
+            d.append("svg").attr("id", defaultIDs[1]);
+            d.append("br");
+            d.append("svg").attr("id", defaultIDs[2]);
+            this.model = model;
+            this.tree = new binarytree_1.SVGBinaryTree(this.svgTree, 0, conf);
+            this.hist = new histogram_1.SVGHistogram(this.svgHist, this.model, conf);
+            this.model.addListener(this);
+        }
+        refresh() {
+            let svgHeight = $(this.div).height();
+            let svgWidth = $(this.div).width();
+            let sideLens = [svgHeight * (7 / 16), svgHeight * (1 / 8), svgHeight * (7 / 16)];
+            d3.select(this.svgHist).attr("height", sideLens[0]).attr("width", sideLens[0]);
+            d3.select(this.svgBar).attr("height", sideLens[1]).attr("width", sideLens[0]);
+            d3.select(this.svgTree).attr("height", sideLens[2]).attr("width", sideLens[2]);
+            let selectedBin = this.model.selectedBin();
+            if (selectedBin != -1 && this.model.getBin(selectedBin).length > 0) {
+                d3.select(this.svgTree).attr("style", "display: initial");
+                d3.select(this.svgBar).attr("style", "display: initial");
+                let items = this.model.getBin(selectedBin).length;
+                let total = this.model.bins()
+                    .reduce((running, cur) => (running + cur.length), 0);
+                let distinct = total / items;
+                let depth = Math.ceil(Math.log2(distinct)) + 1;
+                this.tree.setDepth(depth);
+                this.tree.refresh();
+                let colors = this.conf.colors["histogram"];
+                function isChildFn(targetLayer, targetNode) {
+                    return (layerIdx, nodeIdx) => {
+                        let diff = targetLayer - layerIdx;
+                        return diff >= 0 && Math.floor(targetNode / (Math.pow(2, diff))) == nodeIdx;
+                    };
+                }
+                let unit = 100 / (Math.pow(2, (depth - 1)));
+                let markerLocs = Array.from({ length: (Math.pow(2, (depth - 1))) }, (value, key) => key * unit);
+                let pad = this.conf.padding;
+                let viewBoxHeight = sideLens[1] - 2 * pad;
+                let viewBoxWidth = sideLens[0] - 2 * pad;
+                let hScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxHeight]);
+                let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth]);
+                function absX(relX) {
+                    return pad + wScale(relX);
+                }
+                function absY(relY) {
+                    return pad + hScale(relY);
+                }
+                d3.select(this.svgBar)
+                    .selectAll("rect, line")
+                    .remove();
+                d3.select(this.svgBar)
+                    .selectAll("rect")
+                    .data(markerLocs)
+                    .enter()
+                    .append("rect")
+                    .attr("x", (d) => absX(d))
+                    .attr("y", absY(0))
+                    .attr("width", wScale(unit))
+                    .attr("height", hScale(100))
+                    .attr("fill", (d) => (d == 0 ? colors[selectedBin % colors.length] : "#FFF"))
+                    .attr("stroke", "#000")
+                    .attr("stroke-width", sideLens[1] / 40);
+            }
+            else {
+                d3.select(this.svgTree).attr("style", "display: none;");
+                d3.select(this.svgBar).attr("style", "display: none;");
+            }
+            this.hist.refresh();
+        }
+    }
+    exports.SVGSoloEntropy = SVGSoloEntropy;
+    class SVGEntropy {
+        constructor(divElement, model, conf) {
+            this.conf = conf;
+            let defaultIDs = ["svgHist", "svgTree"];
+            this.div = divElement;
+            this.svgHist = divElement + " > #" + defaultIDs[0];
+            this.svgTree = divElement + " > #" + defaultIDs[1];
+            let d = d3.select(divElement);
+            d.append("svg").attr("id", defaultIDs[0]);
+            d.append("br");
+            d.append("svg").attr("id", defaultIDs[1]);
+            this.model = model;
+            this.tree = new binarytree_1.SVGBinaryTree(this.svgTree, 0, conf);
+            this.hist = new histogram_1.SVGHistogram(this.svgHist, this.model, conf);
+            this.model.addListener(this);
+        }
+        refresh() {
+            let svgHeight = $(this.div).height();
+            let svgWidth = $(this.div).width();
+            d3.select(this.svgHist).attr("height", svgHeight / 2).attr("width", svgHeight / 2);
+            d3.select(this.svgTree).attr("height", svgHeight / 3).attr("width", svgWidth);
+            let selectedBin = this.model.selectedBin();
+            if (selectedBin != -1 && this.model.getBin(selectedBin).length > 0) {
+                d3.select(this.svgTree).attr("style", "display: initial");
+                let colors = this.conf.colors["histogram"];
+                let h = trees_2.TreeNode.huffTree(this.model);
+                this.tree.setTree(h);
+                let color = (layerIdx, nodeIdx, node) => {
+                    if (node.itemType) {
+                        return colors[Number.parseInt(node.itemType) % colors.length];
+                    }
+                    else {
+                        return "#000";
+                    }
+                };
+                this.tree.colorMap(color, color);
+                let unit = 100 / (Math.pow(2, (h.depth() - 1)));
+                let markerLocs = Array.from({ length: (Math.pow(2, (h.depth() - 1))) }, (value, key) => key * unit);
+            }
+            else {
+                d3.select(this.svgTree).attr("style", "display: none;");
+            }
+            this.hist.refresh();
+        }
+    }
+    exports.SVGEntropy = SVGEntropy;
+});
+define("main", ["require", "exports", "view/binarytree", "model/bins", "view/histogram", "view/entropy", "d3"], function (require, exports, tree, histModel, hist, ent, d3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class CONF {
@@ -542,20 +595,18 @@ define("main", ["require", "exports", "model", "view", "d3"], function (require,
         let colors = {
             "default": ["#000", "#202020"],
             "border": ["#505050",],
-            "histogram": Array.from(d3.schemeSpectral[11])
+            "histogram": Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7))
         };
-        let conf = new CONF(8, colors, 5);
-        let m = new model.Histogram(11);
-        let vt = new view.SVGBinaryTree("#treesvg", 4, conf);
+        let conf = new CONF(8, colors, 30);
+        let m = new histModel.Histogram(8);
+        let vt = new tree.SVGBinaryTree("#treesvg", 4, conf);
         vt.setDepth(6);
         let i = 0;
         setInterval(() => { vt.setDepth((i++ % 6) + 1); }, 500);
         m.setAll(1);
-        let v = new view.SVGHistogram("#svg", m, conf);
-        let both = new view.SVGEntropy("#plain-entropy0", m, conf);
+        let v = new hist.SVGHistogram("#svg", m, conf);
+        let both = new ent.SVGEntropy("#plain-entropy0", m, conf);
         window.addEventListener("resize", () => { m.refresh(); });
-        $("#plain-entropy0 > .addItem").click(() => v.incrSelectedBin());
-        $("#plain-entropy0 > .rmItem").click(() => v.decrSelectedBin());
         document.addEventListener("keydown", event => {
             switch (event.key.toLowerCase()) {
                 case ("h"):

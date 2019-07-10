@@ -1,5 +1,7 @@
-import model = require("model");
-import view = require("view");
+import tree = require("view/binarytree");
+import histModel = require("model/bins");
+import hist = require("view/histogram");
+import ent = require("view/entropy");
 import d3 = require("d3");
 
 export class CONF {
@@ -19,12 +21,12 @@ export function main() {
     let colors = {
         "default": ["#000", "#202020"],
         "border": ["#505050",],
-        "histogram": Array.from(d3.schemeSpectral[11])
+        "histogram": Array.from({length: 8}, (v, k) => d3.interpolateSpectral(k/7))
     }
-    let conf: CONF = new CONF(8, colors, 5);
-    let m = new model.Histogram(11);
+    let conf: CONF = new CONF(8, colors, 30);
+    let m = new histModel.Histogram(8);
 
-    let vt = new view.SVGBinaryTree("#treesvg", 4, conf);
+    let vt = new tree.SVGBinaryTree("#treesvg", 4, conf);
     vt.setDepth(6);
 
     let i = 0;
@@ -32,13 +34,11 @@ export function main() {
 
     m.setAll(1);
 
-    let v = new view.SVGHistogram("#svg", m, conf);
+    let v = new hist.SVGHistogram("#svg", m, conf);
 
-    let both = new view.SVGEntropy("#plain-entropy0", m, conf);
+    let both = new ent.SVGEntropy("#plain-entropy0", m, conf);
 
     window.addEventListener("resize", () =>  { m.refresh(); } );
-    $("#plain-entropy0 > .addItem").click(() => v.incrSelectedBin());
-    $("#plain-entropy0 > .rmItem").click(() => v.decrSelectedBin());
 
     document.addEventListener("keydown", event => {
         switch(event.key.toLowerCase()) {
@@ -56,9 +56,5 @@ export function main() {
                 break;
         }
     });
-    // TODO: currently, low entropy distributions with many items allocate extra nodes (1 per item) when fewer should be allocated
-    // potentially the fix is to divide the number of items by the # in bin with the fewest items as normalization
-    // but this would require changing the array which contains colors to match.
-    // TODO: the color generation has to use a huffman tree
 }
 main();

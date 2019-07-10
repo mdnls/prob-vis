@@ -1,1 +1,1 @@
-require(["model", "view", "d3", "main", "jquery"]);
+require(["main"]);
