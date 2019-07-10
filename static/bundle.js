@@ -627,4 +627,102 @@ define("main", ["require", "exports", "view/binarytree", "model/bins", "view/his
     exports.main = main;
     main();
 });
+define("model/heatmap", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class Cell {
+        constructor(r, c, color, quantity) {
+            this.r = r;
+            this.c = c;
+            this.color = color;
+            this.quantity = quantity;
+        }
+    }
+    exports.Cell = Cell;
+    var Slice;
+    (function (Slice) {
+        Slice[Slice["ROWS"] = 0] = "ROWS";
+        Slice[Slice["COLS"] = 1] = "COLS";
+        Slice[Slice["ROW"] = 2] = "ROW";
+    })(Slice = exports.Slice || (exports.Slice = {}));
+    class MatrixSlice {
+        constructor(matrix, mode, index) {
+        }
+        addItem(bin) {
+            throw Error("Cannot add an item to a matrix slice.");
+        }
+        removeItem(bin) {
+            throw Error("Cannot remove an item from a matrix slice.");
+        }
+        addBin() {
+            throw Error("Cannot add a bin to a matrix slice.");
+        }
+        removeBin() {
+            throw Error("Cannot remove a bin from a matrix slice.");
+        }
+        bins() {
+            return new Array();
+        }
+        getBin(bin) {
+            return new Array();
+        }
+        numBins() {
+            return 0;
+        }
+        selectBin() {
+        }
+        selectedBin() {
+            return 0;
+        }
+    }
+    exports.MatrixSlice = MatrixSlice;
+    class HeatMap {
+        constructor(sideLength) {
+            this.mat = Array.from({ length: sideLength }, (v, r) => (Array.from({ length: sideLength }, (v, c) => new Cell(r, c, "#000", 0))));
+            this.listeners = new Array();
+            this.selection = -1;
+        }
+        rowHist() {
+            return new MatrixSlice(this, Slice.ROWS);
+        }
+        colHist() {
+            return new MatrixSlice(this, Slice.COLS);
+        }
+        rowSliceHist(row) {
+            return new MatrixSlice(this, Slice.ROW, row);
+        }
+        refresh() {
+            this.listeners.forEach((listener) => listener.refresh());
+        }
+        addListener(listener) {
+            this.listeners.push(listener);
+            listener.refresh();
+        }
+        getCell(row, col) {
+            return this.mat[row][col];
+        }
+        getRow(row) {
+            return new Array();
+        }
+        rows() {
+            return new Array();
+        }
+        getCol(col) {
+            return new Array();
+        }
+        cols() {
+            return new Array();
+        }
+        selectRow(row) {
+            if (row >= 0 && row < this.cols.length) {
+                this.selection = row;
+                this.refresh();
+            }
+        }
+        selectedRow() {
+            return this.selection;
+        }
+    }
+    exports.HeatMap = HeatMap;
+});
 //# sourceMappingURL=bundle.js.map
