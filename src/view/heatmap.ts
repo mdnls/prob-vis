@@ -8,6 +8,7 @@ export class SVGHeatmap implements ModelListener {
     private svg: string;
     private model: Matrix;
 
+
     width: number;
     height: number;
     viewBoxSideLength: number;
@@ -60,6 +61,8 @@ export class SVGHeatmap implements ModelListener {
 
       let max: number = allCells.reduce((prev, cur) => Math.max(prev, cur.quantity), -Infinity);
 
+      let selectedCol: number = this.model.selectedCol();
+      
       d3.select(this.svg)
         .selectAll("rect")
         .remove();
@@ -73,6 +76,9 @@ export class SVGHeatmap implements ModelListener {
         .attr("y", (d) => absR(d.r * s + 0.075*s))
         .attr("width", (d) => scale(s*0.85))
         .attr("height", (d) => scale(s*0.85))
-        .attr("fill", (d) => d3.interpolateBlues( 0.1 + 0.9 * (d.quantity / max)));
+        .attr("fill", (d) => d3.interpolateBlues( 0.1 + 0.9 * (d.quantity / max)))
+        .attr("stroke", (d) => selectedCol != -1 && d.c == selectedCol ? "#222" : "none");
    }
+
+
 }

@@ -10,8 +10,8 @@ export interface Matrix {
     getCell(r: number, c: number): Cell;
     addListener(listener: ModelListener): void;
     refresh(): void;
-    selectRow(row: number): void;
-    selectedRow(): number;
+    selectCol(col: number): void;
+    selectedCol(): number;
     getRow(r: number): Cell[];
     rows(): Cell[][];
     getCol(r: number): Cell[];
@@ -162,12 +162,12 @@ export class MatrixSlice implements Bins {
         return this.histogram.numBins();
     }
     selectBin(selection: number): void {
-        this.histogram.selectBin(selection);
+        this.matrix.selectCol(selection);
         this.histogram.refresh();
         this.matrix.refresh();
     }
     selectedBin(): number {
-        return this.histogram.selectedBin();
+        return this.matrix.selectedCol();
     }
 }
 
@@ -250,14 +250,14 @@ export class HeatMap implements Matrix {
         return Array.from({length: this.mat.length}, (v, k) => this.getCol(k));
     }
 
-    selectRow(row: number) {
-        if(row >= 0 && row < this.cols.length) {
-            this.selection = row;
+    selectCol(col: number) {
+        if(col >= 0 && col < this.mat.length) {
+            this.selection = col;
             this.refresh();
         }
     }
 
-    selectedRow(): number {
+    selectedCol(): number {
         return this.selection;
     }
 
