@@ -352,7 +352,7 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
 define("view/histogram", ["require", "exports", "d3", "jquery"], function (require, exports, d3, $) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class SVGHistogram {
+    class SVGStaticHistogram {
         constructor(svgElement, model, conf) {
             this.svg = svgElement;
             this.model = model;
@@ -361,12 +361,6 @@ define("view/histogram", ["require", "exports", "d3", "jquery"], function (requi
             d3.select(this.svg)
                 .append("rect")
                 .attr("class", "bottomBorder");
-            d3.select(this.svg)
-                .append("text")
-                .text("*")
-                .attr("class", "colHighlight")
-                .attr("text-anchor", "middle")
-                .attr("dominant-baseline", "middle");
             this.refresh();
         }
         refresh() {
@@ -418,15 +412,45 @@ define("view/histogram", ["require", "exports", "d3", "jquery"], function (requi
                 .attr("x", (d) => absX(d.x * s + s * 0.075))
                 .attr("y", (d) => absY((d.y + 1) * s + s * 0.075))
                 .attr("fill", (d) => colors[d.x % colors.length]);
+        }
+    }
+    exports.SVGStaticHistogram = SVGStaticHistogram;
+    class SVGInteractiveHistogram extends SVGStaticHistogram {
+        constructor(svgElement, model, conf) {
+            super(svgElement, model, conf);
+            this.model.addListener(this);
+            this.refresh();
             d3.select(this.svg)
-                .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / s)));
+                .append("text")
+                .text("*")
+                .attr("class", "colHighlight")
+                .attr("text-anchor", "middle")
+                .attr("dominant-baseline", "middle");
+        }
+        refresh() {
+            super.refresh();
+            let scale = d3.scaleLinear().domain([0, 100]).range([0, this.viewBoxSideLength]);
+            let xOffset = this.xOffset;
+            let yOffset = this.yOffset;
+            let svgHeight = this.height;
+            function absX(relX) {
+                return xOffset + scale(relX);
+            }
+            function invAbsX(absX) {
+                return scale.invert(absX - xOffset);
+            }
+            function absY(relY) {
+                return svgHeight - yOffset - scale(relY);
+            }
+            d3.select(this.svg)
+                .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / this.s)));
             if (this.model.selectedBin() != -1) {
                 let binHeight = this.model.getBin(this.model.selectedBin()).length;
                 d3.select(this.svg)
                     .selectAll(".colHighlight")
-                    .attr("x", (d) => absX(s * this.model.selectedBin() + 0.5 * s))
-                    .attr("y", (d) => absY(s * binHeight))
-                    .attr("style", "font-size: " + scale(s) + "px;");
+                    .attr("x", (d) => absX(this.s * this.model.selectedBin() + 0.5 * this.s))
+                    .attr("y", (d) => absY(this.s * binHeight))
+                    .attr("style", "font-size: " + scale(this.s) + "px;");
             }
         }
         selectCol(bin) {
@@ -449,7 +473,7 @@ define("view/histogram", ["require", "exports", "d3", "jquery"], function (requi
             }
         }
     }
-    exports.SVGHistogram = SVGHistogram;
+    exports.SVGInteractiveHistogram = SVGInteractiveHistogram;
 });
 define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "view/binarytree", "d3", "jquery"], function (require, exports, trees_2, histogram_1, binarytree_1, d3, $) {
     "use strict";
@@ -470,7 +494,7 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
             d.append("svg").attr("id", defaultIDs[2]);
             this.model = model;
             this.tree = new binarytree_1.SVGBinaryTree(this.svgTree, 0, conf);
-            this.hist = new histogram_1.SVGHistogram(this.svgHist, this.model, conf);
+            this.hist = new histogram_1.SVGInteractiveHistogram(this.svgHist, this.model, conf);
             this.model.addListener(this);
         }
         refresh() {
@@ -548,7 +572,7 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
             d.append("svg").attr("id", defaultIDs[1]);
             this.model = model;
             this.tree = new binarytree_1.SVGBinaryTree(this.svgTree, 0, conf);
-            this.hist = new histogram_1.SVGHistogram(this.svgHist, this.model, conf);
+            this.hist = new histogram_1.SVGInteractiveHistogram(this.svgHist, this.model, conf);
             this.model.addListener(this);
         }
         refresh() {
@@ -826,7 +850,7 @@ define("main", ["require", "exports", "view/binarytree", "view/histogram", "view
         let i = 0;
         setInterval(() => { vt.setDepth((i++ % 6) + 1); }, 500);
         m.setAll(1);
-        let v = new hist.SVGHistogram("#svg", m, conf);
+        let v = new hist.SVGInteractiveHistogram("#svg", m, conf);
         let both = new ent.SVGEntropy("#plain-entropy0", m, conf);
         window.addEventListener("resize", () => { m.refresh(); });
         document.addEventListener("keydown", event => {
@@ -848,8 +872,8 @@ define("main", ["require", "exports", "view/binarytree", "view/histogram", "view
         let mat = matModel.HeatMap.fromCSVStr('0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,1,0,1,0,1,0,0,1,0,1,0,0\n5,0,4,2,4,5,9,6,6,7,4,4,5,1,4\n24,10,15,20,16,15,20,20,23,11,25,14,18,9,18\n52,10,18,17,29,28,32,28,24,26,24,22,9,18,41\n22,7,11,19,11,22,20,16,16,17,18,9,8,11,17\n7,3,2,3,3,3,6,3,7,6,6,4,0,4,6\n0,0,0,0,2,1,0,0,0,1,1,0,0,0,0\n0,0,0,0,0,0,0,0,0,1,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0');
         let svgHm = new hm.SVGHeatmap("#hmsvg", mat, conf);
         svgHm.refresh();
-        let matSlice = new matModel.MatrixSlice(mat, matModel.Slice.ROW, 5);
-        let svgMatSlice = new hist.SVGHistogram("#hmslicesvg", matSlice, conf);
+        let matSlice = new matModel.MatrixSlice(mat, matModel.Slice.ROWS);
+        let svgMatSlice = new hist.SVGInteractiveHistogram("#hmslicesvg", matSlice, conf);
         svgMatSlice.refresh();
     }
     exports.main = main;

@@ -4,15 +4,16 @@ import {CONF} from 'main';
 import * as d3 from "d3";
 import * as $ from "jquery";
 
+
 /**
  * Draw a histogram.
  */
-export class SVGHistogram implements ModelListener {
-   private svg: string;
-   private model: Bins;
-   private conf: CONF;
+export class SVGStaticHistogram implements ModelListener {
+   model: Bins;
+   conf: CONF;
 
    // public information about this view's visual configuration which can be helpful to have on the fly
+   svg: string;
    width: number;
    height: number;
    viewBoxSideLength: number;
@@ -37,12 +38,7 @@ export class SVGHistogram implements ModelListener {
       d3.select(this.svg)
         .append("rect")
         .attr("class", "bottomBorder");
-      d3.select(this.svg)
-        .append("text")
-        .text("*")
-        .attr("class", "colHighlight")
-        .attr("text-anchor", "middle")
-        .attr("dominant-baseline", "middle");
+
       this.refresh();
    }
 
@@ -111,22 +107,60 @@ export class SVGHistogram implements ModelListener {
          .attr("x", (d) => absX(d.x * s + s*0.075))
          .attr("y", (d) => absY((d.y+1)* s + s*0.075)) // rectangle extends downward, so the y index is for top left
          .attr("fill", (d) => colors[d.x % colors.length]);
-      
-      // add click handler
-      d3.select(this.svg)
-        .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / s)));
+   }
+}
 
-      if(this.model.selectedBin() != -1) {
-         let binHeight = this.model.getBin(this.model.selectedBin()).length;
-         d3.select(this.svg)
-         .selectAll(".colHighlight")
-         .attr("x", (d) => absX(s * this.model.selectedBin() + 0.5 * s ))
-         .attr("y", (d) => absY(s * binHeight))
-         .attr("style", "font-size: " + scale(s) + "px;");
-      }
+
+export class SVGInteractiveHistogram extends SVGStaticHistogram {
+     /**
+    * Draw a histogram in the given div representing the given model.
+    * @param svgElement the id selector of the svg element that this view should draw in.
+    * @param model the model that this selector should use to draw.
+    */
+   constructor(svgElement: string, model: Bins, conf: CONF) {
+      super(svgElement, model, conf);
+      this.model.addListener(this);
+      this.refresh();
+
+      d3.select(this.svg)
+        .append("text")
+        .text("*")
+        .attr("class", "colHighlight")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "middle");
    }
 
-   /**
+   refresh() {
+      super.refresh();
+
+      let scale = d3.scaleLinear().domain([0, 100]).range([0, this.viewBoxSideLength]);
+
+      let xOffset = this.xOffset;
+      let yOffset = this.yOffset;
+      let svgHeight = this.height;
+      function absX(relX: number) {
+         return xOffset + scale(relX);
+      }
+      function invAbsX(absX: number) {
+         return scale.invert(absX - xOffset);
+      }
+      function absY(relY: number) {
+         return svgHeight - yOffset - scale(relY);
+      }
+
+      d3.select(this.svg)
+      .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / this.s)));
+
+      if(this.model.selectedBin() != -1) {
+       let binHeight = this.model.getBin(this.model.selectedBin()).length;
+       d3.select(this.svg)
+       .selectAll(".colHighlight")
+       .attr("x", (d) => absX(this.s * this.model.selectedBin() + 0.5 * this.s ))
+       .attr("y", (d) => absY(this.s * binHeight))
+       .attr("style", "font-size: " + scale(this.s) + "px;");
+    }
+   }
+      /**
     * Select one of the histogram bins. Other interactions can use the selected bin as an action target.
     * ie. add one item to the selected bin.
     * @param bin bin to select.

@@ -1,7 +1,7 @@
 import {Bins} from 'model/bins';
 import {ModelListener} from 'model/model';
 import {TreeNode, TreeItem} from 'model/trees';
-import {SVGHistogram} from 'view/histogram';
+import {SVGInteractiveHistogram} from 'view/histogram';
 import {SVGBinaryTree} from 'view/binarytree';
 import {CONF} from 'main';
 import * as d3 from "d3";
@@ -10,7 +10,7 @@ import * as $ from "jquery";
 export class SVGSoloEntropy implements ModelListener {
     private model: Bins;
     private tree: SVGBinaryTree;
-    private hist: SVGHistogram;
+    private hist: SVGInteractiveHistogram;
     private svgTree: string;
     private svgBar: string;
     private svgHist: string;
@@ -35,7 +35,7 @@ export class SVGSoloEntropy implements ModelListener {
  
        this.model = model;
        this.tree = new SVGBinaryTree(this.svgTree, 0, conf);
-       this.hist = new SVGHistogram(this.svgHist, this.model, conf);
+       this.hist = new SVGInteractiveHistogram(this.svgHist, this.model, conf);
  
        this.model.addListener(this);
     }
@@ -127,7 +127,7 @@ export class SVGSoloEntropy implements ModelListener {
  export class SVGEntropy implements ModelListener {
     private model: Bins;
     private tree: SVGBinaryTree;
-    private hist: SVGHistogram;
+    private hist: SVGInteractiveHistogram;
     private svgTree: string;
     private svgHist: string;
     private div: string;
@@ -148,7 +148,7 @@ export class SVGSoloEntropy implements ModelListener {
  
        this.model = model;
        this.tree = new SVGBinaryTree(this.svgTree, 0, conf);
-       this.hist = new SVGHistogram(this.svgHist, this.model, conf);
+       this.hist = new SVGInteractiveHistogram(this.svgHist, this.model, conf);
  
        this.model.addListener(this);
     }
