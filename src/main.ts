@@ -1,7 +1,9 @@
 import tree = require("view/binarytree");
-import histModel = require("model/bins");
 import hist = require("view/histogram");
 import ent = require("view/entropy");
+import hm = require("view/heatmap");
+import histModel = require("model/bins");
+import matModel = require("./model/heatmap");
 import d3 = require("d3");
 
 export class CONF {
@@ -56,5 +58,14 @@ export function main() {
                 break;
         }
     });
+
+    let mat = matModel.HeatMap.fromCSVStr('0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,1,0,1,0,1,0,0,1,0,1,0,0\n5,0,4,2,4,5,9,6,6,7,4,4,5,1,4\n24,10,15,20,16,15,20,20,23,11,25,14,18,9,18\n52,10,18,17,29,28,32,28,24,26,24,22,9,18,41\n22,7,11,19,11,22,20,16,16,17,18,9,8,11,17\n7,3,2,3,3,3,6,3,7,6,6,4,0,4,6\n0,0,0,0,2,1,0,0,0,1,1,0,0,0,0\n0,0,0,0,0,0,0,0,0,1,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0');
+    let svgHm = new hm.SVGHeatmap("#hmsvg", mat, conf);
+    svgHm.refresh();
+
+    let matSlice = new matModel.MatrixSlice(mat, matModel.Slice.ROW, 5);
+    let svgMatSlice = new hist.SVGHistogram("#hmslicesvg", matSlice, conf);
+    svgMatSlice.refresh();
+
 }
 main();

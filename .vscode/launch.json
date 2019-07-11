@@ -7,6 +7,13 @@
         {
             "type": "chrome",
             "request": "launch",
+            "name": "Histogram",
+            "url": "file:///Users/max/Projects/probabilities-vis/static/heatmap.html",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
             "name": "Launch Chrome",
             "url": "file:///Users/max/Projects/probabilities-vis/static/index.html",
             "webRoot": "${workspaceFolder}"

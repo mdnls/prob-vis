@@ -23,6 +23,13 @@ define("model/bins", ["require", "exports"], function (require, exports) {
             this.listeners = new Array();
             this.selection = -1;
         }
+        static fromArray(arr) {
+            let hist = new Histogram(arr.length);
+            arr.forEach((numItems, index) => { for (let i = 0; i < numItems; i++) {
+                hist.addItem(index);
+            } });
+            return hist;
+        }
         setAll(count) {
             for (let i = 0; i < this.histBins.length; i++) {
                 while (this.histBins[i].length > count) {
@@ -391,7 +398,7 @@ define("view/histogram", ["require", "exports", "d3", "jquery"], function (requi
             d3.select(this.svg)
                 .selectAll(".bottomBorder")
                 .attr("x", absX(0))
-                .attr("y", absY(-1))
+                .attr("y", absY(0))
                 .attr("height", scale(0.5))
                 .attr("width", viewBoxSideLength)
                 .attr("fill", this.conf.colors["border"][0])
@@ -411,11 +418,6 @@ define("view/histogram", ["require", "exports", "d3", "jquery"], function (requi
                 .attr("x", (d) => absX(d.x * s + s * 0.075))
                 .attr("y", (d) => absY((d.y + 1) * s + s * 0.075))
                 .attr("fill", (d) => colors[d.x % colors.length]);
-            function handleClick() {
-                let absX = d3.event.x;
-                let col = Math.floor(invAbsX(absX) / s);
-                this.selectCol(col);
-            }
             d3.select(this.svg)
                 .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / s)));
             if (this.model.selectedBin() != -1) {
@@ -580,7 +582,227 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
     }
     exports.SVGEntropy = SVGEntropy;
 });
-define("main", ["require", "exports", "view/binarytree", "model/bins", "view/histogram", "view/entropy", "d3"], function (require, exports, tree, histModel, hist, ent, d3) {
+define("model/heatmap", ["require", "exports", "model/bins", "papaparse"], function (require, exports, bins_1, papaparse_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class Cell {
+        constructor(r, c, color, quantity) {
+            this.r = r;
+            this.c = c;
+            this.color = color;
+            this.quantity = quantity;
+        }
+    }
+    exports.Cell = Cell;
+    var Slice;
+    (function (Slice) {
+        Slice[Slice["ROWS"] = 0] = "ROWS";
+        Slice[Slice["COLS"] = 1] = "COLS";
+        Slice[Slice["ROW"] = 2] = "ROW";
+    })(Slice = exports.Slice || (exports.Slice = {}));
+    class MatrixSlice {
+        constructor(matrix, mode, index) {
+            this.matrix = matrix;
+            this.mode = mode;
+            if (mode == Slice.ROW) {
+                if (index == undefined) {
+                    throw Error("Must provide an index to do a row slice.");
+                }
+                this.index = index;
+            }
+            else {
+                this.index = -1;
+            }
+            let toDraw = [];
+            let numItems = 50;
+            if (this.mode == Slice.ROW) {
+                let row = this.matrix.getRow(this.index);
+                let total = row.map((c) => c.quantity).reduce((prev, cur) => prev + cur, 0);
+                if (total == 0) {
+                    toDraw = row.map((c) => 0);
+                }
+                else {
+                    toDraw = row.map((c) => Math.floor(numItems * c.quantity / total));
+                }
+            }
+            else if (this.mode == Slice.COLS) {
+                let cols = this.matrix.cols();
+                let quantityPerCol = cols.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
+                let total = quantityPerCol.reduce((prev, cur) => cur + prev, 0);
+                if (total == 0) {
+                    toDraw = cols.map((c) => 0);
+                }
+                else {
+                    toDraw = quantityPerCol.map((c) => Math.floor(numItems * c / total));
+                }
+            }
+            else if (this.mode == Slice.ROWS) {
+                let rows = this.matrix.rows();
+                let quantityPerRow = rows.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
+                let total = quantityPerRow.reduce((prev, cur) => cur + prev, 0);
+                if (total == 0) {
+                    toDraw = rows.map((c) => 0);
+                }
+                else {
+                    toDraw = quantityPerRow.map((c) => Math.floor(numItems * c / total));
+                }
+            }
+            this.histogram = bins_1.Histogram.fromArray(toDraw);
+        }
+        addListener(listener) {
+            this.matrix.addListener(listener);
+        }
+        refresh() {
+            this.matrix.refresh();
+        }
+        addItem(bin) {
+            throw Error("Cannot add an item to a matrix slice.");
+        }
+        removeItem(bin) {
+            throw Error("Cannot remove an item from a matrix slice.");
+        }
+        addBin() {
+            throw Error("Cannot add a bin to a matrix slice.");
+        }
+        removeBin() {
+            throw Error("Cannot remove a bin from a matrix slice.");
+        }
+        bins() {
+            return this.histogram.bins();
+        }
+        getBin(bin) {
+            return this.histogram.getBin(bin);
+        }
+        numBins() {
+            return this.histogram.numBins();
+        }
+        selectBin(selection) {
+            this.histogram.selectBin(selection);
+            this.histogram.refresh();
+            this.matrix.refresh();
+        }
+        selectedBin() {
+            return this.histogram.selectedBin();
+        }
+    }
+    exports.MatrixSlice = MatrixSlice;
+    class HeatMap {
+        constructor(sideLength) {
+            this.mat = Array.from({ length: sideLength }, (v, r) => (Array.from({ length: sideLength }, (v, c) => new Cell(r, c, "#000", 1))));
+            this.listeners = new Array();
+            this.selection = -1;
+        }
+        static fromCSVStr(csv) {
+            let dataStr = papaparse_1.parse(csv).data;
+            let data = dataStr.map((r) => r.map((val) => Number.parseFloat(val)));
+            data.forEach((row) => { if (row.length != data.length) {
+                throw Error("The input data must be a square matrix");
+            } });
+            let hm = new HeatMap(data.length);
+            data.forEach((row, rIdx) => {
+                row.forEach((quantity, cIdx) => hm.setCell(rIdx, cIdx, quantity));
+            });
+            return hm;
+        }
+        rowHist() {
+            return new MatrixSlice(this, Slice.ROWS);
+        }
+        colHist() {
+            return new MatrixSlice(this, Slice.COLS);
+        }
+        rowSliceHist(row) {
+            return new MatrixSlice(this, Slice.ROW, row);
+        }
+        refresh() {
+            this.listeners.forEach((listener) => listener.refresh());
+        }
+        addListener(listener) {
+            this.listeners.push(listener);
+            listener.refresh();
+        }
+        setCell(row, col, quantity) {
+            if (row >= 0 && row < this.mat.length && col >= 0 && col < this.mat.length) {
+                this.mat[row][col].quantity = quantity;
+            }
+        }
+        getCell(row, col) {
+            return this.mat[row][col];
+        }
+        getRow(row) {
+            return this.mat[row].map((cell) => new Cell(0, cell.c, cell.color, cell.quantity));
+        }
+        rows() {
+            return Array.from(this.mat);
+        }
+        getCol(col) {
+            return this.mat.map((row) => new Cell(row[col].r, 0, row[col].color, row[col].quantity));
+        }
+        cols() {
+            return Array.from({ length: this.mat.length }, (v, k) => this.getCol(k));
+        }
+        selectRow(row) {
+            if (row >= 0 && row < this.cols.length) {
+                this.selection = row;
+                this.refresh();
+            }
+        }
+        selectedRow() {
+            return this.selection;
+        }
+        sideLength() {
+            return this.mat.length;
+        }
+    }
+    exports.HeatMap = HeatMap;
+});
+define("view/heatmap", ["require", "exports", "d3"], function (require, exports, d3) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class SVGHeatmap {
+        constructor(svgElement, model, conf) {
+            this.svg = svgElement;
+            this.model = model;
+            this.conf = conf;
+            this.model.addListener(this);
+        }
+        refresh() {
+            let pad = this.conf.padding;
+            let svgWidth = $(this.svg).width();
+            let svgHeight = $(this.svg).height();
+            let viewBoxSideLength = Math.min(svgWidth, svgHeight) - 2 * pad;
+            let xOffset = (svgWidth - viewBoxSideLength) / 2;
+            let yOffset = (svgHeight - viewBoxSideLength) / 2;
+            let scale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxSideLength]);
+            let s = scale.invert(viewBoxSideLength / this.model.sideLength());
+            this.pad = pad;
+            this.width = svgWidth;
+            this.height = svgHeight;
+            this.viewBoxSideLength = viewBoxSideLength;
+            this.xOffset = xOffset;
+            this.yOffset = yOffset;
+            function absR(relR) {
+                return yOffset + scale(relR);
+            }
+            function absC(relC) {
+                return xOffset + scale(relC);
+            }
+            let allCells = [].concat(...this.model.rows());
+            let max = allCells.reduce((prev, cur) => Math.max(prev, cur.quantity), -Infinity);
+            d3.select(this.svg)
+                .selectAll("rect")
+                .data(allCells)
+                .enter()
+                .append("rect")
+                .attr("x", (d) => absC(d.c * s + 0.075 * s))
+                .attr("y", (d) => absR(d.r * s + 0.075 * s))
+                .attr("width", (d) => scale(s * 0.85))
+                .attr("height", (d) => scale(s * 0.85))
+                .attr("fill", (d) => d3.interpolateBlues(0.1 + 0.9 * (d.quantity / max)));
+        }
+    }
+    exports.SVGHeatmap = SVGHeatmap;
+});
+define("main", ["require", "exports", "view/binarytree", "view/histogram", "view/entropy", "view/heatmap", "model/bins", "model/heatmap", "d3"], function (require, exports, tree, hist, ent, hm, histModel, matModel, d3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class CONF {
@@ -623,106 +845,14 @@ define("main", ["require", "exports", "view/binarytree", "model/bins", "view/his
                     break;
             }
         });
+        let mat = matModel.HeatMap.fromCSVStr('0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,1,0,1,0,1,0,0,1,0,1,0,0\n5,0,4,2,4,5,9,6,6,7,4,4,5,1,4\n24,10,15,20,16,15,20,20,23,11,25,14,18,9,18\n52,10,18,17,29,28,32,28,24,26,24,22,9,18,41\n22,7,11,19,11,22,20,16,16,17,18,9,8,11,17\n7,3,2,3,3,3,6,3,7,6,6,4,0,4,6\n0,0,0,0,2,1,0,0,0,1,1,0,0,0,0\n0,0,0,0,0,0,0,0,0,1,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0');
+        let svgHm = new hm.SVGHeatmap("#hmsvg", mat, conf);
+        svgHm.refresh();
+        let matSlice = new matModel.MatrixSlice(mat, matModel.Slice.ROW, 5);
+        let svgMatSlice = new hist.SVGHistogram("#hmslicesvg", matSlice, conf);
+        svgMatSlice.refresh();
     }
     exports.main = main;
     main();
-});
-define("model/heatmap", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class Cell {
-        constructor(r, c, color, quantity) {
-            this.r = r;
-            this.c = c;
-            this.color = color;
-            this.quantity = quantity;
-        }
-    }
-    exports.Cell = Cell;
-    var Slice;
-    (function (Slice) {
-        Slice[Slice["ROWS"] = 0] = "ROWS";
-        Slice[Slice["COLS"] = 1] = "COLS";
-        Slice[Slice["ROW"] = 2] = "ROW";
-    })(Slice = exports.Slice || (exports.Slice = {}));
-    class MatrixSlice {
-        constructor(matrix, mode, index) {
-        }
-        addItem(bin) {
-            throw Error("Cannot add an item to a matrix slice.");
-        }
-        removeItem(bin) {
-            throw Error("Cannot remove an item from a matrix slice.");
-        }
-        addBin() {
-            throw Error("Cannot add a bin to a matrix slice.");
-        }
-        removeBin() {
-            throw Error("Cannot remove a bin from a matrix slice.");
-        }
-        bins() {
-            return new Array();
-        }
-        getBin(bin) {
-            return new Array();
-        }
-        numBins() {
-            return 0;
-        }
-        selectBin() {
-        }
-        selectedBin() {
-            return 0;
-        }
-    }
-    exports.MatrixSlice = MatrixSlice;
-    class HeatMap {
-        constructor(sideLength) {
-            this.mat = Array.from({ length: sideLength }, (v, r) => (Array.from({ length: sideLength }, (v, c) => new Cell(r, c, "#000", 0))));
-            this.listeners = new Array();
-            this.selection = -1;
-        }
-        rowHist() {
-            return new MatrixSlice(this, Slice.ROWS);
-        }
-        colHist() {
-            return new MatrixSlice(this, Slice.COLS);
-        }
-        rowSliceHist(row) {
-            return new MatrixSlice(this, Slice.ROW, row);
-        }
-        refresh() {
-            this.listeners.forEach((listener) => listener.refresh());
-        }
-        addListener(listener) {
-            this.listeners.push(listener);
-            listener.refresh();
-        }
-        getCell(row, col) {
-            return this.mat[row][col];
-        }
-        getRow(row) {
-            return new Array();
-        }
-        rows() {
-            return new Array();
-        }
-        getCol(col) {
-            return new Array();
-        }
-        cols() {
-            return new Array();
-        }
-        selectRow(row) {
-            if (row >= 0 && row < this.cols.length) {
-                this.selection = row;
-                this.refresh();
-            }
-        }
-        selectedRow() {
-            return this.selection;
-        }
-    }
-    exports.HeatMap = HeatMap;
 });
 //# sourceMappingURL=bundle.js.map

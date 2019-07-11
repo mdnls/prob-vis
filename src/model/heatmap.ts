@@ -1,10 +1,12 @@
 import {Bins, Item, Histogram} from './bins';
 import {ModelListener} from './model';
+import {parse} from 'papaparse';
 
 export interface Matrix {
     colHist(): Bins;
     rowHist(): Bins;
     rowSliceHist(row: number): Bins;
+    setCell(r: number, c: number, quantity: number): void;
     getCell(r: number, c: number): Cell;
     addListener(listener: ModelListener): void;
     refresh(): void;
@@ -14,6 +16,7 @@ export interface Matrix {
     rows(): Cell[][];
     getCol(r: number): Cell[];
     cols(): Cell[][];
+    sideLength(): number;
 }
 
 export interface MatCell {
@@ -65,32 +68,52 @@ export class MatrixSlice implements Bins {
         }
 
         let toDraw: number[] = [];
+        let numItems: number = 50; // this is approximate, due to floor operation
+
         if(this.mode == Slice.ROW) {
             let row = this.matrix.getRow(this.index);
             // every bin gets an item representing a fraction of the total quantity of the row allocated to that cell
             // int(cell quantity / total quantity * 100)
             let total = row.map((c) => c.quantity).reduce((prev, cur) => prev + cur, 0);
-            toDraw = row.map((c) => Math.floor(100 * c.quantity / total));
+
+            if(total == 0) {
+                toDraw = row.map((c) => 0);
+            }
+            else {
+                toDraw = row.map((c) => Math.floor(numItems * c.quantity / total));
+            }
         }
         else if(this.mode == Slice.COLS) {
             let cols = this.matrix.cols();
             let quantityPerCol = cols.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
             
             let total = quantityPerCol.reduce((prev, cur) => cur + prev, 0);
-            toDraw = quantityPerCol.map((c) => Math.floor(100 * c / total));
+
+            if(total == 0) {
+                toDraw = cols.map((c) => 0);
+            }
+            else {
+                toDraw = quantityPerCol.map((c) => Math.floor(numItems * c / total));
+            }
         }
         else if(this.mode == Slice.ROWS) {
             let rows = this.matrix.rows();
             let quantityPerRow = rows.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
             
             let total = quantityPerRow.reduce((prev, cur) => cur + prev, 0);
-            toDraw = quantityPerRow.map((c) => Math.floor(100 * c / total));
+
+            if(total == 0) {
+                toDraw = rows.map((c) => 0);
+            }
+            else {
+                toDraw = quantityPerRow.map((c) => Math.floor(numItems * c / total));
+            }
         }
         this.histogram = Histogram.fromArray(toDraw);
     }
 
     addListener(listener: ModelListener) {
-       this.matrix.addListener(listener); 
+       this.matrix.addListener(listener);
     }
 
     refresh() {
@@ -123,7 +146,9 @@ export class MatrixSlice implements Bins {
         return this.histogram.numBins();
     }
     selectBin(selection: number): void {
-        return this.histogram.selectBin(selection);
+        this.histogram.selectBin(selection);
+        this.histogram.refresh();
+        this.matrix.refresh();
     }
     selectedBin(): number {
         return this.histogram.selectedBin();
@@ -136,9 +161,21 @@ export class HeatMap implements Matrix {
     private selection: number;
 
     constructor(sideLength: number) {
-        this.mat = Array.from({length: sideLength}, (v, r) => (Array.from({length: sideLength}, (v, c) => new Cell(r, c, "#000", 0))));
+        this.mat = Array.from({length: sideLength}, (v, r) => (Array.from({length: sideLength}, (v, c) => new Cell(r, c, "#000", 1))));
         this.listeners = new Array<ModelListener>();
         this.selection = -1;
+    }
+
+    static fromCSVStr(csv: string) {
+        let dataStr = parse(csv).data;
+        let data: number[][] = dataStr.map((r) => r.map((val: string) => Number.parseFloat(val)));
+
+        data.forEach((row) => { if(row.length != data.length) { throw Error("The input data must be a square matrix") }});
+        let hm = new HeatMap(data.length);
+        data.forEach((row, rIdx) => {
+            row.forEach((quantity, cIdx) => hm.setCell(rIdx, cIdx, quantity));
+        });
+        return hm;
     }
 
     rowHist(): MatrixSlice {
@@ -171,6 +208,12 @@ export class HeatMap implements Matrix {
       listener.refresh();
     }
 
+    setCell(row: number, col: number, quantity: number) {
+        if(row >= 0 && row < this.mat.length && col >= 0 && col < this.mat.length) {
+            this.mat[row][col].quantity = quantity;
+        }
+    }
+
     getCell(row: number, col: number): Cell {
         return this.mat[row][col];
     }
@@ -200,6 +243,10 @@ export class HeatMap implements Matrix {
 
     selectedRow(): number {
         return this.selection;
+    }
+
+    sideLength(): number {
+        return this.mat.length;
     }
 
 }

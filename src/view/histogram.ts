@@ -85,7 +85,7 @@ export class SVGHistogram implements ModelListener {
       d3.select(this.svg)
          .selectAll(".bottomBorder")
          .attr("x", absX(0))
-         .attr("y", absY(-1))
+         .attr("y", absY(0))
          .attr("height", scale(0.5))
          .attr("width", viewBoxSideLength)
          .attr("fill", this.conf.colors["border"][0])
@@ -109,16 +109,10 @@ export class SVGHistogram implements ModelListener {
          .attr("width", scale(s * 0.85))
          .attr("height", scale(s * 0.85))
          .attr("x", (d) => absX(d.x * s + s*0.075))
-         .attr("y", (d) => absY((d.y+1) * s + s*0.075))
+         .attr("y", (d) => absY((d.y+1)* s + s*0.075)) // rectangle extends downward, so the y index is for top left
          .attr("fill", (d) => colors[d.x % colors.length]);
       
       // add click handler
-      function handleClick() {
-         let absX = d3.event.x;
-         let col = Math.floor(invAbsX(absX) / s);
-         this.selectCol(col);
-      }
-
       d3.select(this.svg)
         .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / s)));
 

@@ -7,8 +7,10 @@
   "dependencies": {
     "@types/d3": "^5.7.2",
     "@types/jquery": "^3.3.30",
+    "@types/papaparse": "^5.0.0",
     "d3": "^5.9.7",
     "jquery": "^3.4.1",
+    "papaparse": "^5.0.0",
     "requirejs": "^2.3.6"
   }
 }
