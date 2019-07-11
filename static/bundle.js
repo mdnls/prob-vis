@@ -661,7 +661,7 @@ define("model/heatmap", ["require", "exports", "model/bins", "papaparse"], funct
                         toDraw = col.map((c) => Math.floor(numItems * c.quantity / colTotal));
                     }
                     break;
-                case Slice.ROWS:
+                case Slice.COLS:
                     let rows = this.matrix.rows();
                     let quantityPerRow = rows.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
                     let rowsTotal = quantityPerRow.reduce((prev, cur) => cur + prev, 0);
@@ -672,7 +672,7 @@ define("model/heatmap", ["require", "exports", "model/bins", "papaparse"], funct
                         toDraw = quantityPerRow.map((c) => Math.floor(numItems * c / rowsTotal));
                     }
                     break;
-                case Slice.COLS:
+                case Slice.ROWS:
                     let cols = this.matrix.cols();
                     let quantityPerCol = cols.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
                     let colsTotal = quantityPerCol.reduce((prev, cur) => cur + prev, 0);
@@ -827,6 +827,9 @@ define("view/heatmap", ["require", "exports", "d3"], function (require, exports,
             let max = allCells.reduce((prev, cur) => Math.max(prev, cur.quantity), -Infinity);
             d3.select(this.svg)
                 .selectAll("rect")
+                .remove();
+            d3.select(this.svg)
+                .selectAll("rect")
                 .data(allCells)
                 .enter()
                 .append("rect")
@@ -839,7 +842,45 @@ define("view/heatmap", ["require", "exports", "d3"], function (require, exports,
     }
     exports.SVGHeatmap = SVGHeatmap;
 });
-define("main", ["require", "exports", "view/binarytree", "view/histogram", "view/entropy", "view/heatmap", "model/bins", "model/heatmap", "d3"], function (require, exports, tree, hist, ent, hm, histModel, matModel, d3) {
+define("view/transport", ["require", "exports", "view/histogram", "view/heatmap", "model/heatmap", "d3"], function (require, exports, histogram_2, heatmap_1, heatmap_2, d3) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class SVGTransport {
+        constructor(divElement, model, conf) {
+            this.conf = conf;
+            this.div = divElement;
+            let defaultIds = ["svgHeatMap", "svgRowHist", "svgColHist"];
+            this.svgHeatMap = this.div + " > #" + defaultIds[0];
+            this.svgRowHist = this.div + " > #" + defaultIds[1];
+            this.svgColHist = this.div + " > #" + defaultIds[2];
+            this.svgColOverlay = this.div + " > #" + defaultIds[2];
+            let d = d3.select(this.div);
+            d.append("svg").attr("id", defaultIds[1]);
+            d.append("br");
+            d.append("svg").attr("id", defaultIds[0]);
+            d.append("svg").attr("id", defaultIds[2]).attr("transform", "rotate(90)");
+            this.model = model;
+            let rslice = new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.ROWS);
+            let cslice = new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.COLS);
+            this.heatmap = new heatmap_1.SVGHeatmap(this.svgHeatMap, this.model, this.conf);
+            this.rowHist = new histogram_2.SVGInteractiveHistogram(this.svgRowHist, rslice, this.conf);
+            this.colHist = new histogram_2.SVGStaticHistogram(this.svgColHist, cslice, this.conf);
+            this.model.addListener(this);
+        }
+        refresh() {
+            let svgHeight = $(this.div).height();
+            let svgWidth = $(this.div).width();
+            d3.select(this.svgRowHist).attr("width", svgWidth / 2).attr("height", svgHeight / 2);
+            d3.select(this.svgHeatMap).attr("width", svgWidth / 2).attr("height", svgHeight / 2);
+            d3.select(this.svgColHist).attr("width", svgWidth / 2).attr("height", svgHeight / 2);
+            this.rowHist.refresh();
+            this.colHist.refresh();
+            this.heatmap.refresh();
+        }
+    }
+    exports.SVGTransport = SVGTransport;
+});
+define("main", ["require", "exports", "view/binarytree", "view/histogram", "view/entropy", "view/transport", "view/heatmap", "model/bins", "model/heatmap", "d3"], function (require, exports, tree, hist, ent, transport, hm, histModel, matModel, d3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class CONF {
@@ -856,7 +897,7 @@ define("main", ["require", "exports", "view/binarytree", "view/histogram", "view
             "border": ["#505050",],
             "histogram": Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7))
         };
-        let conf = new CONF(8, colors, 30);
+        let conf = new CONF(8, colors, 15);
         let m = new histModel.Histogram(8);
         let vt = new tree.SVGBinaryTree("#treesvg", 4, conf);
         vt.setDepth(6);
@@ -882,21 +923,16 @@ define("main", ["require", "exports", "view/binarytree", "view/histogram", "view
                     break;
             }
         });
-        let mat = matModel.HeatMap.fromCSVStr('0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,1,0,1,0,1,0,0,1,0,1,0,0\n5,0,4,2,4,5,9,6,6,7,4,4,5,1,4\n24,10,15,20,16,15,20,20,23,11,25,14,18,9,18\n52,10,18,17,29,28,32,28,24,26,24,22,9,18,41\n22,7,11,19,11,22,20,16,16,17,18,9,8,11,17\n7,3,2,3,3,3,6,3,7,6,6,4,0,4,6\n0,0,0,0,2,1,0,0,0,1,1,0,0,0,0\n0,0,0,0,0,0,0,0,0,1,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0');
+        let mat = matModel.HeatMap.fromCSVStr('0,0,0,1,2,2,0,2,2,4,0,2,1,0,0\n1,0,0,1,0,1,2,1,2,0,0,1,0,0,0\n1,1,0,0,1,3,2,8,2,6,5,3,1,0,1\n3,1,4,4,7,3,11,8,7,4,4,5,2,0,0\n0,2,2,3,3,8,6,11,14,5,6,6,3,0,1\n0,3,1,6,8,8,20,12,14,18,8,6,7,5,4\n4,2,4,6,5,12,14,21,24,21,3,3,1,1,2\n2,0,6,11,11,11,16,14,17,13,13,6,3,0,2\n2,5,4,6,14,19,19,16,9,15,4,7,6,3,2\n0,1,7,3,8,7,21,12,13,14,8,7,7,0,1\n0,1,1,5,6,9,10,9,13,11,4,4,1,2,3\n0,1,0,3,5,7,8,7,3,3,4,6,3,1,1\n0,1,5,0,1,3,8,4,4,5,5,1,0,0,0\n0,0,0,2,2,2,4,4,2,1,1,0,0,1,0\n0,0,0,0,1,2,1,1,1,2,2,2,0,0,1');
         let svgHm = new hm.SVGHeatmap("#hmsvg", mat, conf);
         svgHm.refresh();
-        let matSlice = new matModel.MatrixSlice(mat, matModel.Slice.COL, 7);
+        let matSlice = new matModel.MatrixSlice(mat, matModel.Slice.ROWS);
         let svgMatSlice = new hist.SVGInteractiveHistogram("#hmslicesvg", matSlice, conf);
         svgMatSlice.refresh();
+        let svgTransport = new transport.SVGTransport("#plain-transport0", mat, conf);
+        svgTransport.refresh();
     }
     exports.main = main;
     main();
-});
-define("view/transport", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class SVGTransport {
-    }
-    exports.SVGTransport = SVGTransport;
 });
 //# sourceMappingURL=bundle.js.map

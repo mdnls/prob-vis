@@ -157,9 +157,6 @@ export class SVGSoloEntropy implements ModelListener {
        let svgHeight = $(this.div).height();
        let svgWidth = $(this.div).width();
  
-       // again, single point of control for the magic numbers that determine sub-element sizing
-       // 0 -> histogram, 1 -> bar, 2 -> tree
-       
        d3.select(this.svgHist).attr("height", svgHeight/2).attr("width", svgHeight/2);
        d3.select(this.svgTree).attr("height", svgHeight/3).attr("width", svgWidth);
  

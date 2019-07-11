@@ -96,7 +96,9 @@ export class MatrixSlice implements Bins {
                     toDraw = col.map((c) => Math.floor(numItems * c.quantity / colTotal));
                 }
                 break;
-            case Slice.ROWS:
+            case Slice.COLS:
+                // this is not reversed - or rather, the swap here is intentional
+                // this is supposed to show cols by averageing across all columns, ie. averaging across the vals of every row
                 let rows = this.matrix.rows();
                 let quantityPerRow = rows.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
                 
@@ -109,7 +111,7 @@ export class MatrixSlice implements Bins {
                     toDraw = quantityPerRow.map((c) => Math.floor(numItems * c / rowsTotal));
                 }
                 break;
-            case Slice.COLS:
+            case Slice.ROWS:
                 let cols = this.matrix.cols();
                 let quantityPerCol = cols.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
                 

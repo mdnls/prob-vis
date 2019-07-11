@@ -25,8 +25,6 @@ export class SVGHeatmap implements ModelListener {
       this.svg = svgElement;
       this.model = model;
       this.conf = conf;
-
-
       this.model.addListener(this);
    }
 
@@ -62,6 +60,10 @@ export class SVGHeatmap implements ModelListener {
 
       let max: number = allCells.reduce((prev, cur) => Math.max(prev, cur.quantity), -Infinity);
 
+      d3.select(this.svg)
+        .selectAll("rect")
+        .remove();
+        
       d3.select(this.svg)
         .selectAll("rect")
         .data(allCells)
