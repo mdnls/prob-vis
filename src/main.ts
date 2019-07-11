@@ -36,7 +36,7 @@ export function main() {
 
     m.setAll(1);
 
-    let v = new hist.SVGHistogram("#svg", m, conf);
+    let v = new hist.SVGInteractiveHistogram("#svg", m, conf);
 
     let both = new ent.SVGEntropy("#plain-entropy0", m, conf);
 
@@ -63,8 +63,8 @@ export function main() {
     let svgHm = new hm.SVGHeatmap("#hmsvg", mat, conf);
     svgHm.refresh();
 
-    let matSlice = new matModel.MatrixSlice(mat, matModel.Slice.ROW, 5);
-    let svgMatSlice = new hist.SVGHistogram("#hmslicesvg", matSlice, conf);
+    let matSlice = new matModel.MatrixSlice(mat, matModel.Slice.COL, 7);
+    let svgMatSlice = new hist.SVGInteractiveHistogram("#hmslicesvg", matSlice, conf);
     svgMatSlice.refresh();
 
 }

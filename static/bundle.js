@@ -623,12 +623,13 @@ define("model/heatmap", ["require", "exports", "model/bins", "papaparse"], funct
         Slice[Slice["ROWS"] = 0] = "ROWS";
         Slice[Slice["COLS"] = 1] = "COLS";
         Slice[Slice["ROW"] = 2] = "ROW";
+        Slice[Slice["COL"] = 3] = "COL";
     })(Slice = exports.Slice || (exports.Slice = {}));
     class MatrixSlice {
         constructor(matrix, mode, index) {
             this.matrix = matrix;
             this.mode = mode;
-            if (mode == Slice.ROW) {
+            if (mode == Slice.ROW || mode == Slice.COL) {
                 if (index == undefined) {
                     throw Error("Must provide an index to do a row slice.");
                 }
@@ -639,37 +640,49 @@ define("model/heatmap", ["require", "exports", "model/bins", "papaparse"], funct
             }
             let toDraw = [];
             let numItems = 50;
-            if (this.mode == Slice.ROW) {
-                let row = this.matrix.getRow(this.index);
-                let total = row.map((c) => c.quantity).reduce((prev, cur) => prev + cur, 0);
-                if (total == 0) {
-                    toDraw = row.map((c) => 0);
-                }
-                else {
-                    toDraw = row.map((c) => Math.floor(numItems * c.quantity / total));
-                }
-            }
-            else if (this.mode == Slice.COLS) {
-                let cols = this.matrix.cols();
-                let quantityPerCol = cols.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
-                let total = quantityPerCol.reduce((prev, cur) => cur + prev, 0);
-                if (total == 0) {
-                    toDraw = cols.map((c) => 0);
-                }
-                else {
-                    toDraw = quantityPerCol.map((c) => Math.floor(numItems * c / total));
-                }
-            }
-            else if (this.mode == Slice.ROWS) {
-                let rows = this.matrix.rows();
-                let quantityPerRow = rows.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
-                let total = quantityPerRow.reduce((prev, cur) => cur + prev, 0);
-                if (total == 0) {
-                    toDraw = rows.map((c) => 0);
-                }
-                else {
-                    toDraw = quantityPerRow.map((c) => Math.floor(numItems * c / total));
-                }
+            switch (this.mode) {
+                case Slice.ROW:
+                    let row = this.matrix.getRow(this.index);
+                    let rowTotal = row.map((c) => c.quantity).reduce((prev, cur) => prev + cur, 0);
+                    if (rowTotal == 0) {
+                        toDraw = row.map((c) => 0);
+                    }
+                    else {
+                        toDraw = row.map((c) => Math.floor(numItems * c.quantity / rowTotal));
+                    }
+                    break;
+                case Slice.COL:
+                    let col = this.matrix.getCol(this.index);
+                    let colTotal = col.map((c) => c.quantity).reduce((prev, cur) => prev + cur, 0);
+                    if (colTotal == 0) {
+                        toDraw = col.map((c) => 0);
+                    }
+                    else {
+                        toDraw = col.map((c) => Math.floor(numItems * c.quantity / colTotal));
+                    }
+                    break;
+                case Slice.ROWS:
+                    let rows = this.matrix.rows();
+                    let quantityPerRow = rows.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
+                    let rowsTotal = quantityPerRow.reduce((prev, cur) => cur + prev, 0);
+                    if (rowsTotal == 0) {
+                        toDraw = rows.map((c) => 0);
+                    }
+                    else {
+                        toDraw = quantityPerRow.map((c) => Math.floor(numItems * c / rowsTotal));
+                    }
+                    break;
+                case Slice.COLS:
+                    let cols = this.matrix.cols();
+                    let quantityPerCol = cols.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
+                    let colsTotal = quantityPerCol.reduce((prev, cur) => cur + prev, 0);
+                    if (colsTotal == 0) {
+                        toDraw = cols.map((c) => 0);
+                    }
+                    else {
+                        toDraw = quantityPerCol.map((c) => Math.floor(numItems * c / colsTotal));
+                    }
+                    break;
             }
             this.histogram = bins_1.Histogram.fromArray(toDraw);
         }
@@ -872,11 +885,18 @@ define("main", ["require", "exports", "view/binarytree", "view/histogram", "view
         let mat = matModel.HeatMap.fromCSVStr('0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,1,0,1,0,1,0,0,1,0,1,0,0\n5,0,4,2,4,5,9,6,6,7,4,4,5,1,4\n24,10,15,20,16,15,20,20,23,11,25,14,18,9,18\n52,10,18,17,29,28,32,28,24,26,24,22,9,18,41\n22,7,11,19,11,22,20,16,16,17,18,9,8,11,17\n7,3,2,3,3,3,6,3,7,6,6,4,0,4,6\n0,0,0,0,2,1,0,0,0,1,1,0,0,0,0\n0,0,0,0,0,0,0,0,0,1,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n0,0,0,0,0,0,0,0,0,0,0,0,0,0,0');
         let svgHm = new hm.SVGHeatmap("#hmsvg", mat, conf);
         svgHm.refresh();
-        let matSlice = new matModel.MatrixSlice(mat, matModel.Slice.ROWS);
+        let matSlice = new matModel.MatrixSlice(mat, matModel.Slice.COL, 7);
         let svgMatSlice = new hist.SVGInteractiveHistogram("#hmslicesvg", matSlice, conf);
         svgMatSlice.refresh();
     }
     exports.main = main;
     main();
+});
+define("view/transport", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class SVGTransport {
+    }
+    exports.SVGTransport = SVGTransport;
 });
 //# sourceMappingURL=bundle.js.map

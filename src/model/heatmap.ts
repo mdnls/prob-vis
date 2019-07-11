@@ -43,7 +43,8 @@ export class Cell {
 export enum Slice {
     ROWS,
     COLS,
-    ROW
+    ROW,
+    COL
 }
 
 /**
@@ -57,7 +58,7 @@ export class MatrixSlice implements Bins {
     constructor(matrix: Matrix, mode: Slice, index?: number) {
         this.matrix = matrix;
         this.mode = mode;
-        if(mode == Slice.ROW) {
+        if(mode == Slice.ROW || mode == Slice.COL) {
             if(index == undefined) {
                 throw Error("Must provide an index to do a row slice.");
             }
@@ -70,44 +71,57 @@ export class MatrixSlice implements Bins {
         let toDraw: number[] = [];
         let numItems: number = 50; // this is approximate, due to floor operation
 
-        if(this.mode == Slice.ROW) {
-            let row = this.matrix.getRow(this.index);
-            // every bin gets an item representing a fraction of the total quantity of the row allocated to that cell
-            // int(cell quantity / total quantity * 100)
-            let total = row.map((c) => c.quantity).reduce((prev, cur) => prev + cur, 0);
+        switch(this.mode) {
+            case Slice.ROW:
+                let row = this.matrix.getRow(this.index);
+                // every bin gets an item representing a fraction of the total quantity of the row allocated to that cell
+                // int(cell quantity / total quantity * 100)
+                let rowTotal = row.map((c) => c.quantity).reduce((prev, cur) => prev + cur, 0);
+    
+                if(rowTotal == 0) {
+                    toDraw = row.map((c) => 0);
+                }
+                else {
+                    toDraw = row.map((c) => Math.floor(numItems * c.quantity / rowTotal));
+                }
+                break;
+            case Slice.COL:
+                let col = this.matrix.getCol(this.index);
+                let colTotal = col.map((c) => c.quantity).reduce((prev, cur) => prev + cur, 0);
 
-            if(total == 0) {
-                toDraw = row.map((c) => 0);
-            }
-            else {
-                toDraw = row.map((c) => Math.floor(numItems * c.quantity / total));
-            }
-        }
-        else if(this.mode == Slice.COLS) {
-            let cols = this.matrix.cols();
-            let quantityPerCol = cols.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
-            
-            let total = quantityPerCol.reduce((prev, cur) => cur + prev, 0);
-
-            if(total == 0) {
-                toDraw = cols.map((c) => 0);
-            }
-            else {
-                toDraw = quantityPerCol.map((c) => Math.floor(numItems * c / total));
-            }
-        }
-        else if(this.mode == Slice.ROWS) {
-            let rows = this.matrix.rows();
-            let quantityPerRow = rows.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
-            
-            let total = quantityPerRow.reduce((prev, cur) => cur + prev, 0);
-
-            if(total == 0) {
-                toDraw = rows.map((c) => 0);
-            }
-            else {
-                toDraw = quantityPerRow.map((c) => Math.floor(numItems * c / total));
-            }
+                if(colTotal == 0) {
+                    toDraw = col.map((c) => 0);
+                }
+                else {
+                    toDraw = col.map((c) => Math.floor(numItems * c.quantity / colTotal));
+                }
+                break;
+            case Slice.ROWS:
+                let rows = this.matrix.rows();
+                let quantityPerRow = rows.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
+                
+                let rowsTotal = quantityPerRow.reduce((prev, cur) => cur + prev, 0);
+    
+                if(rowsTotal == 0) {
+                    toDraw = rows.map((c) => 0);
+                }
+                else {
+                    toDraw = quantityPerRow.map((c) => Math.floor(numItems * c / rowsTotal));
+                }
+                break;
+            case Slice.COLS:
+                let cols = this.matrix.cols();
+                let quantityPerCol = cols.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
+                
+                let colsTotal = quantityPerCol.reduce((prev, cur) => cur + prev, 0);
+    
+                if(colsTotal == 0) {
+                    toDraw = cols.map((c) => 0);
+                }
+                else {
+                    toDraw = quantityPerCol.map((c) => Math.floor(numItems * c / colsTotal));
+                }
+                break;
         }
         this.histogram = Histogram.fromArray(toDraw);
     }
