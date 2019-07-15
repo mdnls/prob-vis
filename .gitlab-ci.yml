@@ -1,9 +1,10 @@
+from: node
 pages:
   stage: deploy
   script:
   - rm -rf public
   - mkdir public
-  - node run build
+  - npm run build
   artifacts:
     paths:
     - public
