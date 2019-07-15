@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css?family=Crimson+Text|Roboto&display=swap");
 .colHighlight {
   font-family: sans-serif;
   -webkit-touch-callout: none;
@@ -6,3 +7,16 @@
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none; }
+
+.atn {
+  margin: 50px;
+  padding: 20px;
+  border: 2px solid #AA2020; }
+
+.container {
+  padding: 50px;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500; }
+
+h1, h2, h3, h4 {
+  font-family: 'Crimson Text', serif; }

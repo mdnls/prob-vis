@@ -1,3 +1,5 @@
+@import "fonts";
+
 .colHighlight {
     font-family: sans-serif;
     -webkit-touch-callout: none;
@@ -8,3 +10,18 @@
     user-select: none;
 }
 
+
+.atn {
+    margin: 50px;
+    padding: 20px;
+    border: 2px solid #AA2020;
+}
+.container {
+    padding: 50px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+}
+
+h1, h2, h3, h4 {
+    font-family: 'Crimson Text', serif;
+}
