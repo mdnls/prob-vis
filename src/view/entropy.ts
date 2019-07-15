@@ -35,7 +35,7 @@ export class SVGSoloEntropy implements ModelListener {
  
        this.model = model;
        this.tree = new SVGBinaryTree(this.svgTree, 0, conf);
-       this.hist = new SVGInteractiveHistogram(this.svgHist, this.model, conf);
+       this.hist = new SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
  
        this.model.addListener(this);
     }
@@ -69,7 +69,10 @@ export class SVGSoloEntropy implements ModelListener {
           this.tree.refresh();
           
           // set the colors for the tree
-          let colors = this.conf.colors["histogram"];
+          let colors = this.conf.colors[this.hist.name];
+          if(colors == undefined) {
+             colors = this.conf.colors["default"];
+          }
           
           function isChildFn(targetLayer: number, targetNode: number) {
              return (layerIdx: number, nodeIdx: number) => {
@@ -148,7 +151,7 @@ export class SVGSoloEntropy implements ModelListener {
  
        this.model = model;
        this.tree = new SVGBinaryTree(this.svgTree, 0, conf);
-       this.hist = new SVGInteractiveHistogram(this.svgHist, this.model, conf);
+       this.hist = new SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
  
        this.model.addListener(this);
     }
@@ -165,7 +168,12 @@ export class SVGSoloEntropy implements ModelListener {
        if(selectedBin != -1 && this.model.getBin(selectedBin).length > 0) {
           d3.select(this.svgTree).attr("style", "display: initial");
  
-          let colors = this.conf.colors["histogram"];
+          
+          let colors = this.conf.colors[this.hist.name];
+          if(colors == undefined) {
+             colors = this.conf.colors["default"];
+          }
+          
           let h = TreeNode.huffTree(this.model);
           this.tree.setTree(h);
           let color = (layerIdx: number, nodeIdx: number, node: TreeItem) => {

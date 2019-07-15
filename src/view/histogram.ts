@@ -11,6 +11,8 @@ import * as $ from "jquery";
 export class SVGStaticHistogram implements ModelListener {
    model: Bins;
    conf: CONF;
+   fixed: boolean;
+   name: string;
 
    // public information about this view's visual configuration which can be helpful to have on the fly
    svg: string;
@@ -24,20 +26,18 @@ export class SVGStaticHistogram implements ModelListener {
 
    /**
     * Draw a histogram in the given div representing the given model.
+    * @param name a unique name for this view.
     * @param svgElement the id selector of the svg element that this view should draw in.
     * @param model the model that this selector should use to draw.
+    * @param conf configuration for this view
     */
-   constructor(svgElement: string, model: Bins, conf: CONF) {
+   constructor(name: string, svgElement: string, model: Bins, conf: CONF) {
       this.svg = svgElement;
       this.model = model;
       this.conf = conf;
-
-
+      this.fixed = false;
+      this.name = name;
       this.model.addListener(this);
-
-      d3.select(this.svg)
-        .append("rect")
-        .attr("class", "bottomBorder");
 
       this.refresh();
    }
@@ -46,6 +46,10 @@ export class SVGStaticHistogram implements ModelListener {
     * Redraw the histogram.
     */
    refresh(): void {
+
+      if(this.fixed) {
+         return;
+      }
       let pad: number = this.conf.padding;
 
       let svgWidth = $(this.svg).width();
@@ -66,8 +70,10 @@ export class SVGStaticHistogram implements ModelListener {
       this.xOffset = xOffset;
       this.yOffset = yOffset;
       
-      let colors = this.conf.colors["histogram"]
-
+      let colors = this.conf.colors[this.name];
+      if(colors == undefined) {
+         colors = this.conf.colors["default"];
+      }
       function absX(relX: number) {
          return xOffset + scale(relX);
       }
@@ -92,33 +98,49 @@ export class SVGStaticHistogram implements ModelListener {
 
       // get rid of old data rectangles before redraw
       d3.select(this.svg)
-         .selectAll("#histItem")
+         .selectAll("." + this.name)
          .remove();
 
       // redraw
       d3.select(this.svg)
-         .selectAll("rect #histItem")
+         .selectAll("rect ." + this.name)
          .data(allItems)
          .enter()
          .append("rect")
-         .attr("id", "histItem")
+         .attr("class", this.name)
          .attr("width", scale(s * 0.85))
          .attr("height", scale(s * 0.85))
          .attr("x", (d) => absX(d.x * s + s*0.075))
          .attr("y", (d) => absY((d.y+1)* s + s*0.075)) // rectangle extends downward, so the y index is for top left
          .attr("fill", (d) => colors[d.x % colors.length]);
    }
+
+   /**
+    * Fixes the view by explicitly disabling refresh.
+    */
+   fix(): void {
+      this.fixed = true;
+   }
+
+   /**
+    * Unfix the view by allowing refresh, if the view was previously fixed.
+    */
+   unfix(): void {
+      this.fixed = false;
+   }
 }
 
 
 export class SVGInteractiveHistogram extends SVGStaticHistogram {
-     /**
+   /**
     * Draw a histogram in the given div representing the given model.
+    * @param name a unique name for this view.
     * @param svgElement the id selector of the svg element that this view should draw in.
     * @param model the model that this selector should use to draw.
+    * @param conf configuration for this view
     */
-   constructor(svgElement: string, model: Bins, conf: CONF) {
-      super(svgElement, model, conf);
+   constructor(name: string, svgElement: string, model: Bins, conf: CONF) {
+      super(name, svgElement, model, conf);
       this.model.addListener(this);
       this.refresh();
 

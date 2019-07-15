@@ -87,11 +87,11 @@ export class SVGBinaryTree implements ModelListener {
        let numLeafs: number = this.tree.numLeaves();
        let itemSize: number = 100 / (2 * numLeafs - 1);
  
-       let pad = this.conf.padding;
- 
        let svgWidth = $(this.svg).width();
        let svgHeight = $(this.svg).height();
  
+       let pad = this.conf.padding + (svgWidth / (2*numLeafs - 1))/2;
+
        let viewBoxWidth = svgWidth - 2 * pad;
        let viewBoxHeight = svgHeight - 2 * pad;
        

@@ -277,9 +277,9 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
         refresh() {
             let numLeafs = this.tree.numLeaves();
             let itemSize = 100 / (2 * numLeafs - 1);
-            let pad = this.conf.padding;
             let svgWidth = $(this.svg).width();
             let svgHeight = $(this.svg).height();
+            let pad = this.conf.padding + (svgWidth / (2 * numLeafs - 1)) / 2;
             let viewBoxWidth = svgWidth - 2 * pad;
             let viewBoxHeight = svgHeight - 2 * pad;
             let wScale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxWidth]);
@@ -353,17 +353,19 @@ define("view/histogram", ["require", "exports", "d3", "jquery"], function (requi
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class SVGStaticHistogram {
-        constructor(svgElement, model, conf) {
+        constructor(name, svgElement, model, conf) {
             this.svg = svgElement;
             this.model = model;
             this.conf = conf;
+            this.fixed = false;
+            this.name = name;
             this.model.addListener(this);
-            d3.select(this.svg)
-                .append("rect")
-                .attr("class", "bottomBorder");
             this.refresh();
         }
         refresh() {
+            if (this.fixed) {
+                return;
+            }
             let pad = this.conf.padding;
             let svgWidth = $(this.svg).width();
             let svgHeight = $(this.svg).height();
@@ -379,7 +381,10 @@ define("view/histogram", ["require", "exports", "d3", "jquery"], function (requi
             this.viewBoxSideLength = viewBoxSideLength;
             this.xOffset = xOffset;
             this.yOffset = yOffset;
-            let colors = this.conf.colors["histogram"];
+            let colors = this.conf.colors[this.name];
+            if (colors == undefined) {
+                colors = this.conf.colors["default"];
+            }
             function absX(relX) {
                 return xOffset + scale(relX);
             }
@@ -399,25 +404,31 @@ define("view/histogram", ["require", "exports", "d3", "jquery"], function (requi
                 .attr("rx", 0.2 * s);
             var allItems = [].concat(...this.model.bins());
             d3.select(this.svg)
-                .selectAll("#histItem")
+                .selectAll("." + this.name)
                 .remove();
             d3.select(this.svg)
-                .selectAll("rect #histItem")
+                .selectAll("rect ." + this.name)
                 .data(allItems)
                 .enter()
                 .append("rect")
-                .attr("id", "histItem")
+                .attr("class", this.name)
                 .attr("width", scale(s * 0.85))
                 .attr("height", scale(s * 0.85))
                 .attr("x", (d) => absX(d.x * s + s * 0.075))
                 .attr("y", (d) => absY((d.y + 1) * s + s * 0.075))
                 .attr("fill", (d) => colors[d.x % colors.length]);
         }
+        fix() {
+            this.fixed = true;
+        }
+        unfix() {
+            this.fixed = false;
+        }
     }
     exports.SVGStaticHistogram = SVGStaticHistogram;
     class SVGInteractiveHistogram extends SVGStaticHistogram {
-        constructor(svgElement, model, conf) {
-            super(svgElement, model, conf);
+        constructor(name, svgElement, model, conf) {
+            super(name, svgElement, model, conf);
             this.model.addListener(this);
             this.refresh();
             d3.select(this.svg)
@@ -494,7 +505,7 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
             d.append("svg").attr("id", defaultIDs[2]);
             this.model = model;
             this.tree = new binarytree_1.SVGBinaryTree(this.svgTree, 0, conf);
-            this.hist = new histogram_1.SVGInteractiveHistogram(this.svgHist, this.model, conf);
+            this.hist = new histogram_1.SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
             this.model.addListener(this);
         }
         refresh() {
@@ -515,7 +526,10 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
                 let depth = Math.ceil(Math.log2(distinct)) + 1;
                 this.tree.setDepth(depth);
                 this.tree.refresh();
-                let colors = this.conf.colors["histogram"];
+                let colors = this.conf.colors[this.hist.name];
+                if (colors == undefined) {
+                    colors = this.conf.colors["default"];
+                }
                 function isChildFn(targetLayer, targetNode) {
                     return (layerIdx, nodeIdx) => {
                         let diff = targetLayer - layerIdx;
@@ -572,7 +586,7 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
             d.append("svg").attr("id", defaultIDs[1]);
             this.model = model;
             this.tree = new binarytree_1.SVGBinaryTree(this.svgTree, 0, conf);
-            this.hist = new histogram_1.SVGInteractiveHistogram(this.svgHist, this.model, conf);
+            this.hist = new histogram_1.SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
             this.model.addListener(this);
         }
         refresh() {
@@ -583,7 +597,10 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
             let selectedBin = this.model.selectedBin();
             if (selectedBin != -1 && this.model.getBin(selectedBin).length > 0) {
                 d3.select(this.svgTree).attr("style", "display: initial");
-                let colors = this.conf.colors["histogram"];
+                let colors = this.conf.colors[this.hist.name];
+                if (colors == undefined) {
+                    colors = this.conf.colors["default"];
+                }
                 let h = trees_2.TreeNode.huffTree(this.model);
                 this.tree.setTree(h);
                 let color = (layerIdx, nodeIdx, node) => {
@@ -639,32 +656,33 @@ define("model/heatmap", ["require", "exports", "model/bins", "papaparse"], funct
                 this.index = -1;
             }
             let toDraw = [];
-            let numItems = 50;
+            let numItems = 100;
+            let rows = this.matrix.rows();
+            let quantityPerRow = rows.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
+            let rowsTotal = quantityPerRow.reduce((prev, cur) => cur + prev, 0);
+            let cols = this.matrix.cols();
+            let quantityPerCol = cols.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
+            let colsTotal = quantityPerCol.reduce((prev, cur) => cur + prev, 0);
             switch (this.mode) {
                 case Slice.ROW:
                     let row = this.matrix.getRow(this.index);
-                    let rowTotal = row.map((c) => c.quantity).reduce((prev, cur) => prev + cur, 0);
-                    if (rowTotal == 0) {
+                    if (rowsTotal == 0) {
                         toDraw = row.map((c) => 0);
                     }
                     else {
-                        toDraw = row.map((c) => Math.floor(numItems * c.quantity / rowTotal));
+                        toDraw = row.map((c) => Math.floor(numItems * c.quantity / rowsTotal));
                     }
                     break;
                 case Slice.COL:
                     let col = this.matrix.getCol(this.index);
-                    let colTotal = col.map((c) => c.quantity).reduce((prev, cur) => prev + cur, 0);
-                    if (colTotal == 0) {
+                    if (colsTotal == 0) {
                         toDraw = col.map((c) => 0);
                     }
                     else {
-                        toDraw = col.map((c) => Math.floor(numItems * c.quantity / colTotal));
+                        toDraw = col.map((c) => Math.floor(numItems * c.quantity / colsTotal));
                     }
                     break;
                 case Slice.COLS:
-                    let rows = this.matrix.rows();
-                    let quantityPerRow = rows.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
-                    let rowsTotal = quantityPerRow.reduce((prev, cur) => cur + prev, 0);
                     if (rowsTotal == 0) {
                         toDraw = rows.map((c) => 0);
                     }
@@ -673,9 +691,6 @@ define("model/heatmap", ["require", "exports", "model/bins", "papaparse"], funct
                     }
                     break;
                 case Slice.ROWS:
-                    let cols = this.matrix.cols();
-                    let quantityPerCol = cols.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
-                    let colsTotal = quantityPerCol.reduce((prev, cur) => cur + prev, 0);
                     if (colsTotal == 0) {
                         toDraw = cols.map((c) => 0);
                     }
@@ -864,20 +879,26 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
             this.model = model;
             let rslice = new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.ROWS);
             let cslice = new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.COLS);
+            this.colslices = Array.from({ length: this.model.sideLength() }, (v, k) => new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.COL, k));
             this.heatmap = new heatmap_1.SVGHeatmap(this.svgHeatMap, this.model, this.conf);
-            this.rowHist = new histogram_2.SVGInteractiveHistogram(this.svgRowHist, rslice, this.conf);
-            this.colHist = new histogram_2.SVGStaticHistogram(this.svgColHist, cslice, this.conf);
+            this.rowHist = new histogram_2.SVGInteractiveHistogram("rowHist", this.svgRowHist, rslice, this.conf);
+            this.colHist = new histogram_2.SVGStaticHistogram("colHist", this.svgColHist, cslice, this.conf);
             this.model.addListener(this);
         }
         refresh() {
             let svgHeight = $(this.div).height();
             let svgWidth = $(this.div).width();
-            d3.select(this.svgRowHist).attr("width", svgWidth / 2).attr("height", svgHeight / 2);
-            d3.select(this.svgHeatMap).attr("width", svgWidth / 2).attr("height", svgHeight / 2);
-            d3.select(this.svgColHist).attr("width", svgWidth / 2).attr("height", svgHeight / 2);
+            d3.select(this.svgRowHist).attr("width", (1 / 2) * svgWidth).attr("height", (1 / 2) * svgHeight);
+            d3.select(this.svgHeatMap).attr("width", (1 / 2) * svgWidth).attr("height", (1 / 2) * svgHeight);
+            d3.select(this.svgColHist).attr("width", (1 / 2) * svgWidth).attr("height", (1 / 2) * svgHeight);
             this.rowHist.refresh();
             this.colHist.refresh();
             this.heatmap.refresh();
+            if (this.model.selectedCol() != -1) {
+                let slice = this.colslices[this.model.selectedCol()];
+                this.colOverlay = new histogram_2.SVGStaticHistogram("colOverlay", this.svgColOverlay, slice, this.conf);
+                this.colOverlay.refresh();
+            }
         }
     }
     exports.SVGTransport = SVGTransport;
@@ -895,28 +916,46 @@ define("main", ["require", "exports", "view/binarytree", "view/histogram", "view
     exports.CONF = CONF;
     function main() {
         let colors = {
-            "default": ["#000", "#202020"],
             "border": ["#505050",],
-            "histogram": Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7))
+            "default": Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7)),
+            "rowHist": Array.from({ length: 1 }, (v, k) => d3.interpolateBlues(0.5)),
+            "colHist": Array.from({ length: 1 }, (v, k) => d3.interpolateBlues(0.5)),
+            "colOverlay": Array.from({ length: 1 }, (v, k) => d3.interpolateReds(0.7))
         };
-        let conf = new CONF(8, colors, 15);
+        let conf = new CONF(8, colors, 5);
         let m = new histModel.Histogram(8);
         let vt = new tree.SVGBinaryTree("#treesvg", 4, conf);
         vt.setDepth(6);
         let i = 0;
         setInterval(() => { vt.setDepth((i++ % 6) + 1); }, 500);
         m.setAll(1);
-        let v = new hist.SVGInteractiveHistogram("#svg", m, conf);
+        let v = new hist.SVGInteractiveHistogram("v", "#svg", m, conf);
         let both = new ent.SVGEntropy("#plain-entropy0", m, conf);
         window.addEventListener("resize", () => { m.refresh(); });
         let mat = matModel.HeatMap.fromCSVStr('0,0,0,1,2,2,0,2,2,4,0,2,1,0,0\n1,0,0,1,0,1,2,1,2,0,0,1,0,0,0\n1,1,0,0,1,3,2,8,2,6,5,3,1,0,1\n3,1,4,4,7,3,11,8,7,4,4,5,2,0,0\n0,2,2,3,3,8,6,11,14,5,6,6,3,0,1\n0,3,1,6,8,8,20,12,14,18,8,6,7,5,4\n4,2,4,6,5,12,14,21,24,21,3,3,1,1,2\n2,0,6,11,11,11,16,14,17,13,13,6,3,0,2\n2,5,4,6,14,19,19,16,9,15,4,7,6,3,2\n0,1,7,3,8,7,21,12,13,14,8,7,7,0,1\n0,1,1,5,6,9,10,9,13,11,4,4,1,2,3\n0,1,0,3,5,7,8,7,3,3,4,6,3,1,1\n0,1,5,0,1,3,8,4,4,5,5,1,0,0,0\n0,0,0,2,2,2,4,4,2,1,1,0,0,1,0\n0,0,0,0,1,2,1,1,1,2,2,2,0,0,1');
         let svgHm = new hm.SVGHeatmap("#hmsvg", mat, conf);
         svgHm.refresh();
         let matSlice = new matModel.MatrixSlice(mat, matModel.Slice.ROWS);
-        let svgMatSlice = new hist.SVGInteractiveHistogram("#hmslicesvg", matSlice, conf);
+        let svgMatSlice = new hist.SVGInteractiveHistogram("matSlice", "#hmslicesvg", matSlice, conf);
         svgMatSlice.refresh();
         let svgTransport = new transport.SVGTransport("#plain-transport0", mat, conf);
         svgTransport.refresh();
+        document.addEventListener("keydown", event => {
+            switch (event.key.toLowerCase()) {
+                case ("h"):
+                    v.selectCol(matSlice.selectedBin() - 1);
+                    break;
+                case ("l"):
+                    v.selectCol(matSlice.selectedBin() + 1);
+                    break;
+                case ("k"):
+                    v.incrSelectedBin();
+                    break;
+                case ("j"):
+                    v.decrSelectedBin();
+                    break;
+            }
+        });
         document.addEventListener("keydown", event => {
             switch (event.key.toLowerCase()) {
                 case ("h"):

@@ -7,6 +7,7 @@ import * as d3 from "d3";
 
 export class SVGTransport implements ModelListener {
     private model: Matrix;
+    private colslices: MatrixSlice[];
 
     private heatmap: SVGHeatmap;
     private rowHist: SVGInteractiveHistogram;
@@ -42,10 +43,12 @@ export class SVGTransport implements ModelListener {
         this.model = model;
         let rslice = new MatrixSlice(this.model, Slice.ROWS);
         let cslice = new MatrixSlice(this.model, Slice.COLS);
+        this.colslices = Array.from({length: this.model.sideLength()},
+                    (v, k) => new MatrixSlice(this.model, Slice.COL, k));
 
         this.heatmap = new SVGHeatmap(this.svgHeatMap, this.model, this.conf);
-        this.rowHist = new SVGInteractiveHistogram(this.svgRowHist, rslice, this.conf);
-        this.colHist = new SVGStaticHistogram(this.svgColHist, cslice, this.conf);
+        this.rowHist = new SVGInteractiveHistogram("rowHist", this.svgRowHist, rslice, this.conf);
+        this.colHist = new SVGStaticHistogram("colHist", this.svgColHist, cslice, this.conf);
         
         this.model.addListener(this);
     }
@@ -54,13 +57,19 @@ export class SVGTransport implements ModelListener {
         let svgHeight = $(this.div).height();
         let svgWidth = $(this.div).width();
 
-        d3.select(this.svgRowHist).attr("width", svgWidth/2).attr("height", svgHeight/2);
-        d3.select(this.svgHeatMap).attr("width", svgWidth/2).attr("height", svgHeight/2);
-        d3.select(this.svgColHist).attr("width", svgWidth/2).attr("height", svgHeight/2);
+        d3.select(this.svgRowHist).attr("width", (1/2) * svgWidth).attr("height", (1/2) * svgHeight);
+        d3.select(this.svgHeatMap).attr("width", (1/2) * svgWidth).attr("height", (1/2) * svgHeight);
+        d3.select(this.svgColHist).attr("width", (1/2) * svgWidth).attr("height", (1/2) * svgHeight);
 
         this.rowHist.refresh();
         this.colHist.refresh();
         this.heatmap.refresh();
+
+        if(this.model.selectedCol() != -1) {
+            let slice = this.colslices[this.model.selectedCol()];
+            this.colOverlay = new SVGStaticHistogram("colOverlay", this.svgColOverlay, slice, this.conf);
+            this.colOverlay.refresh();
+        }
     }
 }
 
