@@ -1,4 +1,4 @@
-from: node
+image: node
 pages:
   stage: deploy
   script:
