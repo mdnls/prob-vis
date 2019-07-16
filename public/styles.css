@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css?family=Crimson+Text|Roboto&display=swap");
+@import url("https://fonts.googleapis.com/css?family=Crimson+Text|Roboto:400,700&display=swap");
 .colHighlight {
   font-family: sans-serif;
   -webkit-touch-callout: none;
@@ -7,6 +7,11 @@
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none; }
+
+cite {
+  vertical-align: super;
+  font-size: smaller;
+  margin-left: -5px; }
 
 .atn {
   margin: 50px;

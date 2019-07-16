@@ -1,18 +1,138 @@
 <head>
     <script data-main="setup" src="require.js"></script>
     <script src="bundle.js"></script>
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+          tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+          TeX: {
+              Macros: {
+                  expected: ["{\\mathbb{E}[#1]}", 1],
+                  expectedunder: ["{\\mathbb{E}_{#1}[#2]}", 2]
+              }
+          }
+        });
+    </script>
+    <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
     <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
-    <div class="container">    
-        <h1>Statistical Distances and Their Implications to GAN Training</h1>
-        <div class="atn">
-            <p>I will construct the blog in this page. Some visual components have separate demo pages:
-                <ul>
-                    <li><a href="heatmap.html">Heatmap</a></li>
-                    <li><a href="histogram.html">Histogram</a></li>
-                </ul>
-            </p>
+    <div class="container">
+        <div id="body">
+            <h1>Statistical Distances and Their Implications to GAN Training</h1>
+            <div class="atn">
+                <p>I will construct the blog in this page. Some visual components have separate demo pages:
+                    <ul>
+                        <li><a href="heatmap.html">Heatmap</a></li>
+                        <li><a href="histogram.html">Histogram</a></li>
+                    </ul>
+                </p>
+            </div>
+
+            <h2>
+                Table of Contents
+            </h1>
+            <ul>
+                <li><p>Entropy of a Probability Distribution</p></li>
+                <li><p>Relative Entropy</p></li>
+                <li><p>Transport Plans</p></li>
+                <li><p>Earthmover's Distance</p></li>
+                <li><p>Fitting "Nice" Distributions</p></li>
+                <li><p>Fitting "Real" Distributions</p></li>
+            </ul>
+
+            <div id="intro">
+                <h2>
+                    Introduction
+                </h2>
+
+                <p>
+                    Paragraph: (hook sentence) GANs allow one to draw samples from structured high dimensional distributions...
+                </p>
+
+                <p>
+                    Paragraph: But to do so, they approximate these distributions... This can drastically determine output quality.
+                </p>
+
+                <p>
+                    Paragraph: This opens a natural question: how does one determine the quality of an approximated distribution? More generally, when are two distributions similar at all?
+                </p>
+                <p>
+                   <b>Show two distributions normal distributions</b> - 
+                    For example, one way to compare two distributions is via the $\chi^2$ test.
+                </p>
+                <p>
+                    However, this may not always be a good choice:
+                    
+                    <b>Show (or switch prev diagram) to pathological case for $\chi^2$</b>
+                </p>
+
+                <p>
+                    Paragraph: The general framework for training generative models is to pick some notion of similarity between two distributions, and then using numerical optimization techniques to make distributions as similar as possible.
+                    This article will explore two alternate perspectives for similarity, which have both gotten attention recently for their roles in the quality of GAN output.
+                </p>
+            </div>
+        </div>   
+
+        <div id="entropy">
+            <h2>
+                Entropy
+            </h2>
+
+            <p>Paragraph: In its original formulation, the GAN framework is shown to minimize JSD, a statistical distance based on entropy <cite>1</cite>.</p>
+            <p>Paragraph: intuition behind entropy is that two distributions are similar if they can be discribed in similar ways </p>
+            <p>Paragraph: crucially, entropy relates probability distributions to the notion of information content. Every event has a quantifiable information. Two distributions are similar, then, if the events they describe typically generate similar amounts of information. </p>
+            <p>Paragraph: formulation: $- \sum p(x) \log p(x) = \expected{ \log \frac{1}{p(x)}}$ </p>
+            <p><b>Show basic histogram, with interactive presets, + table of entropy</b></p>
+            <p>Paragraph: the idea behind this formulation is that information content relates to literal information, transferred over wire via bits</p>
+            <p>Paragraph: using bits to represent events induces a decision tree. $N=\frac{1}{p(x)}$ tells us how many outcomes the tree must have, and $\log N$ is the depth of a tree with $N$ outcomes. This quantity is the information content of $x$.</p>
+            <p>Paragraph: the formula gives us an optimal value, if all encodings are perfect and use the tree optimally. This isn't always the case</p>
+            <p><b>Show the huffman code for an interactive tree along with its entropy and the optimal entropy.</b></p>
+
+            <h2>
+                Cross Entropy
+            </h2>
+
+            <p>Paragraph: from the perspective of entropy, two distributions are similar if their events typically have the same info content</p>
+            <p>Paragraph: Kullback Leibler formulation: $D_{KL} (P \vert \vert Q) = \sum p(x) \log \frac{p(x)}{q(x)} = $$\expectedunder{x \sim P}{N_p} - \expectedunder{x \sim P}{N_q}$</p>
+            <p><b>Show histograms for $p(x)$ and $q(x)$, highlighting the path length difference for selected event</b></p>
+            <p>Paragraph: there are many other ways to use this idea to create a distance between distributions: JSD, KL, XEnt, etc</p>
+            <p>Paragraph: however, all of these share one problem: when $q(x)=0$, the tree for $q(x)$ assigns no path at all to $x$.</p>
+            <p>Glue paragraph: instead, we can look at transport metrics [IPMs] which handle this issue more nicely</p>
+        </div>
+
+        <div id="transport">
+            <h2>Transport</h2>
+
+            <p>Paragraph: a second option for comparing distributions comes from the idea of transport. How much work do we have to do to turn one distribution into another?</p>
+            <p><b>Show two distributions side by side with arrows indicating transport</b></p>
+            <p>Paragraph: we can show the entire transport plan in bulk, by defining a joint distribution</p>
+            <p><b>Show the heatmap for the same two distributions</b></p>
+            <p>Transport cost: $\iint_{X \times Y} p(x, y) c(x, y) dx dy$ - ie. for rectangles of size $dx dy$, we transport $p(x, y)$ of them, and each costs $c(x, y)$</p> 
+            <p>Wasserstein Distance: the minimum transport cost to get from $p$ to $q$.</p>
+            <p>Paragraph: wasserstein distance is "more general" than entropy distances</p>
+        </div>
+
+        <div id="convergence">
+            <h2>How does this distinction affect training of generative models?</h2>
+            <p>Paragraph: in general, training a generative model is feasible under either distance</p>
+            <p>Paragraph: For example, consider "nice" distributions:</p>
+            <p><b>Show animation of 2D convergence when distributions have the same support</b></p>
+            <p>Paragraph: however there are cases when entropy breaks:</p>
+            <p><b>Show animation of 2D convergence when distributions don't have the same support</b></p>
+            <p>Paragraph: in particular, low dimensional manifolds are a "worst case" for entropy measures</p>
+            <p>Paragraph: images have this kind of distribution</p>
+        </div>
+
+        <div id="conclusion">
+            <h2>Conclusion</h2>
+        </div>
+
+        <div id="citations">
+            <ol>
+                <li>Goodfellow Paper</li>
+            </ol>
         </div>
     </div>
 </body>
