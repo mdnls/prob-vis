@@ -111,7 +111,7 @@ export class SVGStaticHistogram implements ModelListener {
          .attr("width", scale(s * 0.85))
          .attr("height", scale(s * 0.85))
          .attr("x", (d) => absX(d.x * s + s*0.075))
-         .attr("y", (d) => absY((d.y+1)* s + s*0.075)) // rectangle extends downward, so the y index is for top left
+         .attr("y", (d) => absY((d.y+1)* s - s*0.075)) // rectangle extends downward, so the y index is for top left
          .attr("fill", (d) => colors[d.x % colors.length]);
    }
 
@@ -215,5 +215,103 @@ export class SVGInteractiveHistogram extends SVGStaticHistogram {
             this.model.removeItem(this.model.selectedBin());
          }
       }
+   }
+}
+
+
+export class SVGPhantomHistogram extends SVGStaticHistogram {
+   private phantom: Bins;
+
+   /**
+    * Draw a histogram in the given div representing the given model.
+    * @param name a unique name for this view.
+    * @param svgElement the id selector of the svg element that this view should draw in.
+    * @param model the model that this selector should use to draw.
+    * @param conf configuration for this view
+    */
+   constructor(name: string, svgElement: string, model: Bins, phantom: Bins, conf: CONF) {
+      super(name, svgElement, model, conf);
+      this.model.addListener(this);
+      this.phantom = phantom;
+      this.phantom.addListener(this);
+      this.refresh();
+   }
+
+   refresh() {
+      let scale = d3.scaleLinear().domain([0, 100]).range([0, this.viewBoxSideLength]);
+
+      let xOffset = this.xOffset;
+      let yOffset = this.yOffset;
+      let svgHeight = this.height;
+      function absX(relX: number) {
+         return xOffset + scale(relX);
+      }
+      function invAbsX(absX: number) {
+         return scale.invert(absX - xOffset);
+      }
+      function absY(relY: number) {
+         return svgHeight - yOffset - scale(relY);
+      }
+      // goal: draw a marker at y+1 where y is the num of items in the bin
+
+      if(this.phantom != undefined) {
+         let pdata = this.phantom.bins().map((bin: Item[]) => bin[bin.length-1]);
+         let mdata = this.model.bins().map((bin: Item[]) => bin[bin.length-1]);
+
+         d3.select(this.svg)
+         .selectAll(".phantomIndicator")
+         .remove();
+
+         d3.select(this.svg)
+         .selectAll(".phantomIndicatorCover")
+         .remove();
+
+         d3.select(this.svg)
+         .selectAll(".phantomIndicatorLine")
+         .remove();
+
+         // add the outline bars
+         d3.select(this.svg)
+         .selectAll("rect .phantomIndicator")
+         .data(pdata)
+         .enter()
+         .append("rect")
+         .attr("x", (d) => absX(d.x * this.s + this.s*0.025))
+         .attr("y", (d) => absY((d.y+1)* this.s - this.s*0.025))
+         .attr("width", (d) => scale(this.s * 0.95))
+         .attr("height", (d) => scale(this.s * 0.95 * 0.25))
+         .attr("fill", "#DDDDDD")
+         .attr("class", "phantomIndicator");
+
+         // use white rectangles to cover bodies
+         d3.select(this.svg)
+         .selectAll("rect .phantomIndicatorCover")
+         .data(pdata)
+         .enter()
+         .append("rect")
+         .attr("x", (d) => absX(d.x * this.s + this.s*0.075))
+         .attr("y", (d) => absY((d.y+1)* this.s - this.s*0.075))
+         .attr("width", (d) => scale(this.s * 0.85))
+         .attr("height", (d) => scale(this.s * 0.85))
+         .attr("fill", "#FFFFFF")
+         .attr("class", "phantomIndicator");
+
+         // then draw the lines for markers which are above the actual model
+
+         let overModelIdxs = Array.from({length: pdata.length}, (v, k) => k).filter((v, k) => pdata[k].y > mdata[k].y);
+         
+         d3.select(this.svg)
+         .selectAll("line .phantomIndicatorLine")
+         .data(overModelIdxs)
+         .enter()
+         .append("line")
+         .attr("x1", (d) => absX(this.s * pdata[d].x + this.s/2))
+         .attr("x2", (d) => absX(this.s * pdata[d].x + this.s/2))
+         .attr("y1", (d) => absY(this.s * (mdata[d].y + 1) - 0.075 * this.s))
+         .attr("y2", (d) => absY(this.s * (pdata[d].y + 1) - 0.075 * this.s))
+         .attr("stroke", "#DDDDDD")
+         .attr("class", "phantomIndicatorLine");
+      }
+      super.refresh();
    }
 }

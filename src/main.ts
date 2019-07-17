@@ -19,7 +19,6 @@ export class CONF {
         this.padding = padding;
     }
 }
-
 export function main() {
     let colors = {
         "border": ["#505050",],
@@ -59,10 +58,10 @@ export function main() {
     document.addEventListener("keydown", event => {
         switch(event.key.toLowerCase()) {
             case("h"):
-                v.selectCol(matSlice.selectedBin() - 1);
+                v.selectCol(m.selectedBin() - 1);
                 break;
             case("l"):
-                v.selectCol(matSlice.selectedBin() + 1);
+                v.selectCol(m.selectedBin() + 1);
                 break;
             case("k"):
                 v.incrSelectedBin();
@@ -88,5 +87,12 @@ export function main() {
                 break;
         }
     });
+
+    
+    let phantom = new histModel.Histogram(8);
+    phantom.setAll(2);
+
+    let phanthist = new hist.SVGPhantomHistogram("phist", "#phantomhist", m, phantom, conf);
+    phanthist.refresh();
 }
 main();

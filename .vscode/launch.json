@@ -8,15 +8,22 @@
             "type": "chrome",
             "request": "launch",
             "name": "Histogram",
-            "url": "file:///Users/max/Projects/probabilities-vis/static/heatmap.html",
+            "url": "file:///Users/max/Projects/probabilities-vis/public/histogram.html",
             "webRoot": "${workspaceFolder}"
         },
         {
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome",
-            "url": "file:///Users/max/Projects/probabilities-vis/static/index.html",
+            "url": "file:///Users/max/Projects/probabilities-vis/public/index.html",
             "webRoot": "${workspaceFolder}"
-        }
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Article",
+            "url": "file:///Users/max/Projects/probabilities-vis/public/index.html",
+            "webRoot": "${workspaceFolder}"
+        },
     ]
 }

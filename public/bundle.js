@@ -1,3 +1,12 @@
+define("article", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function main() {
+        alert("Test");
+    }
+    exports.main = main;
+    main();
+});
 define("model/model", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -415,7 +424,7 @@ define("view/histogram", ["require", "exports", "d3", "jquery"], function (requi
                 .attr("width", scale(s * 0.85))
                 .attr("height", scale(s * 0.85))
                 .attr("x", (d) => absX(d.x * s + s * 0.075))
-                .attr("y", (d) => absY((d.y + 1) * s + s * 0.075))
+                .attr("y", (d) => absY((d.y + 1) * s - s * 0.075))
                 .attr("fill", (d) => colors[d.x % colors.length]);
         }
         fix() {
@@ -485,6 +494,79 @@ define("view/histogram", ["require", "exports", "d3", "jquery"], function (requi
         }
     }
     exports.SVGInteractiveHistogram = SVGInteractiveHistogram;
+    class SVGPhantomHistogram extends SVGStaticHistogram {
+        constructor(name, svgElement, model, phantom, conf) {
+            super(name, svgElement, model, conf);
+            this.model.addListener(this);
+            this.phantom = phantom;
+            this.phantom.addListener(this);
+            this.refresh();
+        }
+        refresh() {
+            let scale = d3.scaleLinear().domain([0, 100]).range([0, this.viewBoxSideLength]);
+            let xOffset = this.xOffset;
+            let yOffset = this.yOffset;
+            let svgHeight = this.height;
+            function absX(relX) {
+                return xOffset + scale(relX);
+            }
+            function invAbsX(absX) {
+                return scale.invert(absX - xOffset);
+            }
+            function absY(relY) {
+                return svgHeight - yOffset - scale(relY);
+            }
+            if (this.phantom != undefined) {
+                let pdata = this.phantom.bins().map((bin) => bin[bin.length - 1]);
+                let mdata = this.model.bins().map((bin) => bin[bin.length - 1]);
+                d3.select(this.svg)
+                    .selectAll(".phantomIndicator")
+                    .remove();
+                d3.select(this.svg)
+                    .selectAll(".phantomIndicatorCover")
+                    .remove();
+                d3.select(this.svg)
+                    .selectAll(".phantomIndicatorLine")
+                    .remove();
+                d3.select(this.svg)
+                    .selectAll("rect .phantomIndicator")
+                    .data(pdata)
+                    .enter()
+                    .append("rect")
+                    .attr("x", (d) => absX(d.x * this.s + this.s * 0.025))
+                    .attr("y", (d) => absY((d.y + 1) * this.s - this.s * 0.025))
+                    .attr("width", (d) => scale(this.s * 0.95))
+                    .attr("height", (d) => scale(this.s * 0.95 * 0.25))
+                    .attr("fill", "#DDDDDD")
+                    .attr("class", "phantomIndicator");
+                d3.select(this.svg)
+                    .selectAll("rect .phantomIndicatorCover")
+                    .data(pdata)
+                    .enter()
+                    .append("rect")
+                    .attr("x", (d) => absX(d.x * this.s + this.s * 0.075))
+                    .attr("y", (d) => absY((d.y + 1) * this.s - this.s * 0.075))
+                    .attr("width", (d) => scale(this.s * 0.85))
+                    .attr("height", (d) => scale(this.s * 0.85))
+                    .attr("fill", "#FFFFFF")
+                    .attr("class", "phantomIndicator");
+                let overModelIdxs = Array.from({ length: pdata.length }, (v, k) => k).filter((v, k) => pdata[k].y > mdata[k].y);
+                d3.select(this.svg)
+                    .selectAll("line .phantomIndicatorLine")
+                    .data(overModelIdxs)
+                    .enter()
+                    .append("line")
+                    .attr("x1", (d) => absX(this.s * pdata[d].x + this.s / 2))
+                    .attr("x2", (d) => absX(this.s * pdata[d].x + this.s / 2))
+                    .attr("y1", (d) => absY(this.s * (mdata[d].y + 1) - 0.075 * this.s))
+                    .attr("y2", (d) => absY(this.s * (pdata[d].y + 1) - 0.075 * this.s))
+                    .attr("stroke", "#DDDDDD")
+                    .attr("class", "phantomIndicatorLine");
+            }
+            super.refresh();
+        }
+    }
+    exports.SVGPhantomHistogram = SVGPhantomHistogram;
 });
 define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "view/binarytree", "d3", "jquery"], function (require, exports, trees_2, histogram_1, binarytree_1, d3, $) {
     "use strict";
@@ -943,10 +1025,10 @@ define("main", ["require", "exports", "view/binarytree", "view/histogram", "view
         document.addEventListener("keydown", event => {
             switch (event.key.toLowerCase()) {
                 case ("h"):
-                    v.selectCol(matSlice.selectedBin() - 1);
+                    v.selectCol(m.selectedBin() - 1);
                     break;
                 case ("l"):
-                    v.selectCol(matSlice.selectedBin() + 1);
+                    v.selectCol(m.selectedBin() + 1);
                     break;
                 case ("k"):
                     v.incrSelectedBin();
@@ -970,6 +1052,10 @@ define("main", ["require", "exports", "view/binarytree", "view/histogram", "view
                     break;
             }
         });
+        let phantom = new histModel.Histogram(8);
+        phantom.setAll(2);
+        let phanthist = new hist.SVGPhantomHistogram("phist", "#phantomhist", m, phantom, conf);
+        phanthist.refresh();
     }
     exports.main = main;
     main();
