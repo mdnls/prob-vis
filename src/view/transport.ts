@@ -1,7 +1,7 @@
 import {SVGInteractiveHistogram, SVGStaticHistogram} from './histogram';
 import {SVGHeatmap} from './heatmap';
 import { Matrix, MatrixSlice, Slice } from '../model/heatmap';
-import { CONF } from '../main';
+import { CONF } from '../model/model';
 import {ModelListener} from '../model/model';
 import * as d3 from "d3";
 

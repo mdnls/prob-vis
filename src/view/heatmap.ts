@@ -1,5 +1,5 @@
 import {Matrix, Cell, MatrixSlice} from '../model/heatmap';
-import {CONF} from '../main';
+import {CONF} from '../model/model';
 import { ModelListener } from '../model/model';
 import * as d3 from 'd3';
 

@@ -29,3 +29,10 @@ h1, h2, h3, h4 {
 b {
   color: #AA2020;
   font-weight: 700; }
+
+.vis-inset {
+  width: 100%;
+  padding: 5% 20%; }
+  .vis-inset svg {
+    height: 80%;
+    margin: 20px; }

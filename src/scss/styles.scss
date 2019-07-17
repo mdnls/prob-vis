@@ -35,3 +35,13 @@ b {
     color: #AA2020;
     font-weight: 700;
 }
+
+.vis-inset {
+    width: 100%;
+    padding: 5% 20%;
+
+    svg {
+        height: 80%;
+        margin: 20px;
+    }
+}

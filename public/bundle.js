@@ -1,15 +1,14 @@
-define("article", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    function main() {
-        alert("Test");
-    }
-    exports.main = main;
-    main();
-});
 define("model/model", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    class CONF {
+        constructor(gridBoxSize, colors, padding) {
+            this.gridBoxSize = gridBoxSize;
+            this.colors = colors;
+            this.padding = padding;
+        }
+    }
+    exports.CONF = CONF;
 });
 define("model/bins", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -96,6 +95,300 @@ define("model/bins", ["require", "exports"], function (require, exports) {
         }
     }
     exports.Histogram = Histogram;
+});
+define("view/textbinder", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class TextBinder {
+        constructor(textElement, model, updateRule) {
+            this.textElement = textElement;
+            this.model = model;
+            this.updateRule = updateRule;
+        }
+        refresh() {
+            $(this.textElement).text(this.updateRule(this.model));
+        }
+    }
+    exports.TextBinder = TextBinder;
+});
+define("data", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.chisqr1 = {
+        "leftHistBins": [1, 2, 4, 6, 3, 4, 1, 1],
+        "rightHistBins": [1, 2, 3, 5, 4, 6, 2, 1]
+    };
+    exports.chisqr2 = {
+        "leftHistBins": [2, 2, 3, 2, 4, 5, 8, 0],
+        "centerHistBins": [2, 2, 3, 2, 4, 5, 8, 8],
+        "rightHistBins": [2, 2, 2, 2, 3, 3, 3, 3]
+    };
+});
+define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], function (require, exports, bins_1, d3, $) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class SVGStaticHistogram {
+        constructor(name, svgElement, model, conf) {
+            this.svg = svgElement;
+            this.model = model;
+            this.conf = conf;
+            this.fixed = false;
+            this.name = name;
+            this.model.addListener(this);
+            this.refresh();
+        }
+        refresh() {
+            if (this.fixed) {
+                return;
+            }
+            let pad = this.conf.padding;
+            let svgWidth = $(this.svg).width();
+            let svgHeight = $(this.svg).height();
+            let viewBoxSideLength = Math.min(svgWidth, svgHeight) - 2 * pad;
+            let xOffset = (svgWidth - viewBoxSideLength) / 2;
+            let yOffset = (svgHeight - viewBoxSideLength) / 2;
+            let scale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxSideLength]);
+            let s = scale.invert(viewBoxSideLength / this.model.numBins());
+            this.s = s;
+            this.pad = pad;
+            this.width = svgWidth;
+            this.height = svgHeight;
+            this.viewBoxSideLength = viewBoxSideLength;
+            this.xOffset = xOffset;
+            this.yOffset = yOffset;
+            let colors = this.conf.colors[this.name];
+            if (colors == undefined) {
+                colors = this.conf.colors["default"];
+            }
+            function absX(relX) {
+                return xOffset + scale(relX);
+            }
+            function invAbsX(absX) {
+                return scale.invert(absX - xOffset);
+            }
+            function absY(relY) {
+                return svgHeight - yOffset - scale(relY);
+            }
+            d3.select(this.svg)
+                .selectAll(".bottomBorder")
+                .attr("x", absX(0))
+                .attr("y", absY(0))
+                .attr("height", scale(0.5))
+                .attr("width", viewBoxSideLength)
+                .attr("fill", this.conf.colors["border"][0])
+                .attr("rx", 0.2 * s);
+            var allItems = [].concat(...this.model.bins());
+            d3.select(this.svg)
+                .selectAll("." + this.name)
+                .remove();
+            d3.select(this.svg)
+                .selectAll("rect ." + this.name)
+                .data(allItems)
+                .enter()
+                .append("rect")
+                .attr("class", this.name)
+                .attr("width", scale(s * 0.85))
+                .attr("height", scale(s * 0.85))
+                .attr("x", (d) => absX(d.x * s + s * 0.075))
+                .attr("y", (d) => absY((d.y + 1) * s - s * 0.075))
+                .attr("fill", (d) => colors[d.x % colors.length]);
+        }
+        fix() {
+            this.fixed = true;
+        }
+        unfix() {
+            this.fixed = false;
+        }
+    }
+    exports.SVGStaticHistogram = SVGStaticHistogram;
+    class SVGInteractiveHistogram extends SVGStaticHistogram {
+        constructor(name, svgElement, model, conf) {
+            super(name, svgElement, model, conf);
+            this.model.addListener(this);
+            this.refresh();
+            d3.select(this.svg)
+                .append("text")
+                .text("*")
+                .attr("class", "colHighlight")
+                .attr("text-anchor", "middle")
+                .attr("dominant-baseline", "middle");
+        }
+        refresh() {
+            super.refresh();
+            let scale = d3.scaleLinear().domain([0, 100]).range([0, this.viewBoxSideLength]);
+            let xOffset = this.xOffset;
+            let yOffset = this.yOffset;
+            let svgHeight = this.height;
+            function absX(relX) {
+                return xOffset + scale(relX);
+            }
+            function invAbsX(absX) {
+                return scale.invert(absX - xOffset);
+            }
+            function absY(relY) {
+                return svgHeight - yOffset - scale(relY);
+            }
+            d3.select(this.svg)
+                .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / this.s)));
+            if (this.model.selectedBin() != -1) {
+                let binHeight = this.model.getBin(this.model.selectedBin()).length;
+                d3.select(this.svg)
+                    .selectAll(".colHighlight")
+                    .attr("x", (d) => absX(this.s * this.model.selectedBin() + 0.5 * this.s))
+                    .attr("y", (d) => absY(this.s * binHeight))
+                    .attr("style", "font-size: " + scale(this.s) + "px;");
+            }
+        }
+        selectCol(bin) {
+            this.model.selectBin(bin);
+        }
+        incrSelectedBin() {
+            if (this.model.selectedBin() != -1) {
+                let curItems = this.model.getBin(this.model.selectedBin()).length;
+                if ((curItems + 1) * this.s < 100) {
+                    this.model.addItem(this.model.selectedBin());
+                }
+            }
+        }
+        decrSelectedBin() {
+            if (this.model.selectedBin() != -1) {
+                let curItems = this.model.getBin(this.model.selectedBin()).length;
+                if (curItems > 1) {
+                    this.model.removeItem(this.model.selectedBin());
+                }
+            }
+        }
+    }
+    exports.SVGInteractiveHistogram = SVGInteractiveHistogram;
+    class SVGPhantomHistogram extends SVGStaticHistogram {
+        constructor(name, svgElement, model, phantom, conf) {
+            super(name, svgElement, model, conf);
+            this.model.addListener(this);
+            this.phantom = phantom;
+            this.phantom.addListener(this);
+            this.refresh();
+        }
+        refresh() {
+            let scale = d3.scaleLinear().domain([0, 100]).range([0, this.viewBoxSideLength]);
+            let xOffset = this.xOffset;
+            let yOffset = this.yOffset;
+            let svgHeight = this.height;
+            function absX(relX) {
+                return xOffset + scale(relX);
+            }
+            function invAbsX(absX) {
+                return scale.invert(absX - xOffset);
+            }
+            function absY(relY) {
+                return svgHeight - yOffset - scale(relY);
+            }
+            if (this.phantom != undefined) {
+                let pdata = this.phantom.bins().map((bin) => bin[bin.length - 1]);
+                let mdata = this.model.bins().map((bin) => bin[bin.length - 1]);
+                mdata = mdata.map((v, k) => (v == undefined) ? new bins_1.BinItem(k, -1, "") : v);
+                d3.select(this.svg)
+                    .selectAll(".phantomIndicator")
+                    .remove();
+                d3.select(this.svg)
+                    .selectAll(".phantomIndicatorCover")
+                    .remove();
+                d3.select(this.svg)
+                    .selectAll(".phantomIndicatorLine")
+                    .remove();
+                d3.select(this.svg)
+                    .selectAll("rect .phantomIndicator")
+                    .data(pdata)
+                    .enter()
+                    .append("rect")
+                    .attr("x", (d) => absX(d.x * this.s + this.s * 0.025))
+                    .attr("y", (d) => absY((d.y + 1) * this.s - this.s * 0.025))
+                    .attr("width", (d) => scale(this.s * 0.95))
+                    .attr("height", (d) => scale(this.s * 0.95 * 0.25))
+                    .attr("fill", "#AAAAAA")
+                    .attr("class", "phantomIndicator");
+                d3.select(this.svg)
+                    .selectAll("rect .phantomIndicatorCover")
+                    .data(pdata)
+                    .enter()
+                    .append("rect")
+                    .attr("x", (d) => absX(d.x * this.s + this.s * 0.075))
+                    .attr("y", (d) => absY((d.y + 1) * this.s - this.s * 0.075))
+                    .attr("width", (d) => scale(this.s * 0.85))
+                    .attr("height", (d) => scale(this.s * 0.85))
+                    .attr("fill", "#FFFFFF")
+                    .attr("class", "phantomIndicator");
+                let overModelIdxs = Array.from({ length: pdata.length }, (v, k) => k).filter((v, k) => pdata[k].y > mdata[k].y);
+                d3.select(this.svg)
+                    .selectAll("line .phantomIndicatorLine")
+                    .data(overModelIdxs)
+                    .enter()
+                    .append("line")
+                    .attr("x1", (d) => absX(this.s * pdata[d].x + this.s / 2))
+                    .attr("x2", (d) => absX(this.s * pdata[d].x + this.s / 2))
+                    .attr("y1", (d) => absY(this.s * (mdata[d].y + 1) - 0.075 * this.s))
+                    .attr("y2", (d) => absY(this.s * (pdata[d].y + 1) - 0.075 * this.s))
+                    .attr("stroke", "#DDDDDD")
+                    .attr("class", "phantomIndicatorLine");
+            }
+            super.refresh();
+        }
+    }
+    exports.SVGPhantomHistogram = SVGPhantomHistogram;
+});
+define("article", ["require", "exports", "d3", "model/bins", "view/textbinder", "data", "view/histogram", "model/model"], function (require, exports, d3, bins_2, textbinder_1, data_1, histogram_1, model_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    let colors = {
+        "border": ["#505050",],
+        "default": Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7)),
+        "rowHist": Array.from({ length: 1 }, (v, k) => d3.interpolateBlues(0.5)),
+        "colHist": Array.from({ length: 1 }, (v, k) => d3.interpolateBlues(0.5)),
+        "colOverlay": Array.from({ length: 1 }, (v, k) => d3.interpolateReds(0.7))
+    };
+    const conf = new model_1.CONF(8, colors, 5);
+    function main() {
+        setupIntro();
+    }
+    exports.main = main;
+    function setupIntro() {
+        let mLeft1 = bins_2.Histogram.fromArray(data_1.chisqr1["leftHistBins"]);
+        let mRight1 = bins_2.Histogram.fromArray(data_1.chisqr1["rightHistBins"]);
+        let hLeft1 = new histogram_1.SVGPhantomHistogram("chisqr-hist-1-left", "#chisqr-1-left-svg", mLeft1, mRight1, conf);
+        let hRight1 = new histogram_1.SVGPhantomHistogram("chisqr-hist-1-right", "#chisqr-1-right-svg", mRight1, mLeft1, conf);
+        hLeft1.refresh();
+        hRight1.refresh();
+        let chisqrval = new textbinder_1.TextBinder("#chisqr-1-val", [mLeft1, mRight1], function (m) {
+            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
+            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
+                .reduce((prev, cur) => prev + cur, 0);
+            return "" + Math.round(c * 100) / 100;
+        });
+        mLeft1.addListener(chisqrval);
+        let mLeft2 = bins_2.Histogram.fromArray(data_1.chisqr2["leftHistBins"]);
+        let mCenter2 = bins_2.Histogram.fromArray(data_1.chisqr2["centerHistBins"]);
+        let mRight2 = bins_2.Histogram.fromArray(data_1.chisqr2["rightHistBins"]);
+        let hLeft2 = new histogram_1.SVGPhantomHistogram("chisqr-hist-2-left", "#chisqr-2-left-svg", mLeft2, mCenter2, conf);
+        let hCenter2 = new histogram_1.SVGStaticHistogram("chisqr-hist-2-center", "#chisqr-2-center-svg", mCenter2, conf);
+        let hRight2 = new histogram_1.SVGPhantomHistogram("chisqr-hist-2-right", "#chisqr-2-right-svg", mRight2, mCenter2, conf);
+        hLeft2.refresh();
+        hCenter2.refresh();
+        hRight2.refresh();
+        let chisqrvalL = new textbinder_1.TextBinder("#chisqr-2-left-val", [mLeft2, mCenter2], function (m) {
+            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
+            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
+                .reduce((prev, cur) => prev + cur, 0);
+            return "" + Math.round(c * 100) / 100;
+        });
+        let chisqrvalR = new textbinder_1.TextBinder("#chisqr-2-right-val", [mRight2, mCenter2], function (m) {
+            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
+            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
+                .reduce((prev, cur) => prev + cur, 0);
+            return "" + Math.round(c * 100) / 100;
+        });
+        mLeft2.addListener(chisqrvalL);
+        mRight2.addListener(chisqrvalR);
+    }
+    main();
 });
 define("model/trees", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -358,217 +651,7 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
     }
     exports.SVGBinaryTree = SVGBinaryTree;
 });
-define("view/histogram", ["require", "exports", "d3", "jquery"], function (require, exports, d3, $) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class SVGStaticHistogram {
-        constructor(name, svgElement, model, conf) {
-            this.svg = svgElement;
-            this.model = model;
-            this.conf = conf;
-            this.fixed = false;
-            this.name = name;
-            this.model.addListener(this);
-            this.refresh();
-        }
-        refresh() {
-            if (this.fixed) {
-                return;
-            }
-            let pad = this.conf.padding;
-            let svgWidth = $(this.svg).width();
-            let svgHeight = $(this.svg).height();
-            let viewBoxSideLength = Math.min(svgWidth, svgHeight) - 2 * pad;
-            let xOffset = (svgWidth - viewBoxSideLength) / 2;
-            let yOffset = (svgHeight - viewBoxSideLength) / 2;
-            let scale = d3.scaleLinear().domain([0, 100]).range([0, viewBoxSideLength]);
-            let s = scale.invert(viewBoxSideLength / this.model.numBins());
-            this.s = s;
-            this.pad = pad;
-            this.width = svgWidth;
-            this.height = svgHeight;
-            this.viewBoxSideLength = viewBoxSideLength;
-            this.xOffset = xOffset;
-            this.yOffset = yOffset;
-            let colors = this.conf.colors[this.name];
-            if (colors == undefined) {
-                colors = this.conf.colors["default"];
-            }
-            function absX(relX) {
-                return xOffset + scale(relX);
-            }
-            function invAbsX(absX) {
-                return scale.invert(absX - xOffset);
-            }
-            function absY(relY) {
-                return svgHeight - yOffset - scale(relY);
-            }
-            d3.select(this.svg)
-                .selectAll(".bottomBorder")
-                .attr("x", absX(0))
-                .attr("y", absY(0))
-                .attr("height", scale(0.5))
-                .attr("width", viewBoxSideLength)
-                .attr("fill", this.conf.colors["border"][0])
-                .attr("rx", 0.2 * s);
-            var allItems = [].concat(...this.model.bins());
-            d3.select(this.svg)
-                .selectAll("." + this.name)
-                .remove();
-            d3.select(this.svg)
-                .selectAll("rect ." + this.name)
-                .data(allItems)
-                .enter()
-                .append("rect")
-                .attr("class", this.name)
-                .attr("width", scale(s * 0.85))
-                .attr("height", scale(s * 0.85))
-                .attr("x", (d) => absX(d.x * s + s * 0.075))
-                .attr("y", (d) => absY((d.y + 1) * s - s * 0.075))
-                .attr("fill", (d) => colors[d.x % colors.length]);
-        }
-        fix() {
-            this.fixed = true;
-        }
-        unfix() {
-            this.fixed = false;
-        }
-    }
-    exports.SVGStaticHistogram = SVGStaticHistogram;
-    class SVGInteractiveHistogram extends SVGStaticHistogram {
-        constructor(name, svgElement, model, conf) {
-            super(name, svgElement, model, conf);
-            this.model.addListener(this);
-            this.refresh();
-            d3.select(this.svg)
-                .append("text")
-                .text("*")
-                .attr("class", "colHighlight")
-                .attr("text-anchor", "middle")
-                .attr("dominant-baseline", "middle");
-        }
-        refresh() {
-            super.refresh();
-            let scale = d3.scaleLinear().domain([0, 100]).range([0, this.viewBoxSideLength]);
-            let xOffset = this.xOffset;
-            let yOffset = this.yOffset;
-            let svgHeight = this.height;
-            function absX(relX) {
-                return xOffset + scale(relX);
-            }
-            function invAbsX(absX) {
-                return scale.invert(absX - xOffset);
-            }
-            function absY(relY) {
-                return svgHeight - yOffset - scale(relY);
-            }
-            d3.select(this.svg)
-                .on("click", () => this.selectCol(Math.floor(invAbsX(d3.event.x) / this.s)));
-            if (this.model.selectedBin() != -1) {
-                let binHeight = this.model.getBin(this.model.selectedBin()).length;
-                d3.select(this.svg)
-                    .selectAll(".colHighlight")
-                    .attr("x", (d) => absX(this.s * this.model.selectedBin() + 0.5 * this.s))
-                    .attr("y", (d) => absY(this.s * binHeight))
-                    .attr("style", "font-size: " + scale(this.s) + "px;");
-            }
-        }
-        selectCol(bin) {
-            this.model.selectBin(bin);
-        }
-        incrSelectedBin() {
-            if (this.model.selectedBin() != -1) {
-                let curItems = this.model.getBin(this.model.selectedBin()).length;
-                if ((curItems + 1) * this.s < 100) {
-                    this.model.addItem(this.model.selectedBin());
-                }
-            }
-        }
-        decrSelectedBin() {
-            if (this.model.selectedBin() != -1) {
-                let curItems = this.model.getBin(this.model.selectedBin()).length;
-                if (curItems > 1) {
-                    this.model.removeItem(this.model.selectedBin());
-                }
-            }
-        }
-    }
-    exports.SVGInteractiveHistogram = SVGInteractiveHistogram;
-    class SVGPhantomHistogram extends SVGStaticHistogram {
-        constructor(name, svgElement, model, phantom, conf) {
-            super(name, svgElement, model, conf);
-            this.model.addListener(this);
-            this.phantom = phantom;
-            this.phantom.addListener(this);
-            this.refresh();
-        }
-        refresh() {
-            let scale = d3.scaleLinear().domain([0, 100]).range([0, this.viewBoxSideLength]);
-            let xOffset = this.xOffset;
-            let yOffset = this.yOffset;
-            let svgHeight = this.height;
-            function absX(relX) {
-                return xOffset + scale(relX);
-            }
-            function invAbsX(absX) {
-                return scale.invert(absX - xOffset);
-            }
-            function absY(relY) {
-                return svgHeight - yOffset - scale(relY);
-            }
-            if (this.phantom != undefined) {
-                let pdata = this.phantom.bins().map((bin) => bin[bin.length - 1]);
-                let mdata = this.model.bins().map((bin) => bin[bin.length - 1]);
-                d3.select(this.svg)
-                    .selectAll(".phantomIndicator")
-                    .remove();
-                d3.select(this.svg)
-                    .selectAll(".phantomIndicatorCover")
-                    .remove();
-                d3.select(this.svg)
-                    .selectAll(".phantomIndicatorLine")
-                    .remove();
-                d3.select(this.svg)
-                    .selectAll("rect .phantomIndicator")
-                    .data(pdata)
-                    .enter()
-                    .append("rect")
-                    .attr("x", (d) => absX(d.x * this.s + this.s * 0.025))
-                    .attr("y", (d) => absY((d.y + 1) * this.s - this.s * 0.025))
-                    .attr("width", (d) => scale(this.s * 0.95))
-                    .attr("height", (d) => scale(this.s * 0.95 * 0.25))
-                    .attr("fill", "#DDDDDD")
-                    .attr("class", "phantomIndicator");
-                d3.select(this.svg)
-                    .selectAll("rect .phantomIndicatorCover")
-                    .data(pdata)
-                    .enter()
-                    .append("rect")
-                    .attr("x", (d) => absX(d.x * this.s + this.s * 0.075))
-                    .attr("y", (d) => absY((d.y + 1) * this.s - this.s * 0.075))
-                    .attr("width", (d) => scale(this.s * 0.85))
-                    .attr("height", (d) => scale(this.s * 0.85))
-                    .attr("fill", "#FFFFFF")
-                    .attr("class", "phantomIndicator");
-                let overModelIdxs = Array.from({ length: pdata.length }, (v, k) => k).filter((v, k) => pdata[k].y > mdata[k].y);
-                d3.select(this.svg)
-                    .selectAll("line .phantomIndicatorLine")
-                    .data(overModelIdxs)
-                    .enter()
-                    .append("line")
-                    .attr("x1", (d) => absX(this.s * pdata[d].x + this.s / 2))
-                    .attr("x2", (d) => absX(this.s * pdata[d].x + this.s / 2))
-                    .attr("y1", (d) => absY(this.s * (mdata[d].y + 1) - 0.075 * this.s))
-                    .attr("y2", (d) => absY(this.s * (pdata[d].y + 1) - 0.075 * this.s))
-                    .attr("stroke", "#DDDDDD")
-                    .attr("class", "phantomIndicatorLine");
-            }
-            super.refresh();
-        }
-    }
-    exports.SVGPhantomHistogram = SVGPhantomHistogram;
-});
-define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "view/binarytree", "d3", "jquery"], function (require, exports, trees_2, histogram_1, binarytree_1, d3, $) {
+define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "view/binarytree", "d3", "jquery"], function (require, exports, trees_2, histogram_2, binarytree_1, d3, $) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class SVGSoloEntropy {
@@ -587,7 +670,7 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
             d.append("svg").attr("id", defaultIDs[2]);
             this.model = model;
             this.tree = new binarytree_1.SVGBinaryTree(this.svgTree, 0, conf);
-            this.hist = new histogram_1.SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
+            this.hist = new histogram_2.SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
             this.model.addListener(this);
         }
         refresh() {
@@ -668,7 +751,7 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
             d.append("svg").attr("id", defaultIDs[1]);
             this.model = model;
             this.tree = new binarytree_1.SVGBinaryTree(this.svgTree, 0, conf);
-            this.hist = new histogram_1.SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
+            this.hist = new histogram_2.SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
             this.model.addListener(this);
         }
         refresh() {
@@ -705,7 +788,7 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
     }
     exports.SVGEntropy = SVGEntropy;
 });
-define("model/heatmap", ["require", "exports", "model/bins", "papaparse"], function (require, exports, bins_1, papaparse_1) {
+define("model/heatmap", ["require", "exports", "model/bins", "papaparse"], function (require, exports, bins_3, papaparse_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class Cell {
@@ -781,7 +864,7 @@ define("model/heatmap", ["require", "exports", "model/bins", "papaparse"], funct
                     }
                     break;
             }
-            this.histogram = bins_1.Histogram.fromArray(toDraw);
+            this.histogram = bins_3.Histogram.fromArray(toDraw);
         }
         addListener(listener) {
             this.matrix.addListener(listener);
@@ -941,7 +1024,7 @@ define("view/heatmap", ["require", "exports", "d3"], function (require, exports,
     }
     exports.SVGHeatmap = SVGHeatmap;
 });
-define("view/transport", ["require", "exports", "view/histogram", "view/heatmap", "model/heatmap", "d3"], function (require, exports, histogram_2, heatmap_1, heatmap_2, d3) {
+define("view/transport", ["require", "exports", "view/histogram", "view/heatmap", "model/heatmap", "d3"], function (require, exports, histogram_3, heatmap_1, heatmap_2, d3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class SVGTransport {
@@ -963,8 +1046,8 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
             let cslice = new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.COLS);
             this.colslices = Array.from({ length: this.model.sideLength() }, (v, k) => new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.COL, k));
             this.heatmap = new heatmap_1.SVGHeatmap(this.svgHeatMap, this.model, this.conf);
-            this.rowHist = new histogram_2.SVGInteractiveHistogram("rowHist", this.svgRowHist, rslice, this.conf);
-            this.colHist = new histogram_2.SVGStaticHistogram("colHist", this.svgColHist, cslice, this.conf);
+            this.rowHist = new histogram_3.SVGInteractiveHistogram("rowHist", this.svgRowHist, rslice, this.conf);
+            this.colHist = new histogram_3.SVGStaticHistogram("colHist", this.svgColHist, cslice, this.conf);
             this.model.addListener(this);
         }
         refresh() {
@@ -978,24 +1061,16 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
             this.heatmap.refresh();
             if (this.model.selectedCol() != -1) {
                 let slice = this.colslices[this.model.selectedCol()];
-                this.colOverlay = new histogram_2.SVGStaticHistogram("colOverlay", this.svgColOverlay, slice, this.conf);
+                this.colOverlay = new histogram_3.SVGStaticHistogram("colOverlay", this.svgColOverlay, slice, this.conf);
                 this.colOverlay.refresh();
             }
         }
     }
     exports.SVGTransport = SVGTransport;
 });
-define("main", ["require", "exports", "view/binarytree", "view/histogram", "view/entropy", "view/transport", "view/heatmap", "model/bins", "model/heatmap", "d3"], function (require, exports, tree, hist, ent, transport, hm, histModel, matModel, d3) {
+define("main", ["require", "exports", "view/binarytree", "view/histogram", "view/entropy", "view/transport", "view/heatmap", "model/bins", "model/heatmap", "d3", "model/model"], function (require, exports, tree, hist, ent, transport, hm, histModel, matModel, d3, model) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class CONF {
-        constructor(gridBoxSize, colors, padding) {
-            this.gridBoxSize = gridBoxSize;
-            this.colors = colors;
-            this.padding = padding;
-        }
-    }
-    exports.CONF = CONF;
     function main() {
         let colors = {
             "border": ["#505050",],
@@ -1004,7 +1079,7 @@ define("main", ["require", "exports", "view/binarytree", "view/histogram", "view
             "colHist": Array.from({ length: 1 }, (v, k) => d3.interpolateBlues(0.5)),
             "colOverlay": Array.from({ length: 1 }, (v, k) => d3.interpolateReds(0.7))
         };
-        let conf = new CONF(8, colors, 5);
+        let conf = new model.CONF(8, colors, 5);
         let m = new histModel.Histogram(8);
         let vt = new tree.SVGBinaryTree("#treesvg", 4, conf);
         vt.setDepth(6);

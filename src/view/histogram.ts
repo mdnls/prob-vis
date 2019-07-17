@@ -1,6 +1,6 @@
 import {ModelListener} from 'model/model';
-import {Bins, Item} from 'model/bins';
-import {CONF} from 'main';
+import {Bins, Item, BinItem} from 'model/bins';
+import {CONF} from '../model/model';
 import * as d3 from "d3";
 import * as $ from "jquery";
 
@@ -257,6 +257,9 @@ export class SVGPhantomHistogram extends SVGStaticHistogram {
       if(this.phantom != undefined) {
          let pdata = this.phantom.bins().map((bin: Item[]) => bin[bin.length-1]);
          let mdata = this.model.bins().map((bin: Item[]) => bin[bin.length-1]);
+         
+         // if a bin has 0 length, mdata will be undefined. replace that with 0:
+         mdata = mdata.map((v, k) => (v == undefined) ? new BinItem(k, -1, "") : v);
 
          d3.select(this.svg)
          .selectAll(".phantomIndicator")
@@ -280,7 +283,7 @@ export class SVGPhantomHistogram extends SVGStaticHistogram {
          .attr("y", (d) => absY((d.y+1)* this.s - this.s*0.025))
          .attr("width", (d) => scale(this.s * 0.95))
          .attr("height", (d) => scale(this.s * 0.95 * 0.25))
-         .attr("fill", "#DDDDDD")
+         .attr("fill", "#AAAAAA")
          .attr("class", "phantomIndicator");
 
          // use white rectangles to cover bodies

@@ -6,19 +6,8 @@ import hm = require("view/heatmap");
 import histModel = require("model/bins");
 import matModel = require("./model/heatmap");
 import d3 = require("d3");
+import model = require("./model/model");
 
-export class CONF {
-    public gridBoxSize: number;
-    // given at item type string, this dictionary gives the main and accent color for that item.
-    colors: { [index: string]: string[] };
-    padding: number;
-
-    constructor(gridBoxSize: number, colors: { [index: string]: string[]}, padding: number) {
-        this.gridBoxSize = gridBoxSize;
-        this.colors = colors;
-        this.padding = padding;
-    }
-}
 export function main() {
     let colors = {
         "border": ["#505050",],
@@ -27,7 +16,7 @@ export function main() {
         "colHist": Array.from({length: 1}, (v, k) => d3.interpolateBlues(0.5)),
         "colOverlay": Array.from({length: 1}, (v, k) => d3.interpolateReds(0.7))
     }
-    let conf: CONF = new CONF(8, colors, 5);
+    let conf: model.CONF = new model.CONF(8, colors, 5);
     let m = new histModel.Histogram(8);
 
     let vt = new tree.SVGBinaryTree("#treesvg", 4, conf);

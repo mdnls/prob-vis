@@ -16,3 +16,20 @@ export interface ModelListener {
     */
    refresh(): void; 
 }
+
+
+/**
+ * Configuration class.
+ */
+export class CONF {
+  public gridBoxSize: number;
+  // given at item type string, this dictionary gives the main and accent color for that item.
+  colors: { [index: string]: string[] };
+  padding: number;
+
+  constructor(gridBoxSize: number, colors: { [index: string]: string[]}, padding: number) {
+      this.gridBoxSize = gridBoxSize;
+      this.colors = colors;
+      this.padding = padding;
+  }
+}

@@ -1,5 +1,5 @@
 import {ModelListener} from 'model/model';
-import {CONF} from 'main';
+import {CONF} from '../model/model';
 import {TreeItem, TreeNode, TreeLeaf} from 'model/trees'
 import * as d3 from "d3";
 import * as $ from "jquery";

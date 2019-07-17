@@ -3,7 +3,7 @@ import {ModelListener} from 'model/model';
 import {TreeNode, TreeItem} from 'model/trees';
 import {SVGInteractiveHistogram} from 'view/histogram';
 import {SVGBinaryTree} from 'view/binarytree';
-import {CONF} from 'main';
+import {CONF} from '../model/model';
 import * as d3 from "d3";
 import * as $ from "jquery";
 

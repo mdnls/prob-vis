@@ -19,61 +19,73 @@
 </head>
 <body>
     <div class="container">
-        <div id="body">
-            <h1>Statistical Distances and Their Implications to GAN Training</h1>
-            <div class="atn">
-                <p>I will construct the blog in this page. Some visual components have separate demo pages:
-                    <ul>
-                        <li><a href="heatmap.html">Heatmap</a></li>
-                        <li><a href="histogram.html">Histogram</a></li>
-                    </ul>
-                </p>
-            </div>
+        <h1>Statistical Distances and Their Implications to GAN Training</h1>
+        <div class="atn">
+            <p>I will construct the blog in this page. Some visual components have separate demo pages:
+                <ul>
+                    <li><a href="heatmap.html">Heatmap</a></li>
+                    <li><a href="histogram.html">Histogram</a></li>
+                </ul>
+            </p>
+        </div>
 
+        <h2>
+            Table of Contents
+        </h1>
+        <ul>
+            <li><p>Entropy of a Probability Distribution</p></li>
+            <li><p>Relative Entropy</p></li>
+            <li><p>Transport Plans</p></li>
+            <li><p>Earthmover's Distance</p></li>
+            <li><p>Fitting "Nice" Distributions</p></li>
+            <li><p>Fitting "Real" Distributions</p></li>
+        </ul>
+
+        <div id="intro">
             <h2>
-                Table of Contents
-            </h1>
-            <ul>
-                <li><p>Entropy of a Probability Distribution</p></li>
-                <li><p>Relative Entropy</p></li>
-                <li><p>Transport Plans</p></li>
-                <li><p>Earthmover's Distance</p></li>
-                <li><p>Fitting "Nice" Distributions</p></li>
-                <li><p>Fitting "Real" Distributions</p></li>
-            </ul>
+                Introduction
+            </h2>
 
-            <div id="intro">
-                <h2>
-                    Introduction
-                </h2>
+            <p>
+                Paragraph: (hook sentence) GANs allow one to draw samples from structured high dimensional distributions...
+            </p>
 
-                <p>
-                    Paragraph: (hook sentence) GANs allow one to draw samples from structured high dimensional distributions...
-                </p>
+            <p>
+                Paragraph: But to do so, they approximate these distributions... This can drastically determine output quality.
+            </p>
 
-                <p>
-                    Paragraph: But to do so, they approximate these distributions... This can drastically determine output quality.
-                </p>
+            <p>
+                Paragraph: This opens a natural question: how does one determine the quality of an approximated distribution? More generally, when are two distributions similar at all?
+            </p>
+            <p>
+                <b>Show two distributions normal distributions</b> - 
+                For example, one way to compare two distributions is via the $\chi^2$ test.
+            </p>
 
-                <p>
-                    Paragraph: This opens a natural question: how does one determine the quality of an approximated distribution? More generally, when are two distributions similar at all?
-                </p>
-                <p>
-                   <b>Show two distributions normal distributions</b> - 
-                    For example, one way to compare two distributions is via the $\chi^2$ test.
-                </p>
-                <p>
-                    However, this may not always be a good choice:
-                    
-                    <b>Show (or switch prev diagram) to pathological case for $\chi^2$</b>
-                </p>
-
-                <p>
-                    Paragraph: The general framework for training generative models is to pick some notion of similarity between two distributions, and then using numerical optimization techniques to make distributions as similar as possible.
-                    This article will explore two alternate perspectives for similarity, which have both gotten attention recently for their roles in the quality of GAN output.
-                </p>
+            <div id="chisqr-1" class="vis-inset" style="height: 400px">
+                <svg id="chisqr-1-left-svg"></svg>
+                <svg id="chisqr-1-right-svg"></svg>
+                <p>The $\chi^2$ distance is <span id="chisqr-1-val">_</span></p>
             </div>
-        </div>   
+
+            <p>
+                However, this may not always be a good choice:
+                
+                <b>Show (or switch prev diagram) to pathological case for $\chi^2$</b>
+                <div id="chisqr-2" class="vis-inset" style="height: 400px">
+                        <svg id="chisqr-2-left-svg"></svg>
+                        <svg id="chisqr-2-center-svg"></svg>
+                        <svg id="chisqr-2-right-svg"></svg>
+                        <p>The $\chi^2$ distance from left to center is <span id="chisqr-2-left-val">_</span></p>
+                        <p>The $\chi^2$ distance from right to center is <span id="chisqr-2-right-val">_</span></p>
+                </div>
+            </p>
+
+            <p>
+                Paragraph: The general framework for training generative models is to pick some notion of similarity between two distributions, and then using numerical optimization techniques to make distributions as similar as possible.
+                This article will explore two alternate perspectives for similarity, which have both gotten attention recently for their roles in the quality of GAN output.
+            </p>
+        </div>
 
         <div id="entropy">
             <h2>
