@@ -78,7 +78,7 @@ export class SVGStaticHistogram implements ModelListener {
          return xOffset + scale(relX);
       }
       function invAbsX(absX: number) {
-         return scale.invert(absX - xOffset);
+         return scale.invert(absX - xOffset - document.getElementById(this.svg).getBoundingClientRect().left);
       }
       function absY(relY: number) {
          return svgHeight - yOffset - scale(relY);
@@ -160,11 +160,12 @@ export class SVGInteractiveHistogram extends SVGStaticHistogram {
       let xOffset = this.xOffset;
       let yOffset = this.yOffset;
       let svgHeight = this.height;
+      let id = this.svg;
       function absX(relX: number) {
          return xOffset + scale(relX);
       }
       function invAbsX(absX: number) {
-         return scale.invert(absX - xOffset);
+         return scale.invert(absX - xOffset - $(id).position().left);
       }
       function absY(relY: number) {
          return svgHeight - yOffset - scale(relY);

@@ -99,7 +99,7 @@ define("model/bins", ["require", "exports"], function (require, exports) {
 define("view/textbinder", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class TextBinder {
+    class LooseTextBinder {
         constructor(textElement, model, updateRule) {
             this.textElement = textElement;
             this.model = model;
@@ -107,6 +107,13 @@ define("view/textbinder", ["require", "exports"], function (require, exports) {
         }
         refresh() {
             $(this.textElement).text(this.updateRule(this.model));
+        }
+    }
+    exports.LooseTextBinder = LooseTextBinder;
+    class TextBinder extends LooseTextBinder {
+        constructor(textElement, model, updateRule) {
+            super(textElement, model, updateRule);
+            model.addListener(this);
         }
     }
     exports.TextBinder = TextBinder;
@@ -122,6 +129,11 @@ define("data", ["require", "exports"], function (require, exports) {
         "leftHistBins": [2, 2, 3, 2, 4, 5, 8, 0],
         "centerHistBins": [2, 2, 3, 2, 4, 5, 8, 8],
         "rightHistBins": [2, 2, 2, 2, 3, 3, 3, 3]
+    };
+    exports.entropyExs = {
+        "highEntropy": [3, 4, 3, 3, 3, 4, 3, 3],
+        "medEntropy": [1, 2, 4, 7, 7, 4, 2, 1],
+        "lowEntropy": [1, 7, 1, 1, 1, 1, 1, 1]
     };
 });
 define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], function (require, exports, bins_1, d3, $) {
@@ -164,7 +176,7 @@ define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], f
                 return xOffset + scale(relX);
             }
             function invAbsX(absX) {
-                return scale.invert(absX - xOffset);
+                return scale.invert(absX - xOffset - document.getElementById(this.svg).getBoundingClientRect().left);
             }
             function absY(relY) {
                 return svgHeight - yOffset - scale(relY);
@@ -219,11 +231,12 @@ define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], f
             let xOffset = this.xOffset;
             let yOffset = this.yOffset;
             let svgHeight = this.height;
+            let id = this.svg;
             function absX(relX) {
                 return xOffset + scale(relX);
             }
             function invAbsX(absX) {
-                return scale.invert(absX - xOffset);
+                return scale.invert(absX - xOffset - $(id).position().left);
             }
             function absY(relY) {
                 return svgHeight - yOffset - scale(relY);
@@ -335,61 +348,6 @@ define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], f
     }
     exports.SVGPhantomHistogram = SVGPhantomHistogram;
 });
-define("article", ["require", "exports", "d3", "model/bins", "view/textbinder", "data", "view/histogram", "model/model"], function (require, exports, d3, bins_2, textbinder_1, data_1, histogram_1, model_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    let colors = {
-        "border": ["#505050",],
-        "default": Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7)),
-        "rowHist": Array.from({ length: 1 }, (v, k) => d3.interpolateBlues(0.5)),
-        "colHist": Array.from({ length: 1 }, (v, k) => d3.interpolateBlues(0.5)),
-        "colOverlay": Array.from({ length: 1 }, (v, k) => d3.interpolateReds(0.7))
-    };
-    const conf = new model_1.CONF(8, colors, 5);
-    function main() {
-        setupIntro();
-    }
-    exports.main = main;
-    function setupIntro() {
-        let mLeft1 = bins_2.Histogram.fromArray(data_1.chisqr1["leftHistBins"]);
-        let mRight1 = bins_2.Histogram.fromArray(data_1.chisqr1["rightHistBins"]);
-        let hLeft1 = new histogram_1.SVGPhantomHistogram("chisqr-hist-1-left", "#chisqr-1-left-svg", mLeft1, mRight1, conf);
-        let hRight1 = new histogram_1.SVGPhantomHistogram("chisqr-hist-1-right", "#chisqr-1-right-svg", mRight1, mLeft1, conf);
-        hLeft1.refresh();
-        hRight1.refresh();
-        let chisqrval = new textbinder_1.TextBinder("#chisqr-1-val", [mLeft1, mRight1], function (m) {
-            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
-            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
-                .reduce((prev, cur) => prev + cur, 0);
-            return "" + Math.round(c * 100) / 100;
-        });
-        mLeft1.addListener(chisqrval);
-        let mLeft2 = bins_2.Histogram.fromArray(data_1.chisqr2["leftHistBins"]);
-        let mCenter2 = bins_2.Histogram.fromArray(data_1.chisqr2["centerHistBins"]);
-        let mRight2 = bins_2.Histogram.fromArray(data_1.chisqr2["rightHistBins"]);
-        let hLeft2 = new histogram_1.SVGPhantomHistogram("chisqr-hist-2-left", "#chisqr-2-left-svg", mLeft2, mCenter2, conf);
-        let hCenter2 = new histogram_1.SVGStaticHistogram("chisqr-hist-2-center", "#chisqr-2-center-svg", mCenter2, conf);
-        let hRight2 = new histogram_1.SVGPhantomHistogram("chisqr-hist-2-right", "#chisqr-2-right-svg", mRight2, mCenter2, conf);
-        hLeft2.refresh();
-        hCenter2.refresh();
-        hRight2.refresh();
-        let chisqrvalL = new textbinder_1.TextBinder("#chisqr-2-left-val", [mLeft2, mCenter2], function (m) {
-            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
-            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
-                .reduce((prev, cur) => prev + cur, 0);
-            return "" + Math.round(c * 100) / 100;
-        });
-        let chisqrvalR = new textbinder_1.TextBinder("#chisqr-2-right-val", [mRight2, mCenter2], function (m) {
-            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
-            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
-                .reduce((prev, cur) => prev + cur, 0);
-            return "" + Math.round(c * 100) / 100;
-        });
-        mLeft2.addListener(chisqrvalL);
-        mRight2.addListener(chisqrvalR);
-    }
-    main();
-});
 define("model/trees", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -458,14 +416,16 @@ define("model/trees", ["require", "exports"], function (require, exports) {
             let balance = (layerIdx, nodeIdx, node) => {
                 if (node.left().itemType && huffTree.depth() - (layerIdx + 1) > 1) {
                     let target = TreeNode.fullTree(huffTree.depth() - (layerIdx + 1));
-                    let type = node.left().itemType;
+                    let type = "c" + node.left().itemType;
                     target.treeMap((l, k, n) => { n.itemType = type; }, (l, k, n) => { n.itemType = type; });
+                    target.itemType = node.left().itemType;
                     node.leftChild = target;
                 }
                 if (node.right().itemType && huffTree.depth() - (layerIdx + 1) > 1) {
                     let target = TreeNode.fullTree(huffTree.depth() - (layerIdx + 1));
-                    let type = node.right().itemType;
+                    let type = "c" + node.right().itemType;
                     target.treeMap((l, k, n) => { n.itemType = type; }, (l, k, n) => { n.itemType = type; });
+                    target.itemType = node.right().itemType;
                     node.rightChild = target;
                 }
             };
@@ -651,7 +611,7 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
     }
     exports.SVGBinaryTree = SVGBinaryTree;
 });
-define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "view/binarytree", "d3", "jquery"], function (require, exports, trees_2, histogram_2, binarytree_1, d3, $) {
+define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "view/binarytree", "d3", "jquery"], function (require, exports, trees_2, histogram_1, binarytree_1, d3, $) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class SVGSoloEntropy {
@@ -670,7 +630,7 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
             d.append("svg").attr("id", defaultIDs[2]);
             this.model = model;
             this.tree = new binarytree_1.SVGBinaryTree(this.svgTree, 0, conf);
-            this.hist = new histogram_2.SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
+            this.hist = new histogram_1.SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
             this.model.addListener(this);
         }
         refresh() {
@@ -751,7 +711,7 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
             d.append("svg").attr("id", defaultIDs[1]);
             this.model = model;
             this.tree = new binarytree_1.SVGBinaryTree(this.svgTree, 0, conf);
-            this.hist = new histogram_2.SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
+            this.hist = new histogram_1.SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
             this.model.addListener(this);
         }
         refresh() {
@@ -770,7 +730,14 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
                 this.tree.setTree(h);
                 let color = (layerIdx, nodeIdx, node) => {
                     if (node.itemType) {
-                        return colors[Number.parseInt(node.itemType) % colors.length];
+                        if (node.itemType[0] == "c") {
+                            let c = d3.color(colors[Number.parseInt(node.itemType[1]) % colors.length]);
+                            c.opacity = 0.7;
+                            return c.toString();
+                        }
+                        else {
+                            return colors[Number.parseInt(node.itemType) % colors.length];
+                        }
                     }
                     else {
                         return "#000";
@@ -787,6 +754,172 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
         }
     }
     exports.SVGEntropy = SVGEntropy;
+    class SVGIndicatorEntropy extends SVGEntropy {
+        constructor(divElement, model, conf) {
+            super(divElement, model, conf);
+            d3.select(this.svgTree)
+                .append("line")
+                .attr("id", "actualEntInd")
+                .attr("x1", 0)
+                .attr("x2", 0)
+                .attr("y1", 0)
+                .attr("y2", 0);
+            d3.select(this.svgTree)
+                .append("line")
+                .attr("id", "realizedEntInd")
+                .attr("x1", 0)
+                .attr("x2", 0)
+                .attr("y1", 0)
+                .attr("y2", 0);
+        }
+        refresh() {
+            super.refresh();
+            if (this.model.selectedBin() != -1) {
+                let treeModel = this.tree.tree;
+                let binModel = this.model;
+                let total = binModel.bins().reduce((p, c) => c.length + p, 0);
+                let prob = binModel.bins().map(v => v.length / total);
+                let binLayers = [];
+                let treeFn = (layerIdx, nodeIdx, node) => {
+                    if (node.itemType != undefined && node.itemType[0] != "c") {
+                        binLayers.push([Number.parseInt(node.itemType), layerIdx]);
+                    }
+                };
+                treeModel.treeMap(treeFn, treeFn);
+                let actual = prob.reduce((p, c) => p + (c * Math.log2(1 / c)), 0);
+                let realized = binLayers.reduce((p, c) => p + prob[c[0]] * c[1], 0);
+                let pad = this.conf.padding + (this.tree.width / (2 * this.tree.numLeafs - 1)) / 2;
+                let wScale = d3.scaleLinear().domain([0, 100]).range([0, this.tree.viewBoxWidth]);
+                let hScale = d3.scaleLinear().domain([0, 100]).range([0, this.tree.viewBoxHeight]);
+                let r = this.tree.nodeRadius;
+                function absX(relX) {
+                    return pad + wScale(relX);
+                }
+                function absY(relY) {
+                    return pad + hScale(relY);
+                }
+                let d = treeModel.depth();
+                d3.select("#actualEntInd")
+                    .attr("x1", absX(0))
+                    .attr("x2", absX(100))
+                    .attr("y1", absY((100 / d) * (d - actual - 1)) + r)
+                    .attr("y2", absY((100 / d) * (d - actual - 1)) + r)
+                    .attr("stroke", "#AA2020")
+                    .attr("stroke-width", "4px");
+                d3.select("#realizedEntInd")
+                    .attr("x1", absX(0))
+                    .attr("x2", absX(100))
+                    .attr("y1", absY((100 / d) * (d - realized - 1)) + r)
+                    .attr("y2", absY((100 / d) * (d - realized - 1)) + r)
+                    .attr("stroke", "#999")
+                    .attr("stroke-width", "4px");
+            }
+        }
+    }
+    exports.SVGIndicatorEntropy = SVGIndicatorEntropy;
+});
+define("article", ["require", "exports", "d3", "jquery", "model/bins", "view/textbinder", "data", "view/histogram", "view/entropy", "model/model"], function (require, exports, d3, $, bins_2, textbinder_1, data_1, histogram_2, entropy_1, model_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    let colors = {
+        "border": ["#505050",],
+        "default": Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7)),
+        "rowHist": Array.from({ length: 1 }, (v, k) => d3.interpolateBlues(0.5)),
+        "colHist": Array.from({ length: 1 }, (v, k) => d3.interpolateBlues(0.5)),
+        "colOverlay": Array.from({ length: 1 }, (v, k) => d3.interpolateReds(0.7))
+    };
+    const conf = new model_1.CONF(8, colors, 5);
+    function main() {
+        setupIntro();
+    }
+    exports.main = main;
+    function setupIntro() {
+        let mLeft1 = bins_2.Histogram.fromArray(data_1.chisqr1["leftHistBins"]);
+        let mRight1 = bins_2.Histogram.fromArray(data_1.chisqr1["rightHistBins"]);
+        let hLeft1 = new histogram_2.SVGPhantomHistogram("chisqr-hist-1-left", "#chisqr-1-left-svg", mLeft1, mRight1, conf);
+        let hRight1 = new histogram_2.SVGPhantomHistogram("chisqr-hist-1-right", "#chisqr-1-right-svg", mRight1, mLeft1, conf);
+        hLeft1.refresh();
+        hRight1.refresh();
+        let chisqrval = new textbinder_1.LooseTextBinder("#chisqr-1-val", [mLeft1, mRight1], function (m) {
+            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
+            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
+                .reduce((prev, cur) => prev + cur, 0);
+            return "" + Math.round(c * 100) / 100;
+        });
+        mLeft1.addListener(chisqrval);
+        let mLeft2 = bins_2.Histogram.fromArray(data_1.chisqr2["leftHistBins"]);
+        let mCenter2 = bins_2.Histogram.fromArray(data_1.chisqr2["centerHistBins"]);
+        let mRight2 = bins_2.Histogram.fromArray(data_1.chisqr2["rightHistBins"]);
+        let hLeft2 = new histogram_2.SVGPhantomHistogram("chisqr-hist-2-left", "#chisqr-2-left-svg", mLeft2, mCenter2, conf);
+        let hCenter2 = new histogram_2.SVGStaticHistogram("chisqr-hist-2-center", "#chisqr-2-center-svg", mCenter2, conf);
+        let hRight2 = new histogram_2.SVGPhantomHistogram("chisqr-hist-2-right", "#chisqr-2-right-svg", mRight2, mCenter2, conf);
+        hLeft2.refresh();
+        hCenter2.refresh();
+        hRight2.refresh();
+        let chisqrvalL = new textbinder_1.LooseTextBinder("#chisqr-2-left-val", [mLeft2, mCenter2], function (m) {
+            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
+            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
+                .reduce((prev, cur) => prev + cur, 0);
+            return "" + Math.round(c * 100) / 100;
+        });
+        let chisqrvalR = new textbinder_1.LooseTextBinder("#chisqr-2-right-val", [mRight2, mCenter2], function (m) {
+            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
+            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
+                .reduce((prev, cur) => prev + cur, 0);
+            return "" + Math.round(c * 100) / 100;
+        });
+        mLeft2.addListener(chisqrvalL);
+        mRight2.addListener(chisqrvalR);
+        let mLowEnt = bins_2.Histogram.fromArray(data_1.entropyExs["lowEntropy"]);
+        let mMedEnt = bins_2.Histogram.fromArray(data_1.entropyExs["medEntropy"]);
+        let mHighEnt = bins_2.Histogram.fromArray(data_1.entropyExs["highEntropy"]);
+        let hLowEnt = new histogram_2.SVGStaticHistogram("entropy-ex", "#entropy-ex-active", mLowEnt, conf);
+        let hMedEnt = new histogram_2.SVGStaticHistogram("entropy-ex", "#entropy-ex-active", mMedEnt, conf);
+        let hHighEnt = new histogram_2.SVGStaticHistogram("entropy-ex", "#entropy-ex-active", mHighEnt, conf);
+        let tLowEnt = new textbinder_1.TextBinder("#entropy-ex-val", mLowEnt, function (m) {
+            let total = m.bins().reduce((p, c) => c.length + p, 0);
+            let nats = (a) => Math.log2(total / a);
+            let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
+            return "" + Math.round(entropy * 100) / 100;
+        });
+        let tMedEnt = new textbinder_1.TextBinder("#entropy-ex-val", mMedEnt, function (m) {
+            let total = m.bins().reduce((p, c) => c.length + p, 0);
+            let nats = (a) => Math.log2(total / a);
+            let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
+            return "" + Math.round(entropy * 100) / 100;
+        });
+        let tHighEnt = new textbinder_1.TextBinder("#entropy-ex-val", mHighEnt, function (m) {
+            let total = m.bins().reduce((p, c) => c.length + p, 0);
+            let nats = (a) => Math.log2(total / a);
+            let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
+            return "" + Math.round(entropy * 100) / 100;
+        });
+        let mActiveEnt = mMedEnt;
+        $("#entropy-ex-low").click(() => { mActiveEnt = mLowEnt; mLowEnt.refresh(); });
+        $("#entropy-ex-med").click(() => { mActiveEnt = mMedEnt; mMedEnt.refresh(); });
+        $("#entropy-ex-high").click(() => { mActiveEnt = mHighEnt; mHighEnt.refresh(); });
+        let mInteractiveEnt = new bins_2.Histogram(8);
+        mInteractiveEnt.setAll(1);
+        let interactiveEnt = new entropy_1.SVGIndicatorEntropy("#entropy-ex-interactive", mInteractiveEnt, conf);
+        interactiveEnt.refresh();
+        document.addEventListener("keydown", event => {
+            switch (event.key.toLowerCase()) {
+                case ("h"):
+                    interactiveEnt.hist.selectCol(mInteractiveEnt.selectedBin() - 1);
+                    break;
+                case ("l"):
+                    interactiveEnt.hist.selectCol(mInteractiveEnt.selectedBin() + 1);
+                    break;
+                case ("k"):
+                    interactiveEnt.hist.incrSelectedBin();
+                    break;
+                case ("j"):
+                    interactiveEnt.hist.decrSelectedBin();
+                    break;
+            }
+        });
+    }
+    main();
 });
 define("model/heatmap", ["require", "exports", "model/bins", "papaparse"], function (require, exports, bins_3, papaparse_1) {
     "use strict";

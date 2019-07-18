@@ -1,4 +1,8 @@
 <head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script data-main="article" src="require.js"></script>
     <script src="bundle.js"></script>
     <script type="text/x-mathjax-config">
@@ -62,23 +66,27 @@
                 For example, one way to compare two distributions is via the $\chi^2$ test.
             </p>
 
-            <div id="chisqr-1" class="vis-inset" style="height: 400px">
-                <svg id="chisqr-1-left-svg"></svg>
-                <svg id="chisqr-1-right-svg"></svg>
-                <p>The $\chi^2$ distance is <span id="chisqr-1-val">_</span></p>
+            <div id="chisqr-1" class="vis-inset col-12">
+                <div class="row h-100">          
+                    <svg id="chisqr-1-left-svg" class="col-6"></svg>
+                    <svg id="chisqr-1-right-svg" class="col-6"></svg>
+                </div>
             </div>
+            <p>The $\chi^2$ distance is <span id="chisqr-1-val">_</span></p>
 
             <p>
                 However, this may not always be a good choice:
                 
                 <b>Show (or switch prev diagram) to pathological case for $\chi^2$</b>
-                <div id="chisqr-2" class="vis-inset" style="height: 400px">
-                        <svg id="chisqr-2-left-svg"></svg>
-                        <svg id="chisqr-2-center-svg"></svg>
-                        <svg id="chisqr-2-right-svg"></svg>
-                        <p>The $\chi^2$ distance from left to center is <span id="chisqr-2-left-val">_</span></p>
-                        <p>The $\chi^2$ distance from right to center is <span id="chisqr-2-right-val">_</span></p>
+                <div id="chisqr-2" class="vis-inset col-10 offset-1">
+                    <div class="row h-100">
+                        <svg id="chisqr-2-left-svg" class="col-4"></svg>
+                        <svg id="chisqr-2-center-svg" class="col-4"></svg>
+                        <svg id="chisqr-2-right-svg" class="col-4"></svg>
+                    </div>
                 </div>
+                <p>The $\chi^2$ distance from left to center is <span id="chisqr-2-left-val">_</span></p>
+                <p>The $\chi^2$ distance from right to center is <span id="chisqr-2-right-val">_</span></p>
             </p>
 
             <p>
@@ -97,11 +105,29 @@
             <p>Paragraph: crucially, entropy relates probability distributions to the notion of information content. Every event has a quantifiable information. Two distributions are similar, then, if the events they describe typically generate similar amounts of information. </p>
             <p>Paragraph: formulation: $- \sum p(x) \log p(x) = \expected{ \log \frac{1}{p(x)}}$ </p>
             <p><b>Show basic histogram, with interactive presets, + table of entropy</b></p>
+
+            <p>
+                <div id="entropy-ex" class="vis-inset col-12">
+                    <div class="h-100">
+                        <svg id="entropy-ex-active" class="col-12"></svg>
+                    </div>
+                </div>
+                <button id="entropy-ex-low">Low Entropy</button>
+                <button id="entropy-ex-med">Medium Entropy</button>
+                <button id="entropy-ex-high">High Entropy</button>
+                <p>$H$ = <span id="entropy-ex-val"></span></p>
+            </p>
             <p>Paragraph: the idea behind this formulation is that information content relates to literal information, transferred over wire via bits</p>
             <p>Paragraph: using bits to represent events induces a decision tree. $N=\frac{1}{p(x)}$ tells us how many outcomes the tree must have, and $\log N$ is the depth of a tree with $N$ outcomes. This quantity is the information content of $x$.</p>
             <p>Paragraph: the formula gives us an optimal value, if all encodings are perfect and use the tree optimally. This isn't always the case</p>
             <p><b>Show the huffman code for an interactive tree along with its entropy and the optimal entropy.</b></p>
+            <p>
+                <div id="entropy-interactive" class="vis-inset-long col-12">
+                    <div id="entropy-ex-interactive" class="h-100">
 
+                    </div>
+                </div>
+            </p>
             <h2>
                 Cross Entropy
             </h2>

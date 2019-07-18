@@ -37,11 +37,9 @@ b {
 }
 
 .vis-inset {
-    width: 100%;
-    padding: 5% 20%;
+    height: 40vh;
+}
 
-    svg {
-        height: 80%;
-        margin: 20px;
-    }
+.vis-inset-long {
+    height: 45vh;
 }

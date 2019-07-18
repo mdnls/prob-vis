@@ -2,8 +2,9 @@ import {ModelListener, Model} from '../model/model';
 
 /**
  * Update the text in a particular html element using the result of a function applied to the model.
+ * Does not require a model, but must be refreshed manually.
  */
-export class TextBinder<T> implements ModelListener {
+export class LooseTextBinder<T> implements ModelListener {
     private model: T;
     private textElement: string;
     private updateRule: (model: T) => string;
@@ -16,5 +17,15 @@ export class TextBinder<T> implements ModelListener {
 
     refresh() {
         $(this.textElement).text(this.updateRule(this.model));
+    }
+}
+
+/**
+ * Update the text in a particular html element using the result of a function applied to the model.
+ */
+export class TextBinder<T extends Model> extends LooseTextBinder<T> {
+    constructor(textElement: string, model: T, updateRule: (model: T) => string) {
+        super(textElement, model, updateRule);
+        model.addListener(this);
     }
 }

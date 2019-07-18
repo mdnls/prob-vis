@@ -128,13 +128,13 @@ export class SVGSoloEntropy implements ModelListener {
  }
  
  export class SVGEntropy implements ModelListener {
-    private model: Bins;
-    private tree: SVGBinaryTree;
-    private hist: SVGInteractiveHistogram;
-    private svgTree: string;
-    private svgHist: string;
-    private div: string;
-    private conf: CONF;
+    model: Bins;
+    tree: SVGBinaryTree;
+    hist: SVGInteractiveHistogram;
+    svgTree: string;
+    svgHist: string;
+    div: string;
+    conf: CONF;
  
     constructor(divElement: string, model: Bins, conf: CONF) {
        this.conf = conf;
@@ -177,8 +177,15 @@ export class SVGSoloEntropy implements ModelListener {
           let h = TreeNode.huffTree(this.model);
           this.tree.setTree(h);
           let color = (layerIdx: number, nodeIdx: number, node: TreeItem) => {
-             if(node.itemType) { 
-                return colors[Number.parseInt(node.itemType) % colors.length];
+             if(node.itemType) {
+                if(node.itemType[0] == "c") {
+                   let c = d3.color(colors[Number.parseInt(node.itemType[1]) % colors.length]);
+                   c.opacity = 0.7;
+                   return c.toString();
+                }
+                else {
+                  return colors[Number.parseInt(node.itemType) % colors.length];
+                }
              }
              else {
                 return "#000";
@@ -194,7 +201,84 @@ export class SVGSoloEntropy implements ModelListener {
        else { 
           d3.select(this.svgTree).attr("style", "display: none;");
        }
- 
        this.hist.refresh();
+    }
+ }
+
+ export class SVGIndicatorEntropy extends SVGEntropy {
+    constructor(divElement: string, model: Bins, conf: CONF) {
+       super(divElement, model, conf);
+
+       d3.select(this.svgTree)
+         .append("line")
+         .attr("id", "actualEntInd")
+         .attr("x1", 0)
+         .attr("x2", 0)
+         .attr("y1", 0)
+         .attr("y2", 0);
+      d3.select(this.svgTree)
+         .append("line")
+         .attr("id", "realizedEntInd")
+         .attr("x1", 0)
+         .attr("x2", 0)
+         .attr("y1", 0)
+         .attr("y2", 0);
+    }
+
+    refresh() {
+      super.refresh();
+
+      if(this.model.selectedBin() != -1) {
+         let treeModel = this.tree.tree;
+         let binModel = this.model;
+   
+         // calculate actual and realized entropy
+         let total = binModel.bins().reduce((p, c) => c.length + p, 0);
+         let prob = binModel.bins().map(v => v.length / total);
+   
+         let binLayers: number[][] = [];
+         // TODO: introduce hufftree class which can make this calculation at the model level, in a way that is more concrete.
+         let treeFn = (layerIdx: number, nodeIdx: number, node: TreeItem) => {
+            if(node.itemType != undefined && node.itemType[0] != "c") { // this is awful ood
+               binLayers.push([Number.parseInt(node.itemType), layerIdx])
+           }
+         };
+         treeModel.treeMap(treeFn, treeFn);
+
+         let actual = prob.reduce((p, c) => p + (c * Math.log2(1/c)), 0);
+         let realized = binLayers.reduce((p, c) => p + prob[c[0]] * c[1], 0)
+   
+         // set up drawing items
+         
+         let pad = this.conf.padding + (this.tree.width / (2 * this.tree.numLeafs - 1))/2;
+         let wScale = d3.scaleLinear().domain([0, 100]).range([0, this.tree.viewBoxWidth])
+         let hScale = d3.scaleLinear().domain([0, 100]).range([0, this.tree.viewBoxHeight]);
+         let r = this.tree.nodeRadius;
+   
+         function absX(relX: number) {
+            return pad + wScale(relX);
+         }
+         function absY(relY: number) {
+            return pad + hScale(relY);
+         }
+   
+         let d = treeModel.depth();
+   
+         d3.select("#actualEntInd")
+            .attr("x1", absX(0))
+            .attr("x2", absX(100))
+            .attr("y1", absY((100 / d) * (d - actual - 1)) + r)
+            .attr("y2", absY((100 / d) * (d - actual - 1)) + r)
+            .attr("stroke", "#AA2020")
+            .attr("stroke-width", "4px");
+         d3.select("#realizedEntInd")
+            .attr("x1", absX(0))
+            .attr("x2", absX(100))
+            .attr("y1", absY((100 / d) * (d - realized - 1)) + r)
+            .attr("y2", absY((100 / d) * (d - realized - 1)) + r)
+            .attr("stroke", "#999")
+            .attr("stroke-width", "4px");
+
+      }
     }
  }

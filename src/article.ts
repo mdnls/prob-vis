@@ -1,9 +1,10 @@
 import * as d3 from "d3";
 import * as $ from "jquery";
 import { Histogram } from "./model/bins";
-import { TextBinder } from "./view/textbinder";
-import { chisqr1, chisqr2 } from "./data";
+import { TextBinder, LooseTextBinder } from "./view/textbinder";
+import { chisqr1, chisqr2, entropyExs } from "./data";
 import { SVGPhantomHistogram, SVGStaticHistogram } from "./view/histogram";
+import { SVGIndicatorEntropy } from "./view/entropy";
 import { CONF } from "./model/model";
 // This script controls all of the animations in the article
 
@@ -31,7 +32,7 @@ function setupIntro() {
     hLeft1.refresh();
     hRight1.refresh();
 
-    let chisqrval = new TextBinder<Histogram[]>("#chisqr-1-val", [mLeft1, mRight1], function (m: Histogram[]) { 
+    let chisqrval = new LooseTextBinder<Histogram[]>("#chisqr-1-val", [mLeft1, mRight1], function (m: Histogram[]) { 
         let test = (a: number, b: number) => { return Math.pow((a-b), 2) / b };
         let c = Array.from({length: m[0].numBins()},
                         (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
@@ -51,7 +52,7 @@ function setupIntro() {
     hCenter2.refresh();
     hRight2.refresh();
 
-    let chisqrvalL = new TextBinder<Histogram[]>("#chisqr-2-left-val", [mLeft2, mCenter2], function (m: Histogram[]) { 
+    let chisqrvalL = new LooseTextBinder<Histogram[]>("#chisqr-2-left-val", [mLeft2, mCenter2], function (m: Histogram[]) { 
         let test = (a: number, b: number) => { return Math.pow((a-b), 2) / b };
         let c = Array.from({length: m[0].numBins()},
                         (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
@@ -59,7 +60,7 @@ function setupIntro() {
         return "" + Math.round(c * 100) / 100;
     });
 
-    let chisqrvalR = new TextBinder<Histogram[]>("#chisqr-2-right-val", [mRight2, mCenter2], function (m: Histogram[]) { 
+    let chisqrvalR = new LooseTextBinder<Histogram[]>("#chisqr-2-right-val", [mRight2, mCenter2], function (m: Histogram[]) { 
         let test = (a: number, b: number) => { return Math.pow((a-b), 2) / b };
         let c = Array.from({length: m[0].numBins()},
                         (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
@@ -69,6 +70,63 @@ function setupIntro() {
     mLeft2.addListener(chisqrvalL);
     mRight2.addListener(chisqrvalR);
 
+    // Entropy example distributions
+    let mLowEnt = Histogram.fromArray(entropyExs["lowEntropy"]);
+    let mMedEnt = Histogram.fromArray(entropyExs["medEntropy"]);
+    let mHighEnt = Histogram.fromArray(entropyExs["highEntropy"]);
+
+    let hLowEnt = new SVGStaticHistogram("entropy-ex", "#entropy-ex-active", mLowEnt, conf);
+    let hMedEnt = new SVGStaticHistogram("entropy-ex", "#entropy-ex-active", mMedEnt, conf);
+    let hHighEnt = new SVGStaticHistogram("entropy-ex", "#entropy-ex-active", mHighEnt, conf);
+
+    let tLowEnt = new TextBinder<Histogram>("#entropy-ex-val", mLowEnt, function (m: Histogram) { 
+        let total = m.bins().reduce((p, c) => c.length + p, 0);
+        let nats = (a: number) => Math.log2(total / a);
+        let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
+        return "" + Math.round(entropy * 100) / 100;
+    });
+
+    let tMedEnt = new TextBinder<Histogram>("#entropy-ex-val", mMedEnt, function (m: Histogram) { 
+        let total = m.bins().reduce((p, c) => c.length + p, 0);
+        let nats = (a: number) => Math.log2(total / a);
+        let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
+        return "" + Math.round(entropy * 100) / 100;
+    });
+
+    let tHighEnt = new TextBinder<Histogram>("#entropy-ex-val", mHighEnt, function (m: Histogram) { 
+        let total = m.bins().reduce((p, c) => c.length + p, 0);
+        let nats = (a: number) => Math.log2(total / a);
+        let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
+        return "" + Math.round(entropy * 100) / 100;
+    });
+
+    let mActiveEnt = mMedEnt; // used to track the active histogram on window resize
+    $("#entropy-ex-low").click(() => {mActiveEnt = mLowEnt; mLowEnt.refresh()});
+    $("#entropy-ex-med").click(() => {mActiveEnt = mMedEnt; mMedEnt.refresh()});
+    $("#entropy-ex-high").click(() => {mActiveEnt = mHighEnt; mHighEnt.refresh()});
+
+    // Interactive entropy diagram
+    let mInteractiveEnt = new Histogram(8);
+    mInteractiveEnt.setAll(1);
+    let interactiveEnt = new SVGIndicatorEntropy("#entropy-ex-interactive", mInteractiveEnt, conf);
+    interactiveEnt.refresh();
+
+    document.addEventListener("keydown", event => {
+        switch(event.key.toLowerCase()) {
+            case("h"):
+                interactiveEnt.hist.selectCol(mInteractiveEnt.selectedBin() - 1);
+                break;
+            case("l"):
+                interactiveEnt.hist.selectCol(mInteractiveEnt.selectedBin() + 1);
+                break;
+            case("k"):
+                interactiveEnt.hist.incrSelectedBin();
+                break;
+            case("j"):
+                interactiveEnt.hist.decrSelectedBin();
+                break;
+        }
+    });
 }  
 
 main();

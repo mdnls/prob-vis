@@ -11,12 +11,12 @@ export class SVGBinaryTree implements ModelListener {
     // given an integer N, draw the smallest binary tree with at least N leaves
     // highlight one such leaf and the path from the root to that leaf
  
-    private tree: TreeItem;
-    private svg: string;
-    private attnNode: number[];
-    private conf: CONF;
-    private nodeColor: (layerIdx: number, nodeIdx: number, node: TreeNode) => void;
-    private leafColor: (layerIdx: number, nodeIdx: number, node: TreeLeaf) => void;
+    tree: TreeItem;
+    svg: string;
+    attnNode: number[];
+    conf: CONF;
+    nodeColor: (layerIdx: number, nodeIdx: number, node: TreeNode) => void;
+    leafColor: (layerIdx: number, nodeIdx: number, node: TreeLeaf) => void;
  
  
     // helpful public information about this view's visual configuration

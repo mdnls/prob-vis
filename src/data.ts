@@ -10,3 +10,9 @@ export const chisqr2 = {
     "centerHistBins": [2, 2, 3, 2, 4, 5, 8, 8],
     "rightHistBins": [2, 2, 2, 2, 3, 3, 3, 3]
 }
+
+export const entropyExs = {
+    "highEntropy": [3, 4, 3, 3, 3, 4, 3, 3],
+    "medEntropy": [1, 2, 4, 7, 7, 4, 2, 1],
+    "lowEntropy": [1, 7, 1, 1, 1, 1, 1, 1]
+}

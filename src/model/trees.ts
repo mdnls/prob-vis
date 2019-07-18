@@ -149,24 +149,26 @@ export interface TreeItem extends Item, Model {
       }
   
       let huffTree = binNodes[0];
-  
+
       let balance = (layerIdx: number, nodeIdx: number, node: TreeNode) => {
         // if I have children, and my depth + 1 = total depth, then no change
         // if my depth + 1 < total depth, I need to extend out my children 
         if(node.left().itemType && huffTree.depth() - (layerIdx + 1) > 1) {
           let target = TreeNode.fullTree(huffTree.depth() - (layerIdx + 1));
-          let type = node.left().itemType;
+          let type = "c" + node.left().itemType; // "c" indicates a child
           target.treeMap(
             (l, k, n) => {n.itemType = type},
             (l, k, n) => {n.itemType = type});
+          target.itemType = node.left().itemType;
           node.leftChild = target;
         }
         if(node.right().itemType && huffTree.depth() - (layerIdx + 1) > 1) {
           let target = TreeNode.fullTree(huffTree.depth() - (layerIdx + 1));
-          let type = node.right().itemType;
+          let type = "c" + node.right().itemType; // "c" indicates a child
           target.treeMap(
             (l, k, n) => {n.itemType = type},
             (l, k, n) => {n.itemType = type});
+          target.itemType = node.right().itemType;
           node.rightChild = target;
         }
       }
@@ -316,5 +318,4 @@ export interface TreeItem extends Item, Model {
       this._treeMap(0, 0, nodeFn, leafFn);
      }
   }
-  
   
