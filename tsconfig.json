@@ -5,7 +5,7 @@
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": true,
-        "outFile": "public/bundle.js",
+        "outFile": "src/html/bundle.js",
         "sourceMap": true
     }
 }

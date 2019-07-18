@@ -146,7 +146,6 @@ export class SVGSoloEntropy implements ModelListener {
  
        let d = d3.select(divElement);
        d.append("svg").attr("id", defaultIDs[0]);
-       d.append("br")
        d.append("svg").attr("id", defaultIDs[1]);
  
        this.model = model;
@@ -160,8 +159,8 @@ export class SVGSoloEntropy implements ModelListener {
        let svgHeight = $(this.div).height();
        let svgWidth = $(this.div).width();
  
-       d3.select(this.svgHist).attr("height", svgHeight/2).attr("width", svgHeight/2);
-       d3.select(this.svgTree).attr("height", svgHeight/3).attr("width", svgWidth);
+       d3.select(this.svgHist).attr("height", svgHeight/2).attr("width", svgWidth/2);
+       d3.select(this.svgTree).attr("height", svgHeight/2).attr("width", svgWidth);
  
        let selectedBin = this.model.selectedBin();
  
@@ -270,14 +269,14 @@ export class SVGSoloEntropy implements ModelListener {
             .attr("y1", absY((100 / d) * (d - actual - 1)) + r)
             .attr("y2", absY((100 / d) * (d - actual - 1)) + r)
             .attr("stroke", "#AA2020")
-            .attr("stroke-width", "4px");
+            .attr("stroke-width", "2px");
          d3.select("#realizedEntInd")
             .attr("x1", absX(0))
             .attr("x2", absX(100))
             .attr("y1", absY((100 / d) * (d - realized - 1)) + r)
             .attr("y2", absY((100 / d) * (d - realized - 1)) + r)
             .attr("stroke", "#999")
-            .attr("stroke-width", "4px");
+            .attr("stroke-width", "2px");
 
       }
     }
