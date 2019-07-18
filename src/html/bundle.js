@@ -38,6 +38,11 @@ define("model/bins", ["require", "exports"], function (require, exports) {
             } });
             return hist;
         }
+        static full(length, n) {
+            let hist = new Histogram(length);
+            hist.setAll(n);
+            return hist;
+        }
         setAll(count) {
             for (let i = 0; i < this.histBins.length; i++) {
                 while (this.histBins[i].length > count) {
@@ -134,6 +139,9 @@ define("data", ["require", "exports"], function (require, exports) {
         "highEntropy": [3, 4, 3, 3, 3, 4, 3, 3],
         "medEntropy": [1, 2, 4, 7, 7, 4, 2, 1],
         "lowEntropy": [1, 7, 1, 1, 1, 1, 1, 1]
+    };
+    exports.xEntropyExs = {
+        "q": [2, 7, 4, 2, 5, 1, 3, 2]
     };
 });
 define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], function (require, exports, bins_1, d3, $) {
@@ -536,6 +544,10 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
             this.tree = tree;
             this.refresh();
         }
+        highlightNode(layerIdx, nodeIdx) {
+            this.attnNode = [layerIdx, nodeIdx];
+            this.refresh();
+        }
         refresh() {
             let numLeafs = this.tree.numLeaves();
             let itemSize = 100 / (2 * numLeafs - 1);
@@ -572,7 +584,19 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
             d3.select(this.svg)
                 .selectAll("#treeEdge")
                 .remove();
-            function addEdge(svg, parent, child) {
+            function isChildFn(targetLayer, targetNode) {
+                return (layerIdx, nodeIdx) => {
+                    let diff = targetLayer - layerIdx;
+                    return diff >= 0 && Math.floor(targetNode / (Math.pow(2, diff))) == nodeIdx;
+                };
+            }
+            let childCheck = (this.attnNode != undefined) ? isChildFn(this.attnNode[0], this.attnNode[1]) : () => false;
+            function addEdge(svg, parent, child, cLayer, cIndex) {
+                let pLayer = cLayer - 1;
+                let pIndex = Math.floor(cIndex / 2);
+                let highlight = (childCheck(pLayer, pIndex) && childCheck(cLayer, cIndex));
+                let color = highlight ? "#0074D9" : "gray";
+                let width = highlight ? hScale(itemSize / 3) : hScale(itemSize / 5);
                 d3.select(svg)
                     .append("line")
                     .attr("id", "treeEdge")
@@ -580,15 +604,15 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
                     .attr("x2", (d) => absX(child.x + itemSize / 2))
                     .attr("y1", (d) => absY(parent.y + itemSize / 2))
                     .attr("y2", (d) => absY(child.y + itemSize / 2))
-                    .attr("stroke-width", hScale(itemSize / 5))
-                    .attr("stroke", "gray");
+                    .attr("stroke-width", width)
+                    .attr("stroke", color);
             }
             this.tree.treeMap(this.nodeColor, this.leafColor);
             this.tree.treeMap((layerIdx, nodeIdx, node) => {
-                addEdge(this.svg, node, node.left());
-                addEdge(this.svg, node, node.right());
+                addEdge(this.svg, node, node.left(), layerIdx + 1, 2 * nodeIdx);
+                addEdge(this.svg, node, node.right(), layerIdx + 1, 2 * nodeIdx + 1);
             }, (layerIdx, leaf) => { });
-            this.tree._treeMap(1, 0, (layerIdx, nodeIdx, node) => {
+            this.tree._treeMap(0, 0, (layerIdx, nodeIdx, node) => {
                 d3.select(this.svg)
                     .append("circle")
                     .data([node])
@@ -596,7 +620,9 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
                     .attr("r", wScale(itemSize / 2))
                     .attr("cx", (d) => absX(d.x + itemSize / 2))
                     .attr("cy", (d) => absY(d.y + itemSize / 2))
-                    .attr("fill", (d) => d.color);
+                    .attr("fill", (d) => d.color)
+                    .attr("stroke", (d) => childCheck(layerIdx, nodeIdx) ? "#0074D9" : "none")
+                    .attr("stroke-width", 3);
             }, (layerIdx, nodeIdx, leaf) => {
                 d3.select(this.svg)
                     .append("circle")
@@ -605,7 +631,9 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
                     .attr("r", wScale(itemSize / 2))
                     .attr("cx", (d) => absX(d.x + itemSize / 2))
                     .attr("cy", (d) => absY(d.y + itemSize / 2))
-                    .attr("fill", (d) => d.color);
+                    .attr("fill", (d) => d.color)
+                    .attr("stroke", (d) => childCheck(layerIdx, nodeIdx) ? "#0074D9" : "none")
+                    .attr("stroke-width", 3);
             });
         }
     }
@@ -635,7 +663,6 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
         }
         refresh() {
             let svgHeight = $(this.div).height();
-            let svgWidth = $(this.div).width();
             let sideLens = [svgHeight * (7 / 16), svgHeight * (1 / 8), svgHeight * (7 / 16)];
             d3.select(this.svgHist).attr("height", sideLens[0]).attr("width", sideLens[0]);
             d3.select(this.svgBar).attr("height", sideLens[1]).attr("width", sideLens[0]);
@@ -710,7 +737,7 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
             d.append("svg").attr("id", defaultIDs[1]);
             this.model = model;
             this.tree = new binarytree_1.SVGBinaryTree(this.svgTree, 0, conf);
-            this.hist = new histogram_1.SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
+            this.hist = new histogram_1.SVGHistogram("entHist", this.svgHist, this.model, conf);
             this.model.addListener(this);
         }
         refresh() {
@@ -718,7 +745,6 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
             let svgWidth = $(this.div).width();
             d3.select(this.svgHist).attr("height", svgHeight / 2).attr("width", svgWidth / 2);
             d3.select(this.svgTree).attr("height", svgHeight / 2).attr("width", svgWidth);
-            let selectedBin = this.model.selectedBin();
             d3.select(this.svgTree).attr("style", "display: initial");
             let colors = this.conf.colors[this.hist.name];
             if (colors == undefined) {
@@ -742,13 +768,18 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
                 }
             };
             this.tree.colorMap(color, color);
-            let unit = 100 / (Math.pow(2, (h.depth() - 1)));
-            let markerLocs = Array.from({ length: (Math.pow(2, (h.depth() - 1))) }, (value, key) => key * unit);
             this.hist.refresh();
         }
     }
     exports.SVGEntropy = SVGEntropy;
-    class SVGIndicatorEntropy extends SVGEntropy {
+    class SVGInteractiveEntropy extends SVGEntropy {
+        constructor(divElement, model, conf) {
+            super(divElement, model, conf);
+            this.hist = new histogram_1.SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
+        }
+    }
+    exports.SVGInteractiveEntropy = SVGInteractiveEntropy;
+    class SVGIndicatorEntropy extends SVGInteractiveEntropy {
         constructor(divElement, model, conf) {
             super(divElement, model, conf);
             d3.select(this.svgTree)
@@ -811,6 +842,58 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
         }
     }
     exports.SVGIndicatorEntropy = SVGIndicatorEntropy;
+    class SVGInteractiveCrossEntropy {
+        constructor(divElement, pModel, qModel, conf) {
+            let defaultIDs = ["pEnt", "qEnt"];
+            this.div = divElement;
+            this.divSourceEnt = divElement + " > #" + defaultIDs[0];
+            this.divTargetEnt = divElement + " > #" + defaultIDs[1];
+            let d = d3.select(divElement);
+            d.attr("class", "row");
+            d.append("div").attr("id", defaultIDs[0]).attr("class", "col-6");
+            d.append("div").attr("id", defaultIDs[1]).attr("class", "col-6");
+            this.sourceModel = pModel;
+            this.targetModel = qModel;
+            this.conf = conf;
+            this.sourceEnt = new SVGInteractiveEntropy(this.divSourceEnt, this.sourceModel, conf);
+            this.targetEnt = new SVGEntropy(this.divTargetEnt, this.targetModel, conf);
+            this.sourceModel.addListener(this);
+            this.targetModel.addListener(this);
+        }
+        refresh() {
+            let selectedBin = this.sourceModel.selectedBin();
+            if (selectedBin != -1) {
+                let findInTree = function (selectedBin, tree) {
+                    let layerIdx = -1;
+                    let nodeIdx = -1;
+                    let d = 0;
+                    while (d < tree.depth() && layerIdx == -1) {
+                        let layer = tree.layer(d);
+                        layer.forEach((v, i) => {
+                            if (v.itemType == selectedBin + "") {
+                                layerIdx = d;
+                                nodeIdx = i;
+                            }
+                        });
+                        d += 1;
+                    }
+                    return [layerIdx, nodeIdx];
+                };
+                let inSource = findInTree(selectedBin, this.sourceEnt.tree.tree);
+                let inTarget = findInTree(selectedBin, this.targetEnt.tree.tree);
+                if (inSource[0] == -1 || inTarget[0] == -1) {
+                    this.sourceEnt.refresh();
+                    this.targetEnt.refresh();
+                    return;
+                }
+                this.sourceEnt.tree.highlightNode(inSource[0], inSource[1]);
+                this.targetEnt.tree.highlightNode(inTarget[0], inTarget[1]);
+            }
+            this.sourceEnt.refresh();
+            this.targetEnt.refresh();
+        }
+    }
+    exports.SVGInteractiveCrossEntropy = SVGInteractiveCrossEntropy;
 });
 define("article", ["require", "exports", "d3", "jquery", "model/bins", "view/textbinder", "data", "view/histogram", "view/entropy", "model/model"], function (require, exports, d3, $, bins_2, textbinder_1, data_1, histogram_2, entropy_1, model_1) {
     "use strict";
@@ -892,8 +975,7 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "view/tex
         $("#entropy-ex-low").click(() => { mActiveEnt = mLowEnt; mLowEnt.refresh(); });
         $("#entropy-ex-med").click(() => { mActiveEnt = mMedEnt; mMedEnt.refresh(); });
         $("#entropy-ex-high").click(() => { mActiveEnt = mHighEnt; mHighEnt.refresh(); });
-        let mInteractiveEnt = new bins_2.Histogram(8);
-        mInteractiveEnt.setAll(1);
+        let mInteractiveEnt = bins_2.Histogram.full(8, 1);
         let interactiveEnt = new entropy_1.SVGIndicatorEntropy("#entropy-ex-interactive", mInteractiveEnt, conf);
         interactiveEnt.refresh();
         document.addEventListener("keydown", event => {
@@ -912,6 +994,10 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "view/tex
                     break;
             }
         });
+        let qModel = bins_2.Histogram.fromArray(data_1.xEntropyExs["q"]);
+        let pModel = bins_2.Histogram.full(8, 1);
+        let interactiveXEnt = new entropy_1.SVGInteractiveCrossEntropy("#xentropy-ex-interactive", pModel, qModel, conf);
+        interactiveXEnt.refresh();
     }
     main();
 });

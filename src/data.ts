@@ -16,3 +16,7 @@ export const entropyExs = {
     "medEntropy": [1, 2, 4, 7, 7, 4, 2, 1],
     "lowEntropy": [1, 7, 1, 1, 1, 1, 1, 1]
 }
+
+export const xEntropyExs = {
+    "q": [2, 7, 4, 2, 5, 1, 3, 2]
+}

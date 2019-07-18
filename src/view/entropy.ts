@@ -1,7 +1,7 @@
 import {Bins} from 'model/bins';
 import {ModelListener} from 'model/model';
 import {TreeNode, TreeItem} from 'model/trees';
-import {SVGInteractiveHistogram} from 'view/histogram';
+import {SVGInteractiveHistogram, SVGHistogram} from 'view/histogram';
 import {SVGBinaryTree} from 'view/binarytree';
 import {CONF} from '../model/model';
 import * as d3 from "d3";
@@ -42,7 +42,6 @@ export class SVGSoloEntropy implements ModelListener {
  
     refresh() {
        let svgHeight = $(this.div).height();
-       let svgWidth = $(this.div).width();
  
        // again, single point of control for the magic numbers that determine sub-element sizing
        // 0 -> histogram, 1 -> bar, 2 -> tree
@@ -131,7 +130,7 @@ export class SVGSoloEntropy implements ModelListener {
  export class SVGEntropy implements ModelListener {
     model: Bins;
     tree: SVGBinaryTree;
-    hist: SVGInteractiveHistogram;
+    hist: SVGHistogram;
     svgTree: string;
     svgHist: string;
     div: string;
@@ -151,7 +150,7 @@ export class SVGSoloEntropy implements ModelListener {
  
        this.model = model;
        this.tree = new SVGBinaryTree(this.svgTree, 0, conf);
-       this.hist = new SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
+       this.hist = new SVGHistogram("entHist", this.svgHist, this.model, conf);
  
        this.model.addListener(this);
     }
@@ -163,11 +162,8 @@ export class SVGSoloEntropy implements ModelListener {
       d3.select(this.svgHist).attr("height", svgHeight/2).attr("width", svgWidth/2);
       d3.select(this.svgTree).attr("height", svgHeight/2).attr("width", svgWidth);
 
-      let selectedBin = this.model.selectedBin();
- 
       d3.select(this.svgTree).attr("style", "display: initial");
 
-      
       let colors = this.conf.colors[this.hist.name];
       if(colors == undefined) {
          colors = this.conf.colors["default"];
@@ -183,7 +179,7 @@ export class SVGSoloEntropy implements ModelListener {
                return c.toString();
             }
             else {
-            return colors[Number.parseInt(node.itemType) % colors.length];
+               return colors[Number.parseInt(node.itemType) % colors.length];
             }
          }
          else {
@@ -192,15 +188,20 @@ export class SVGSoloEntropy implements ModelListener {
       }
       this.tree.colorMap(color, color);
 
-
-      // units for the bar
-      let unit = 100 / (2**(h.depth()-1));
-      let markerLocs = Array.from({length: (2**(h.depth()-1)) }, (value, key) => key * unit);
       this.hist.refresh();
     }
  }
 
- export class SVGIndicatorEntropy extends SVGEntropy {
+ export class SVGInteractiveEntropy extends SVGEntropy {
+   hist: SVGInteractiveHistogram;
+   constructor(divElement: string, model: Bins, conf: CONF) {
+      super(divElement, model, conf);
+      // overwrite the histogram
+      this.hist = new SVGInteractiveHistogram("entHist", this.svgHist, this.model, conf);
+   }
+ }
+
+ export class SVGIndicatorEntropy extends SVGInteractiveEntropy {
     constructor(divElement: string, model: Bins, conf: CONF) {
        super(divElement, model, conf);
 
@@ -277,3 +278,72 @@ export class SVGSoloEntropy implements ModelListener {
       }
     }
  }
+
+export class SVGInteractiveCrossEntropy implements ModelListener {
+   div: string;
+   divSourceEnt: string;
+   divTargetEnt: string;
+   sourceEnt: SVGInteractiveEntropy;
+   targetEnt: SVGEntropy;
+   sourceModel: Bins;
+   targetModel: Bins;
+   conf: CONF;
+   constructor(divElement: string, pModel: Bins, qModel: Bins, conf: CONF) {
+      let defaultIDs = ["pEnt", "qEnt"];
+      this.div = divElement;
+      this.divSourceEnt = divElement + " > #" + defaultIDs[0];
+      this.divTargetEnt = divElement + " > #" + defaultIDs[1];
+
+      let d = d3.select(divElement);
+      d.attr("class", "row");
+      d.append("div").attr("id", defaultIDs[0]).attr("class", "col-6");
+      d.append("div").attr("id", defaultIDs[1]).attr("class", "col-6");
+
+      this.sourceModel = pModel;
+      this.targetModel = qModel;
+      this.conf = conf;
+
+      this.sourceEnt = new SVGInteractiveEntropy(this.divSourceEnt, this.sourceModel, conf)
+      this.targetEnt = new SVGEntropy(this.divTargetEnt, this.targetModel, conf);
+      this.sourceModel.addListener(this);
+      this.targetModel.addListener(this);
+   }
+
+   refresh() {
+      let selectedBin = this.sourceModel.selectedBin();
+      if(selectedBin != -1) {
+
+         let findInTree = function(selectedBin: number, tree: TreeItem) {
+            let layerIdx = -1;
+            let nodeIdx = -1;
+            let d = 0;
+            while(d < tree.depth() && layerIdx == -1) {
+               let layer = tree.layer(d);
+               layer.forEach((v: TreeItem, i: number) => {
+                  if(v.itemType == selectedBin + "") {
+                     layerIdx = d;
+                     nodeIdx = i;
+                  }
+              });
+              d += 1;
+            }
+            return [layerIdx, nodeIdx];
+         } 
+
+         let inSource = findInTree(selectedBin, this.sourceEnt.tree.tree);
+         let inTarget = findInTree(selectedBin, this.targetEnt.tree.tree);
+
+         if(inSource[0] == -1 || inTarget[0] == -1) {
+            this.sourceEnt.refresh();
+            this.targetEnt.refresh();
+            return;
+         }
+         
+         this.sourceEnt.tree.highlightNode(inSource[0], inSource[1]);
+         this.targetEnt.tree.highlightNode(inTarget[0], inTarget[1]);
+      }
+
+      this.sourceEnt.refresh();
+      this.targetEnt.refresh();
+   }
+}

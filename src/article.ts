@@ -2,9 +2,9 @@ import * as d3 from "d3";
 import * as $ from "jquery";
 import { Histogram } from "./model/bins";
 import { TextBinder, LooseTextBinder } from "./view/textbinder";
-import { chisqr1, chisqr2, entropyExs } from "./data";
+import { chisqr1, chisqr2, entropyExs, xEntropyExs } from "./data";
 import { SVGPhantomHistogram, SVGHistogram } from "./view/histogram";
-import { SVGIndicatorEntropy } from "./view/entropy";
+import { SVGIndicatorEntropy, SVGInteractiveCrossEntropy } from "./view/entropy";
 import { CONF } from "./model/model";
 // This script controls all of the animations in the article
 
@@ -106,8 +106,7 @@ function setupIntro() {
     $("#entropy-ex-high").click(() => {mActiveEnt = mHighEnt; mHighEnt.refresh()});
 
     // Interactive entropy diagram
-    let mInteractiveEnt = new Histogram(8);
-    mInteractiveEnt.setAll(1);
+    let mInteractiveEnt = Histogram.full(8, 1);
     let interactiveEnt = new SVGIndicatorEntropy("#entropy-ex-interactive", mInteractiveEnt, conf);
     interactiveEnt.refresh();
 
@@ -127,6 +126,12 @@ function setupIntro() {
                 break;
         }
     });
+
+    // Interactive cross entropy diagram
+    let qModel = Histogram.fromArray(xEntropyExs["q"]);
+    let pModel = Histogram.full(8, 1);
+    let interactiveXEnt = new SVGInteractiveCrossEntropy("#xentropy-ex-interactive", pModel, qModel, conf);
+    interactiveXEnt.refresh();
 }  
 
 main();

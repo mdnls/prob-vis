@@ -82,6 +82,12 @@ export class Histogram implements Bins {
       return hist;
     }
 
+    public static full(length: number, n: number) {
+      let hist = new Histogram(length);
+      hist.setAll(n);
+      return hist;
+    }
+
     /**
      * Represents a histogram containing different bins with unique items.
      * @param numBins Create a histogram with the specified number of bins.

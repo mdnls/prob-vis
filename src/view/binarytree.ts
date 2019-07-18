@@ -79,6 +79,16 @@ export class SVGBinaryTree implements ModelListener {
        this.tree = tree;
        this.refresh();
     }
+
+    /**
+     * Call attention to a node and its children.
+     * @param layerIdx layer index of node
+     * @param nodeIdx index in layer of node
+     */
+    highlightNode(layerIdx: number, nodeIdx: number) {
+       this.attnNode = [layerIdx, nodeIdx];
+       this.refresh();
+    }
  
     /**
      * Redraw the binary tree.
@@ -124,9 +134,7 @@ export class SVGBinaryTree implements ModelListener {
              leaf.y = 0;
           }
        );
- 
-       
- 
+          
        d3.select(this.svg)
           .selectAll("#treeItem")
           .remove();
@@ -134,48 +142,69 @@ export class SVGBinaryTree implements ModelListener {
           .selectAll("#treeEdge")
           .remove();
        
-       function addEdge(svg: string, parent: TreeItem, child: TreeItem) {
-          d3.select(svg)
+      function isChildFn(targetLayer: number, targetNode: number) {
+         return (layerIdx: number, nodeIdx: number) => {
+            let diff = targetLayer - layerIdx;
+            // the nodeIdx of the parent of node k is Math.floor(k/2), similar to child equations for heap structures.
+            // it is a nontrivial proof that repeatedly taking the floor of k/2 is the same as taking the floor after
+            //    dividing all the 2s.
+            return diff >= 0 && Math.floor(targetNode / (2**diff)) == nodeIdx;
+         }
+      }
+
+      let childCheck = (this.attnNode != undefined) ? isChildFn(this.attnNode[0], this.attnNode[1]) : () => false;
+
+       function addEdge(svg: string, parent: TreeItem, child: TreeItem, cLayer: number, cIndex: number) {
+         let pLayer = cLayer - 1;
+         let pIndex = Math.floor(cIndex/2);
+         let highlight = (childCheck(pLayer, pIndex) && childCheck(cLayer, cIndex))
+         let color = highlight ? "#0074D9" : "gray";
+         let width = highlight ? hScale(itemSize/3) : hScale(itemSize/5);
+         d3.select(svg)
              .append("line")
              .attr("id", "treeEdge")
              .attr("x1", (d) => absX(parent.x + itemSize/2))
              .attr("x2", (d) => absX(child.x + itemSize/2))
              .attr("y1", (d) => absY(parent.y + itemSize/2))
              .attr("y2", (d) => absY(child.y + itemSize/2))
-             .attr("stroke-width", hScale(itemSize/5))
-             .attr("stroke", "gray");
+             .attr("stroke-width", width)
+             .attr("stroke", color);
        }
- 
-       this.tree.treeMap(this.nodeColor, this.leafColor);
+
+      this.tree.treeMap(this.nodeColor, this.leafColor);
  
        this.tree.treeMap(
           (layerIdx, nodeIdx, node) => {
-             addEdge(this.svg, node, node.left());
-             addEdge(this.svg, node, node.right());
+             addEdge(this.svg, node, node.left(), layerIdx + 1, 2 * nodeIdx);
+             addEdge(this.svg, node, node.right(), layerIdx + 1, 2 * nodeIdx + 1);
           },
           (layerIdx, leaf) => {});
  
-       this.tree._treeMap(1, 0,
-          (layerIdx, nodeIdx, node) => {
-             d3.select(this.svg)
-                .append("circle")
-                .data([node])
-                .attr("id", "treeItem")
-                .attr("r", wScale(itemSize/2))
-                .attr("cx", (d) => absX(d.x + itemSize/2))
-                .attr("cy", (d) => absY(d.y + itemSize/2))
-                .attr("fill", (d) => d.color );
-          },
-          (layerIdx, nodeIdx, leaf) => {
-             d3.select(this.svg)
-                .append("circle")
-                .data([leaf])
-                .attr("id", "treeItem")
-                .attr("r", wScale(itemSize/2))
-                .attr("cx", (d) => absX(d.x + itemSize/2))
-                .attr("cy", (d) => absY(d.y + itemSize/2))
-                .attr("fill", (d) => d.color);
-          });
+      this.tree._treeMap(0, 0,
+         (layerIdx, nodeIdx, node) => {
+            d3.select(this.svg)
+               .append("circle")
+               .data([node])
+               .attr("id", "treeItem")
+               .attr("r", wScale(itemSize/2))
+               .attr("cx", (d) => absX(d.x + itemSize/2))
+               .attr("cy", (d) => absY(d.y + itemSize/2))
+               .attr("fill", (d) => d.color )
+               .attr("stroke", (d) => childCheck(layerIdx, nodeIdx) ? "#0074D9" : "none")
+               .attr("stroke-width", 3);
+         },
+         (layerIdx, nodeIdx, leaf) => {
+            d3.select(this.svg)
+               .append("circle")
+               .data([leaf])
+               .attr("id", "treeItem")
+               .attr("r", wScale(itemSize/2))
+               .attr("cx", (d) => absX(d.x + itemSize/2))
+               .attr("cy", (d) => absY(d.y + itemSize/2))
+               .attr("fill", (d) => d.color)
+               .attr("stroke", (d) => childCheck(layerIdx, nodeIdx) ? "#0074D9" : "none")
+               .attr("stroke-width", 3);
+         });
     }
  }
  
