@@ -13,6 +13,7 @@
     "node-sass": "^4.12.0",
     "papaparse": "^5.0.0",
     "requirejs": "^2.3.6",
+    "typescript": "^3.5.3",
     "watch": "^1.0.2"
   },
   "scripts": {

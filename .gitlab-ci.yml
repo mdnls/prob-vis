@@ -5,6 +5,7 @@ pages:
   - rm -rf public
   - mkdir public
   - npm install
+  - tsc
   - npm run build
   artifacts:
     paths:
