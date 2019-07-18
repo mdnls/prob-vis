@@ -76,7 +76,7 @@ export interface TreeItem extends Item, Model {
      * given by the relative number of items in each bin.
      * @param bins: a set of bins.
      */
-    public static huffTree(binModel: Bins) {
+    public static huffTree(binModel: Bins, requiredDepth?: number) {
       let bins = binModel.bins();
       let total = bins.reduce((prev, cur) => prev + cur.length, 0);
   
@@ -150,11 +150,15 @@ export interface TreeItem extends Item, Model {
   
       let huffTree = binNodes[0];
 
+      let depth = huffTree.depth();
+      if(requiredDepth != undefined) {
+        depth = Math.max(depth, requiredDepth);
+      }
       let balance = (layerIdx: number, nodeIdx: number, node: TreeNode) => {
         // if I have children, and my depth + 1 = total depth, then no change
         // if my depth + 1 < total depth, I need to extend out my children 
-        if(node.left().itemType && huffTree.depth() - (layerIdx + 1) > 1) {
-          let target = TreeNode.fullTree(huffTree.depth() - (layerIdx + 1));
+        if(node.left().itemType && depth - (layerIdx + 1) > 1) {
+          let target = TreeNode.fullTree(depth - (layerIdx + 1));
           let type = "c" + node.left().itemType; // "c" indicates a child
           target.treeMap(
             (l, k, n) => {n.itemType = type},
@@ -162,8 +166,8 @@ export interface TreeItem extends Item, Model {
           target.itemType = node.left().itemType;
           node.leftChild = target;
         }
-        if(node.right().itemType && huffTree.depth() - (layerIdx + 1) > 1) {
-          let target = TreeNode.fullTree(huffTree.depth() - (layerIdx + 1));
+        if(node.right().itemType && depth - (layerIdx + 1) > 1) {
+          let target = TreeNode.fullTree(depth - (layerIdx + 1));
           let type = "c" + node.right().itemType; // "c" indicates a child
           target.treeMap(
             (l, k, n) => {n.itemType = type},

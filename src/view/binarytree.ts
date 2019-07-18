@@ -190,8 +190,8 @@ export class SVGBinaryTree implements ModelListener {
                .attr("cx", (d) => absX(d.x + itemSize/2))
                .attr("cy", (d) => absY(d.y + itemSize/2))
                .attr("fill", (d) => d.color )
-               .attr("stroke", (d) => childCheck(layerIdx, nodeIdx) ? "#0074D9" : "none")
-               .attr("stroke-width", 3);
+               .attr("stroke", (d) => childCheck(layerIdx, nodeIdx) ? "#0074D9" : "#000")
+               .attr("stroke-width", (d) => childCheck(layerIdx, nodeIdx) ? 3 : 1);
          },
          (layerIdx, nodeIdx, leaf) => {
             d3.select(this.svg)
@@ -202,8 +202,8 @@ export class SVGBinaryTree implements ModelListener {
                .attr("cx", (d) => absX(d.x + itemSize/2))
                .attr("cy", (d) => absY(d.y + itemSize/2))
                .attr("fill", (d) => d.color)
-               .attr("stroke", (d) => childCheck(layerIdx, nodeIdx) ? "#0074D9" : "none")
-               .attr("stroke-width", 3);
+               .attr("stroke", (d) => childCheck(layerIdx, nodeIdx) ? "#0074D9" : "#000")
+               .attr("stroke-width", childCheck(layerIdx, nodeIdx) ? 3 : 1);
          });
     }
  }

@@ -135,6 +135,7 @@ export class SVGSoloEntropy implements ModelListener {
     svgHist: string;
     div: string;
     conf: CONF;
+    targetDepth: number;
  
     constructor(divElement: string, model: Bins, conf: CONF) {
        this.conf = conf;
@@ -159,7 +160,7 @@ export class SVGSoloEntropy implements ModelListener {
       let svgHeight = $(this.div).height();
       let svgWidth = $(this.div).width();
 
-      d3.select(this.svgHist).attr("height", svgHeight/2).attr("width", svgWidth/2);
+      d3.select(this.svgHist).attr("height", svgHeight/2).attr("width", svgWidth);
       d3.select(this.svgTree).attr("height", svgHeight/2).attr("width", svgWidth);
 
       d3.select(this.svgTree).attr("style", "display: initial");
@@ -169,7 +170,7 @@ export class SVGSoloEntropy implements ModelListener {
          colors = this.conf.colors["default"];
       }
       
-      let h = TreeNode.huffTree(this.model);
+      let h = TreeNode.huffTree(this.model, this.targetDepth);
       this.tree.setTree(h);
       let color = (layerIdx: number, nodeIdx: number, node: TreeItem) => {
          if(node.itemType) {
@@ -189,7 +190,18 @@ export class SVGSoloEntropy implements ModelListener {
       this.tree.colorMap(color, color);
 
       this.hist.refresh();
-    }
+   }
+
+   requireDepth(n: number) {
+      this.targetDepth = n;
+      this.refresh();
+   }
+
+   unsetDepth() {
+      delete this.targetDepth;
+      this.refresh();
+   }
+
  }
 
  export class SVGInteractiveEntropy extends SVGEntropy {
@@ -338,10 +350,18 @@ export class SVGInteractiveCrossEntropy implements ModelListener {
             this.targetEnt.refresh();
             return;
          }
-         
+
          this.sourceEnt.tree.highlightNode(inSource[0], inSource[1]);
          this.targetEnt.tree.highlightNode(inTarget[0], inTarget[1]);
       }
+      // get the depths of trees for both models
+      // It would be nice to math out the depth of a huffman tree without constructing it
+      // but the tree construction is efficient, so this is not a huge issue.
+      let sourceTree = TreeNode.huffTree(this.sourceEnt.model);
+      let targetTree = TreeNode.huffTree(this.targetEnt.model);
+      let d = Math.max(sourceTree.depth(), targetTree.depth());
+      this.sourceEnt.requireDepth(d);
+      this.targetEnt.requireDepth(d);
 
       this.sourceEnt.refresh();
       this.targetEnt.refresh();

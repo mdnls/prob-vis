@@ -368,7 +368,7 @@ define("model/trees", ["require", "exports"], function (require, exports) {
                 return new TreeNode(this.fullTree(d - 1), this.fullTree(d - 1));
             }
         }
-        static huffTree(binModel) {
+        static huffTree(binModel, requiredDepth) {
             let bins = binModel.bins();
             let total = bins.reduce((prev, cur) => prev + cur.length, 0);
             let binFreqs = bins.map((k) => k.length / total);
@@ -421,16 +421,20 @@ define("model/trees", ["require", "exports"], function (require, exports) {
                 }
             }
             let huffTree = binNodes[0];
+            let depth = huffTree.depth();
+            if (requiredDepth != undefined) {
+                depth = Math.max(depth, requiredDepth);
+            }
             let balance = (layerIdx, nodeIdx, node) => {
-                if (node.left().itemType && huffTree.depth() - (layerIdx + 1) > 1) {
-                    let target = TreeNode.fullTree(huffTree.depth() - (layerIdx + 1));
+                if (node.left().itemType && depth - (layerIdx + 1) > 1) {
+                    let target = TreeNode.fullTree(depth - (layerIdx + 1));
                     let type = "c" + node.left().itemType;
                     target.treeMap((l, k, n) => { n.itemType = type; }, (l, k, n) => { n.itemType = type; });
                     target.itemType = node.left().itemType;
                     node.leftChild = target;
                 }
-                if (node.right().itemType && huffTree.depth() - (layerIdx + 1) > 1) {
-                    let target = TreeNode.fullTree(huffTree.depth() - (layerIdx + 1));
+                if (node.right().itemType && depth - (layerIdx + 1) > 1) {
+                    let target = TreeNode.fullTree(depth - (layerIdx + 1));
                     let type = "c" + node.right().itemType;
                     target.treeMap((l, k, n) => { n.itemType = type; }, (l, k, n) => { n.itemType = type; });
                     target.itemType = node.right().itemType;
@@ -621,8 +625,8 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
                     .attr("cx", (d) => absX(d.x + itemSize / 2))
                     .attr("cy", (d) => absY(d.y + itemSize / 2))
                     .attr("fill", (d) => d.color)
-                    .attr("stroke", (d) => childCheck(layerIdx, nodeIdx) ? "#0074D9" : "none")
-                    .attr("stroke-width", 3);
+                    .attr("stroke", (d) => childCheck(layerIdx, nodeIdx) ? "#0074D9" : "#000")
+                    .attr("stroke-width", (d) => childCheck(layerIdx, nodeIdx) ? 3 : 1);
             }, (layerIdx, nodeIdx, leaf) => {
                 d3.select(this.svg)
                     .append("circle")
@@ -632,8 +636,8 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
                     .attr("cx", (d) => absX(d.x + itemSize / 2))
                     .attr("cy", (d) => absY(d.y + itemSize / 2))
                     .attr("fill", (d) => d.color)
-                    .attr("stroke", (d) => childCheck(layerIdx, nodeIdx) ? "#0074D9" : "none")
-                    .attr("stroke-width", 3);
+                    .attr("stroke", (d) => childCheck(layerIdx, nodeIdx) ? "#0074D9" : "#000")
+                    .attr("stroke-width", childCheck(layerIdx, nodeIdx) ? 3 : 1);
             });
         }
     }
@@ -743,14 +747,14 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
         refresh() {
             let svgHeight = $(this.div).height();
             let svgWidth = $(this.div).width();
-            d3.select(this.svgHist).attr("height", svgHeight / 2).attr("width", svgWidth / 2);
+            d3.select(this.svgHist).attr("height", svgHeight / 2).attr("width", svgWidth);
             d3.select(this.svgTree).attr("height", svgHeight / 2).attr("width", svgWidth);
             d3.select(this.svgTree).attr("style", "display: initial");
             let colors = this.conf.colors[this.hist.name];
             if (colors == undefined) {
                 colors = this.conf.colors["default"];
             }
-            let h = trees_2.TreeNode.huffTree(this.model);
+            let h = trees_2.TreeNode.huffTree(this.model, this.targetDepth);
             this.tree.setTree(h);
             let color = (layerIdx, nodeIdx, node) => {
                 if (node.itemType) {
@@ -769,6 +773,14 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
             };
             this.tree.colorMap(color, color);
             this.hist.refresh();
+        }
+        requireDepth(n) {
+            this.targetDepth = n;
+            this.refresh();
+        }
+        unsetDepth() {
+            delete this.targetDepth;
+            this.refresh();
         }
     }
     exports.SVGEntropy = SVGEntropy;
@@ -889,6 +901,11 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
                 this.sourceEnt.tree.highlightNode(inSource[0], inSource[1]);
                 this.targetEnt.tree.highlightNode(inTarget[0], inTarget[1]);
             }
+            let sourceTree = trees_2.TreeNode.huffTree(this.sourceEnt.model);
+            let targetTree = trees_2.TreeNode.huffTree(this.targetEnt.model);
+            let d = Math.max(sourceTree.depth(), targetTree.depth());
+            this.sourceEnt.requireDepth(d);
+            this.targetEnt.requireDepth(d);
             this.sourceEnt.refresh();
             this.targetEnt.refresh();
         }

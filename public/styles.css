@@ -31,8 +31,7 @@ b {
   font-weight: 700; }
 
 .vis-inset {
-  display: inline-block;
-  width: 100%;
-  height: 30vh; }
-  .vis-inset svg {
-    height: 100%; }
+  height: 35vh; }
+
+.vis-inset-long {
+  height: 45vh; }

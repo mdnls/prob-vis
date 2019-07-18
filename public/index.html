@@ -109,7 +109,7 @@
             <p>
                 <div id="entropy-ex" class="vis-inset col-12">
                     <div class="h-100">
-                        <svg id="entropy-ex-active" class="col-12"></svg>
+                        <svg id="entropy-ex-active" class="col-12 h-100"></svg>
                     </div>
                 </div>
                 <button id="entropy-ex-low">Low Entropy</button>
@@ -121,13 +121,13 @@
             <p>Paragraph: using bits to represent events induces a decision tree. $N=\frac{1}{p(x)}$ tells us how many outcomes the tree must have, and $\log N$ is the depth of a tree with $N$ outcomes. This quantity is the information content of $x$.</p>
             <p>Paragraph: the formula gives us an optimal value, if all encodings are perfect and use the tree optimally. This isn't always the case</p>
             <p><b>Show the huffman code for an interactive tree along with its entropy and the optimal entropy.</b></p>
-            <p>
-                <div id="entropy-interactive" class="vis-inset-long col-12">
-                    <div id="entropy-ex-interactive" class="h-100">
+            
+            <div id="entropy-interactive" class="vis-inset-long col-8 offset-2">
+                <div id="entropy-ex-interactive" class="h-100">
 
-                    </div>
                 </div>
-            </p>
+            </div>
+            
             <h2>
                 Cross Entropy
             </h2>
@@ -135,13 +135,13 @@
             <p>Paragraph: from the perspective of entropy, two distributions are similar if their events typically have the same info content</p>
             <p>Paragraph: Kullback Leibler formulation: $D_{KL} (P \vert \vert Q) = \sum p(x) \log \frac{p(x)}{q(x)} = $$\expectedunder{x \sim P}{N_p} - \expectedunder{x \sim P}{N_q}$</p>
             <p><b>Show histograms for $p(x)$ and $q(x)$, highlighting the path length difference for selected event</b></p>
-            <p>
-                <div id="xentropy-interactive" class="vis-inset-long col-12">
-                    <div id="xentropy-ex-interactive" class="h-100">
-                        
-                    </div>
+        
+            <div id="xentropy-interactive" class="col-12">
+                <div id="xentropy-ex-interactive" class="h-100">
+                    
                 </div>
-            </p>
+            </div>
+            
             <p>Paragraph: there are many other ways to use this idea to create a distance between distributions: JSD, KL, XEnt, etc</p>
             <p>Paragraph: however, all of these share one problem: when $q(x)=0$, the tree for $q(x)$ assigns no path at all to $x$.</p>
             <p>Glue paragraph: instead, we can look at transport metrics [IPMs] which handle this issue more nicely</p>
