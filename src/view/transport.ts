@@ -1,4 +1,4 @@
-import {SVGInteractiveHistogram, SVGStaticHistogram} from './histogram';
+import {SVGInteractiveHistogram, SVGHistogram} from './histogram';
 import {SVGHeatmap} from './heatmap';
 import { Matrix, MatrixSlice, Slice } from '../model/heatmap';
 import { CONF } from '../model/model';
@@ -11,8 +11,8 @@ export class SVGTransport implements ModelListener {
 
     private heatmap: SVGHeatmap;
     private rowHist: SVGInteractiveHistogram;
-    private colHist: SVGStaticHistogram;
-    private colOverlay: SVGStaticHistogram;
+    private colHist: SVGHistogram;
+    private colOverlay: SVGHistogram;
 
     private div: string;
     private svgHeatMap: string;
@@ -48,7 +48,7 @@ export class SVGTransport implements ModelListener {
 
         this.heatmap = new SVGHeatmap(this.svgHeatMap, this.model, this.conf);
         this.rowHist = new SVGInteractiveHistogram("rowHist", this.svgRowHist, rslice, this.conf);
-        this.colHist = new SVGStaticHistogram("colHist", this.svgColHist, cslice, this.conf);
+        this.colHist = new SVGHistogram("colHist", this.svgColHist, cslice, this.conf);
         
         this.model.addListener(this);
     }
@@ -67,7 +67,7 @@ export class SVGTransport implements ModelListener {
 
         if(this.model.selectedCol() != -1) {
             let slice = this.colslices[this.model.selectedCol()];
-            this.colOverlay = new SVGStaticHistogram("colOverlay", this.svgColOverlay, slice, this.conf);
+            this.colOverlay = new SVGHistogram("colOverlay", this.svgColOverlay, slice, this.conf);
             this.colOverlay.refresh();
         }
     }

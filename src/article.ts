@@ -3,7 +3,7 @@ import * as $ from "jquery";
 import { Histogram } from "./model/bins";
 import { TextBinder, LooseTextBinder } from "./view/textbinder";
 import { chisqr1, chisqr2, entropyExs } from "./data";
-import { SVGPhantomHistogram, SVGStaticHistogram } from "./view/histogram";
+import { SVGPhantomHistogram, SVGHistogram } from "./view/histogram";
 import { SVGIndicatorEntropy } from "./view/entropy";
 import { CONF } from "./model/model";
 // This script controls all of the animations in the article
@@ -46,7 +46,7 @@ function setupIntro() {
     let mCenter2 = Histogram.fromArray(chisqr2["centerHistBins"]);
     let mRight2 = Histogram.fromArray(chisqr2["rightHistBins"]);
     let hLeft2 = new SVGPhantomHistogram("chisqr-hist-2-left", "#chisqr-2-left-svg", mLeft2, mCenter2, conf);
-    let hCenter2 = new SVGStaticHistogram("chisqr-hist-2-center", "#chisqr-2-center-svg", mCenter2, conf);
+    let hCenter2 = new SVGHistogram("chisqr-hist-2-center", "#chisqr-2-center-svg", mCenter2, conf);
     let hRight2 = new SVGPhantomHistogram("chisqr-hist-2-right", "#chisqr-2-right-svg", mRight2, mCenter2, conf);
     hLeft2.refresh();
     hCenter2.refresh();
@@ -75,9 +75,9 @@ function setupIntro() {
     let mMedEnt = Histogram.fromArray(entropyExs["medEntropy"]);
     let mHighEnt = Histogram.fromArray(entropyExs["highEntropy"]);
 
-    let hLowEnt = new SVGStaticHistogram("entropy-ex", "#entropy-ex-active", mLowEnt, conf);
-    let hMedEnt = new SVGStaticHistogram("entropy-ex", "#entropy-ex-active", mMedEnt, conf);
-    let hHighEnt = new SVGStaticHistogram("entropy-ex", "#entropy-ex-active", mHighEnt, conf);
+    let hLowEnt = new SVGHistogram("entropy-ex", "#entropy-ex-active", mLowEnt, conf);
+    let hMedEnt = new SVGHistogram("entropy-ex", "#entropy-ex-active", mMedEnt, conf);
+    let hHighEnt = new SVGHistogram("entropy-ex", "#entropy-ex-active", mHighEnt, conf);
 
     let tLowEnt = new TextBinder<Histogram>("#entropy-ex-val", mLowEnt, function (m: Histogram) { 
         let total = m.bins().reduce((p, c) => c.length + p, 0);

@@ -139,7 +139,7 @@ define("data", ["require", "exports"], function (require, exports) {
 define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], function (require, exports, bins_1, d3, $) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class SVGStaticHistogram {
+    class SVGHistogram {
         constructor(name, svgElement, model, conf) {
             this.svg = svgElement;
             this.model = model;
@@ -212,8 +212,8 @@ define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], f
             this.fixed = false;
         }
     }
-    exports.SVGStaticHistogram = SVGStaticHistogram;
-    class SVGInteractiveHistogram extends SVGStaticHistogram {
+    exports.SVGHistogram = SVGHistogram;
+    class SVGInteractiveHistogram extends SVGHistogram {
         constructor(name, svgElement, model, conf) {
             super(name, svgElement, model, conf);
             this.model.addListener(this);
@@ -273,7 +273,7 @@ define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], f
         }
     }
     exports.SVGInteractiveHistogram = SVGInteractiveHistogram;
-    class SVGPhantomHistogram extends SVGStaticHistogram {
+    class SVGPhantomHistogram extends SVGHistogram {
         constructor(name, svgElement, model, phantom, conf) {
             super(name, svgElement, model, conf);
             this.model.addListener(this);
@@ -719,36 +719,31 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
             d3.select(this.svgHist).attr("height", svgHeight / 2).attr("width", svgWidth / 2);
             d3.select(this.svgTree).attr("height", svgHeight / 2).attr("width", svgWidth);
             let selectedBin = this.model.selectedBin();
-            if (selectedBin != -1 && this.model.getBin(selectedBin).length > 0) {
-                d3.select(this.svgTree).attr("style", "display: initial");
-                let colors = this.conf.colors[this.hist.name];
-                if (colors == undefined) {
-                    colors = this.conf.colors["default"];
-                }
-                let h = trees_2.TreeNode.huffTree(this.model);
-                this.tree.setTree(h);
-                let color = (layerIdx, nodeIdx, node) => {
-                    if (node.itemType) {
-                        if (node.itemType[0] == "c") {
-                            let c = d3.color(colors[Number.parseInt(node.itemType[1]) % colors.length]);
-                            c.opacity = 0.7;
-                            return c.toString();
-                        }
-                        else {
-                            return colors[Number.parseInt(node.itemType) % colors.length];
-                        }
+            d3.select(this.svgTree).attr("style", "display: initial");
+            let colors = this.conf.colors[this.hist.name];
+            if (colors == undefined) {
+                colors = this.conf.colors["default"];
+            }
+            let h = trees_2.TreeNode.huffTree(this.model);
+            this.tree.setTree(h);
+            let color = (layerIdx, nodeIdx, node) => {
+                if (node.itemType) {
+                    if (node.itemType[0] == "c") {
+                        let c = d3.color(colors[Number.parseInt(node.itemType[1]) % colors.length]);
+                        c.opacity = 0.7;
+                        return c.toString();
                     }
                     else {
-                        return "#000";
+                        return colors[Number.parseInt(node.itemType) % colors.length];
                     }
-                };
-                this.tree.colorMap(color, color);
-                let unit = 100 / (Math.pow(2, (h.depth() - 1)));
-                let markerLocs = Array.from({ length: (Math.pow(2, (h.depth() - 1))) }, (value, key) => key * unit);
-            }
-            else {
-                d3.select(this.svgTree).attr("style", "display: none;");
-            }
+                }
+                else {
+                    return "#000";
+                }
+            };
+            this.tree.colorMap(color, color);
+            let unit = 100 / (Math.pow(2, (h.depth() - 1)));
+            let markerLocs = Array.from({ length: (Math.pow(2, (h.depth() - 1))) }, (value, key) => key * unit);
             this.hist.refresh();
         }
     }
@@ -850,7 +845,7 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "view/tex
         let mCenter2 = bins_2.Histogram.fromArray(data_1.chisqr2["centerHistBins"]);
         let mRight2 = bins_2.Histogram.fromArray(data_1.chisqr2["rightHistBins"]);
         let hLeft2 = new histogram_2.SVGPhantomHistogram("chisqr-hist-2-left", "#chisqr-2-left-svg", mLeft2, mCenter2, conf);
-        let hCenter2 = new histogram_2.SVGStaticHistogram("chisqr-hist-2-center", "#chisqr-2-center-svg", mCenter2, conf);
+        let hCenter2 = new histogram_2.SVGHistogram("chisqr-hist-2-center", "#chisqr-2-center-svg", mCenter2, conf);
         let hRight2 = new histogram_2.SVGPhantomHistogram("chisqr-hist-2-right", "#chisqr-2-right-svg", mRight2, mCenter2, conf);
         hLeft2.refresh();
         hCenter2.refresh();
@@ -872,9 +867,9 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "view/tex
         let mLowEnt = bins_2.Histogram.fromArray(data_1.entropyExs["lowEntropy"]);
         let mMedEnt = bins_2.Histogram.fromArray(data_1.entropyExs["medEntropy"]);
         let mHighEnt = bins_2.Histogram.fromArray(data_1.entropyExs["highEntropy"]);
-        let hLowEnt = new histogram_2.SVGStaticHistogram("entropy-ex", "#entropy-ex-active", mLowEnt, conf);
-        let hMedEnt = new histogram_2.SVGStaticHistogram("entropy-ex", "#entropy-ex-active", mMedEnt, conf);
-        let hHighEnt = new histogram_2.SVGStaticHistogram("entropy-ex", "#entropy-ex-active", mHighEnt, conf);
+        let hLowEnt = new histogram_2.SVGHistogram("entropy-ex", "#entropy-ex-active", mLowEnt, conf);
+        let hMedEnt = new histogram_2.SVGHistogram("entropy-ex", "#entropy-ex-active", mMedEnt, conf);
+        let hHighEnt = new histogram_2.SVGHistogram("entropy-ex", "#entropy-ex-active", mHighEnt, conf);
         let tLowEnt = new textbinder_1.TextBinder("#entropy-ex-val", mLowEnt, function (m) {
             let total = m.bins().reduce((p, c) => c.length + p, 0);
             let nats = (a) => Math.log2(total / a);
@@ -1179,7 +1174,7 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
             this.colslices = Array.from({ length: this.model.sideLength() }, (v, k) => new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.COL, k));
             this.heatmap = new heatmap_1.SVGHeatmap(this.svgHeatMap, this.model, this.conf);
             this.rowHist = new histogram_3.SVGInteractiveHistogram("rowHist", this.svgRowHist, rslice, this.conf);
-            this.colHist = new histogram_3.SVGStaticHistogram("colHist", this.svgColHist, cslice, this.conf);
+            this.colHist = new histogram_3.SVGHistogram("colHist", this.svgColHist, cslice, this.conf);
             this.model.addListener(this);
         }
         refresh() {
@@ -1193,7 +1188,7 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
             this.heatmap.refresh();
             if (this.model.selectedCol() != -1) {
                 let slice = this.colslices[this.model.selectedCol()];
-                this.colOverlay = new histogram_3.SVGStaticHistogram("colOverlay", this.svgColOverlay, slice, this.conf);
+                this.colOverlay = new histogram_3.SVGHistogram("colOverlay", this.svgColOverlay, slice, this.conf);
                 this.colOverlay.refresh();
             }
         }

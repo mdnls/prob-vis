@@ -8,7 +8,7 @@ import * as $ from "jquery";
 /**
  * Draw a histogram.
  */
-export class SVGStaticHistogram implements ModelListener {
+export class SVGHistogram implements ModelListener {
    model: Bins;
    conf: CONF;
    fixed: boolean;
@@ -131,7 +131,7 @@ export class SVGStaticHistogram implements ModelListener {
 }
 
 
-export class SVGInteractiveHistogram extends SVGStaticHistogram {
+export class SVGInteractiveHistogram extends SVGHistogram {
    /**
     * Draw a histogram in the given div representing the given model.
     * @param name a unique name for this view.
@@ -220,7 +220,7 @@ export class SVGInteractiveHistogram extends SVGStaticHistogram {
 }
 
 
-export class SVGPhantomHistogram extends SVGStaticHistogram {
+export class SVGPhantomHistogram extends SVGHistogram {
    private phantom: Bins;
 
    /**

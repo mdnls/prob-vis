@@ -127,6 +127,7 @@ export class SVGSoloEntropy implements ModelListener {
     }
  }
  
+
  export class SVGEntropy implements ModelListener {
     model: Bins;
     tree: SVGBinaryTree;
@@ -156,51 +157,46 @@ export class SVGSoloEntropy implements ModelListener {
     }
  
     refresh() {
-       let svgHeight = $(this.div).height();
-       let svgWidth = $(this.div).width();
+      let svgHeight = $(this.div).height();
+      let svgWidth = $(this.div).width();
+
+      d3.select(this.svgHist).attr("height", svgHeight/2).attr("width", svgWidth/2);
+      d3.select(this.svgTree).attr("height", svgHeight/2).attr("width", svgWidth);
+
+      let selectedBin = this.model.selectedBin();
  
-       d3.select(this.svgHist).attr("height", svgHeight/2).attr("width", svgWidth/2);
-       d3.select(this.svgTree).attr("height", svgHeight/2).attr("width", svgWidth);
- 
-       let selectedBin = this.model.selectedBin();
- 
-       if(selectedBin != -1 && this.model.getBin(selectedBin).length > 0) {
-          d3.select(this.svgTree).attr("style", "display: initial");
- 
-          
-          let colors = this.conf.colors[this.hist.name];
-          if(colors == undefined) {
-             colors = this.conf.colors["default"];
-          }
-          
-          let h = TreeNode.huffTree(this.model);
-          this.tree.setTree(h);
-          let color = (layerIdx: number, nodeIdx: number, node: TreeItem) => {
-             if(node.itemType) {
-                if(node.itemType[0] == "c") {
-                   let c = d3.color(colors[Number.parseInt(node.itemType[1]) % colors.length]);
-                   c.opacity = 0.7;
-                   return c.toString();
-                }
-                else {
-                  return colors[Number.parseInt(node.itemType) % colors.length];
-                }
-             }
-             else {
-                return "#000";
-             }
-          }
-          this.tree.colorMap(color, color);
- 
- 
-          // units for the bar
-          let unit = 100 / (2**(h.depth()-1));
-          let markerLocs = Array.from({length: (2**(h.depth()-1)) }, (value, key) => key * unit);
-       }
-       else { 
-          d3.select(this.svgTree).attr("style", "display: none;");
-       }
-       this.hist.refresh();
+      d3.select(this.svgTree).attr("style", "display: initial");
+
+      
+      let colors = this.conf.colors[this.hist.name];
+      if(colors == undefined) {
+         colors = this.conf.colors["default"];
+      }
+      
+      let h = TreeNode.huffTree(this.model);
+      this.tree.setTree(h);
+      let color = (layerIdx: number, nodeIdx: number, node: TreeItem) => {
+         if(node.itemType) {
+            if(node.itemType[0] == "c") {
+               let c = d3.color(colors[Number.parseInt(node.itemType[1]) % colors.length]);
+               c.opacity = 0.7;
+               return c.toString();
+            }
+            else {
+            return colors[Number.parseInt(node.itemType) % colors.length];
+            }
+         }
+         else {
+            return "#000";
+         }
+      }
+      this.tree.colorMap(color, color);
+
+
+      // units for the bar
+      let unit = 100 / (2**(h.depth()-1));
+      let markerLocs = Array.from({length: (2**(h.depth()-1)) }, (value, key) => key * unit);
+      this.hist.refresh();
     }
  }
 
