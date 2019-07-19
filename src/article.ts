@@ -1,10 +1,12 @@
 import * as d3 from "d3";
 import * as $ from "jquery";
 import { Histogram } from "./model/bins";
+import { HeatMap } from "./model/heatmap";
 import { TextBinder, LooseTextBinder } from "./view/textbinder";
-import { chisqr1, chisqr2, entropyExs, xEntropyExs } from "./data";
+import { chisqr1, chisqr2, entropyExs, xEntropyExs, transportEx } from "./data";
 import { SVGPhantomHistogram, SVGHistogram } from "./view/histogram";
 import { SVGIndicatorEntropy, SVGInteractiveCrossEntropy } from "./view/entropy";
+import { SVGIndicatorTransport, SVGTransportMatrix } from "./view/transport";
 import { CONF } from "./model/model";
 // This script controls all of the animations in the article
 
@@ -12,9 +14,9 @@ import { CONF } from "./model/model";
 let colors = {
     "border": ["#505050",],
     "default": Array.from({length: 8}, (v, k) => d3.interpolateSpectral(k/7)),
-    "rowHist": Array.from({length: 1}, (v, k) => d3.interpolateBlues(0.5)),
-    "colHist": Array.from({length: 1}, (v, k) => d3.interpolateBlues(0.5)),
-    "colOverlay": Array.from({length: 1}, (v, k) => d3.interpolateReds(0.7))
+    "rowHist": Array.from({length: 8}, (v, k) => d3.interpolateSpectral(k/7)),
+    "colHist": Array.from({length: 8}, (v, k) => d3.interpolateSpectral(k/7)),
+    "colOverlay": ["#000"]
 }
 const conf: CONF = new CONF(8, colors, 5);
 
@@ -132,6 +134,11 @@ function setupIntro() {
     let pModel = Histogram.full(8, 1);
     let interactiveXEnt = new SVGInteractiveCrossEntropy("#xentropy-ex-interactive", pModel, qModel, conf);
     interactiveXEnt.refresh();
+
+    // Transport diagram with arrows
+    let transportMatrix = HeatMap.fromCSVStr(transportEx["matrix"]);
+    let interactiveTransport = new SVGIndicatorTransport("#transport-ex-interactive", transportMatrix, conf);
+    interactiveTransport.refresh();
 }  
 
 main();

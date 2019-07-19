@@ -84,7 +84,6 @@ define("model/bins", ["require", "exports"], function (require, exports) {
         }
         addListener(listener) {
             this.listeners.push(listener);
-            listener.refresh();
         }
         numBins() {
             return this.histBins.length;
@@ -100,6 +99,189 @@ define("model/bins", ["require", "exports"], function (require, exports) {
         }
     }
     exports.Histogram = Histogram;
+});
+define("model/heatmap", ["require", "exports", "model/bins", "papaparse"], function (require, exports, bins_1, papaparse_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class Cell {
+        constructor(r, c, color, quantity) {
+            this.r = r;
+            this.c = c;
+            this.color = color;
+            this.quantity = quantity;
+        }
+    }
+    exports.Cell = Cell;
+    var Slice;
+    (function (Slice) {
+        Slice[Slice["ROWS"] = 0] = "ROWS";
+        Slice[Slice["COLS"] = 1] = "COLS";
+        Slice[Slice["ROW"] = 2] = "ROW";
+        Slice[Slice["COL"] = 3] = "COL";
+    })(Slice = exports.Slice || (exports.Slice = {}));
+    class MatrixSlice {
+        constructor(matrix, mode, index) {
+            this.matrix = matrix;
+            this.mode = mode;
+            if (mode == Slice.ROW || mode == Slice.COL) {
+                if (index == undefined) {
+                    throw Error("Must provide an index to do a row slice.");
+                }
+                this.index = index;
+            }
+            else {
+                this.index = -1;
+            }
+            let toDraw = [];
+            let numItems = 25;
+            let rows = this.matrix.rows();
+            let quantityPerRow = rows.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
+            let rowsTotal = quantityPerRow.reduce((prev, cur) => cur + prev, 0);
+            let cols = this.matrix.cols();
+            let quantityPerCol = cols.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
+            let colsTotal = quantityPerCol.reduce((prev, cur) => cur + prev, 0);
+            switch (this.mode) {
+                case Slice.ROW:
+                    let row = this.matrix.getRow(this.index);
+                    if (rowsTotal == 0) {
+                        toDraw = row.map((c) => 0);
+                    }
+                    else {
+                        toDraw = row.map((c) => Math.floor(numItems * c.quantity / rowsTotal));
+                    }
+                    break;
+                case Slice.COL:
+                    let col = this.matrix.getCol(this.index);
+                    if (colsTotal == 0) {
+                        toDraw = col.map((c) => 0);
+                    }
+                    else {
+                        toDraw = col.map((c) => Math.floor(numItems * c.quantity / colsTotal));
+                    }
+                    break;
+                case Slice.COLS:
+                    if (rowsTotal == 0) {
+                        toDraw = rows.map((c) => 0);
+                    }
+                    else {
+                        toDraw = quantityPerRow.map((c) => Math.floor(numItems * c / rowsTotal));
+                    }
+                    break;
+                case Slice.ROWS:
+                    if (colsTotal == 0) {
+                        toDraw = cols.map((c) => 0);
+                    }
+                    else {
+                        toDraw = quantityPerCol.map((c) => Math.floor(numItems * c / colsTotal));
+                    }
+                    break;
+            }
+            this.histogram = bins_1.Histogram.fromArray(toDraw);
+        }
+        addListener(listener) {
+            this.matrix.addListener(listener);
+        }
+        refresh() {
+            this.matrix.refresh();
+        }
+        addItem(bin) {
+            throw Error("Cannot add an item to a matrix slice.");
+        }
+        removeItem(bin) {
+            throw Error("Cannot remove an item from a matrix slice.");
+        }
+        addBin() {
+            throw Error("Cannot add a bin to a matrix slice.");
+        }
+        removeBin() {
+            throw Error("Cannot remove a bin from a matrix slice.");
+        }
+        bins() {
+            return this.histogram.bins();
+        }
+        getBin(bin) {
+            return this.histogram.getBin(bin);
+        }
+        numBins() {
+            return this.histogram.numBins();
+        }
+        selectBin(selection) {
+            this.matrix.selectCol(selection);
+            this.histogram.refresh();
+            this.matrix.refresh();
+        }
+        selectedBin() {
+            return this.matrix.selectedCol();
+        }
+    }
+    exports.MatrixSlice = MatrixSlice;
+    class HeatMap {
+        constructor(sideLength) {
+            this.mat = Array.from({ length: sideLength }, (v, r) => (Array.from({ length: sideLength }, (v, c) => new Cell(r, c, "#000", 1))));
+            this.listeners = new Array();
+            this.selection = -1;
+        }
+        static fromCSVStr(csv) {
+            let dataStr = papaparse_1.parse(csv).data;
+            let data = dataStr.map((r) => r.map((val) => Number.parseFloat(val)));
+            data.forEach((row) => { if (row.length != data.length) {
+                throw Error("The input data must be a square matrix");
+            } });
+            let hm = new HeatMap(data.length);
+            data.forEach((row, rIdx) => {
+                row.forEach((quantity, cIdx) => hm.setCell(rIdx, cIdx, quantity));
+            });
+            return hm;
+        }
+        rowHist() {
+            return new MatrixSlice(this, Slice.ROWS);
+        }
+        colHist() {
+            return new MatrixSlice(this, Slice.COLS);
+        }
+        rowSliceHist(row) {
+            return new MatrixSlice(this, Slice.ROW, row);
+        }
+        refresh() {
+            this.listeners.forEach((listener) => listener.refresh());
+        }
+        addListener(listener) {
+            this.listeners.push(listener);
+        }
+        setCell(row, col, quantity) {
+            if (row >= 0 && row < this.mat.length && col >= 0 && col < this.mat.length) {
+                this.mat[row][col].quantity = quantity;
+            }
+        }
+        getCell(row, col) {
+            return this.mat[row][col];
+        }
+        getRow(row) {
+            return this.mat[row].map((cell) => new Cell(0, cell.c, cell.color, cell.quantity));
+        }
+        rows() {
+            return Array.from(this.mat);
+        }
+        getCol(col) {
+            return this.mat.map((row) => new Cell(row[col].r, 0, row[col].color, row[col].quantity));
+        }
+        cols() {
+            return Array.from({ length: this.mat.length }, (v, k) => this.getCol(k));
+        }
+        selectCol(col) {
+            if (col >= 0 && col < this.mat.length) {
+                this.selection = col;
+                this.refresh();
+            }
+        }
+        selectedCol() {
+            return this.selection;
+        }
+        sideLength() {
+            return this.mat.length;
+        }
+    }
+    exports.HeatMap = HeatMap;
 });
 define("view/textbinder", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -143,8 +325,11 @@ define("data", ["require", "exports"], function (require, exports) {
     exports.xEntropyExs = {
         "q": [2, 7, 4, 2, 5, 1, 3, 2]
     };
+    exports.transportEx = {
+        "matrix": "0,0,0,0,0,0,0,0\n0,2,0,0,0,0,0,1\n0,0,3,0,0,6,2,3\n0,1,0,0,0,0,0,0\n2,0,5,0,0,0,0,1\n2,7,6,1,0,1,0,0\n0,8,4,0,1,2,0,0\n1,3,0,1,1,0,2,1"
+    };
 });
-define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], function (require, exports, bins_1, d3, $) {
+define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], function (require, exports, bins_2, d3, $) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class SVGHistogram {
@@ -306,7 +491,7 @@ define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], f
             if (this.phantom != undefined) {
                 let pdata = this.phantom.bins().map((bin) => bin[bin.length - 1]);
                 let mdata = this.model.bins().map((bin) => bin[bin.length - 1]);
-                mdata = mdata.map((v, k) => (v == undefined) ? new bins_1.BinItem(k, -1, "") : v);
+                mdata = mdata.map((v, k) => (v == undefined) ? new bins_2.BinItem(k, -1, "") : v);
                 d3.select(this.svg)
                     .selectAll(".phantomIndicator")
                     .remove();
@@ -912,296 +1097,6 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
     }
     exports.SVGInteractiveCrossEntropy = SVGInteractiveCrossEntropy;
 });
-define("article", ["require", "exports", "d3", "jquery", "model/bins", "view/textbinder", "data", "view/histogram", "view/entropy", "model/model"], function (require, exports, d3, $, bins_2, textbinder_1, data_1, histogram_2, entropy_1, model_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    let colors = {
-        "border": ["#505050",],
-        "default": Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7)),
-        "rowHist": Array.from({ length: 1 }, (v, k) => d3.interpolateBlues(0.5)),
-        "colHist": Array.from({ length: 1 }, (v, k) => d3.interpolateBlues(0.5)),
-        "colOverlay": Array.from({ length: 1 }, (v, k) => d3.interpolateReds(0.7))
-    };
-    const conf = new model_1.CONF(8, colors, 5);
-    function main() {
-        setupIntro();
-    }
-    exports.main = main;
-    function setupIntro() {
-        let mLeft1 = bins_2.Histogram.fromArray(data_1.chisqr1["leftHistBins"]);
-        let mRight1 = bins_2.Histogram.fromArray(data_1.chisqr1["rightHistBins"]);
-        let hLeft1 = new histogram_2.SVGPhantomHistogram("chisqr-hist-1-left", "#chisqr-1-left-svg", mLeft1, mRight1, conf);
-        let hRight1 = new histogram_2.SVGPhantomHistogram("chisqr-hist-1-right", "#chisqr-1-right-svg", mRight1, mLeft1, conf);
-        hLeft1.refresh();
-        hRight1.refresh();
-        let chisqrval = new textbinder_1.LooseTextBinder("#chisqr-1-val", [mLeft1, mRight1], function (m) {
-            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
-            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
-                .reduce((prev, cur) => prev + cur, 0);
-            return "" + Math.round(c * 100) / 100;
-        });
-        mLeft1.addListener(chisqrval);
-        let mLeft2 = bins_2.Histogram.fromArray(data_1.chisqr2["leftHistBins"]);
-        let mCenter2 = bins_2.Histogram.fromArray(data_1.chisqr2["centerHistBins"]);
-        let mRight2 = bins_2.Histogram.fromArray(data_1.chisqr2["rightHistBins"]);
-        let hLeft2 = new histogram_2.SVGPhantomHistogram("chisqr-hist-2-left", "#chisqr-2-left-svg", mLeft2, mCenter2, conf);
-        let hCenter2 = new histogram_2.SVGHistogram("chisqr-hist-2-center", "#chisqr-2-center-svg", mCenter2, conf);
-        let hRight2 = new histogram_2.SVGPhantomHistogram("chisqr-hist-2-right", "#chisqr-2-right-svg", mRight2, mCenter2, conf);
-        hLeft2.refresh();
-        hCenter2.refresh();
-        hRight2.refresh();
-        let chisqrvalL = new textbinder_1.LooseTextBinder("#chisqr-2-left-val", [mLeft2, mCenter2], function (m) {
-            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
-            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
-                .reduce((prev, cur) => prev + cur, 0);
-            return "" + Math.round(c * 100) / 100;
-        });
-        let chisqrvalR = new textbinder_1.LooseTextBinder("#chisqr-2-right-val", [mRight2, mCenter2], function (m) {
-            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
-            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
-                .reduce((prev, cur) => prev + cur, 0);
-            return "" + Math.round(c * 100) / 100;
-        });
-        mLeft2.addListener(chisqrvalL);
-        mRight2.addListener(chisqrvalR);
-        let mLowEnt = bins_2.Histogram.fromArray(data_1.entropyExs["lowEntropy"]);
-        let mMedEnt = bins_2.Histogram.fromArray(data_1.entropyExs["medEntropy"]);
-        let mHighEnt = bins_2.Histogram.fromArray(data_1.entropyExs["highEntropy"]);
-        let hLowEnt = new histogram_2.SVGHistogram("entropy-ex", "#entropy-ex-active", mLowEnt, conf);
-        let hMedEnt = new histogram_2.SVGHistogram("entropy-ex", "#entropy-ex-active", mMedEnt, conf);
-        let hHighEnt = new histogram_2.SVGHistogram("entropy-ex", "#entropy-ex-active", mHighEnt, conf);
-        let tLowEnt = new textbinder_1.TextBinder("#entropy-ex-val", mLowEnt, function (m) {
-            let total = m.bins().reduce((p, c) => c.length + p, 0);
-            let nats = (a) => Math.log2(total / a);
-            let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
-            return "" + Math.round(entropy * 100) / 100;
-        });
-        let tMedEnt = new textbinder_1.TextBinder("#entropy-ex-val", mMedEnt, function (m) {
-            let total = m.bins().reduce((p, c) => c.length + p, 0);
-            let nats = (a) => Math.log2(total / a);
-            let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
-            return "" + Math.round(entropy * 100) / 100;
-        });
-        let tHighEnt = new textbinder_1.TextBinder("#entropy-ex-val", mHighEnt, function (m) {
-            let total = m.bins().reduce((p, c) => c.length + p, 0);
-            let nats = (a) => Math.log2(total / a);
-            let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
-            return "" + Math.round(entropy * 100) / 100;
-        });
-        let mActiveEnt = mMedEnt;
-        $("#entropy-ex-low").click(() => { mActiveEnt = mLowEnt; mLowEnt.refresh(); });
-        $("#entropy-ex-med").click(() => { mActiveEnt = mMedEnt; mMedEnt.refresh(); });
-        $("#entropy-ex-high").click(() => { mActiveEnt = mHighEnt; mHighEnt.refresh(); });
-        let mInteractiveEnt = bins_2.Histogram.full(8, 1);
-        let interactiveEnt = new entropy_1.SVGIndicatorEntropy("#entropy-ex-interactive", mInteractiveEnt, conf);
-        interactiveEnt.refresh();
-        document.addEventListener("keydown", event => {
-            switch (event.key.toLowerCase()) {
-                case ("h"):
-                    interactiveEnt.hist.selectCol(mInteractiveEnt.selectedBin() - 1);
-                    break;
-                case ("l"):
-                    interactiveEnt.hist.selectCol(mInteractiveEnt.selectedBin() + 1);
-                    break;
-                case ("k"):
-                    interactiveEnt.hist.incrSelectedBin();
-                    break;
-                case ("j"):
-                    interactiveEnt.hist.decrSelectedBin();
-                    break;
-            }
-        });
-        let qModel = bins_2.Histogram.fromArray(data_1.xEntropyExs["q"]);
-        let pModel = bins_2.Histogram.full(8, 1);
-        let interactiveXEnt = new entropy_1.SVGInteractiveCrossEntropy("#xentropy-ex-interactive", pModel, qModel, conf);
-        interactiveXEnt.refresh();
-    }
-    main();
-});
-define("model/heatmap", ["require", "exports", "model/bins", "papaparse"], function (require, exports, bins_3, papaparse_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    class Cell {
-        constructor(r, c, color, quantity) {
-            this.r = r;
-            this.c = c;
-            this.color = color;
-            this.quantity = quantity;
-        }
-    }
-    exports.Cell = Cell;
-    var Slice;
-    (function (Slice) {
-        Slice[Slice["ROWS"] = 0] = "ROWS";
-        Slice[Slice["COLS"] = 1] = "COLS";
-        Slice[Slice["ROW"] = 2] = "ROW";
-        Slice[Slice["COL"] = 3] = "COL";
-    })(Slice = exports.Slice || (exports.Slice = {}));
-    class MatrixSlice {
-        constructor(matrix, mode, index) {
-            this.matrix = matrix;
-            this.mode = mode;
-            if (mode == Slice.ROW || mode == Slice.COL) {
-                if (index == undefined) {
-                    throw Error("Must provide an index to do a row slice.");
-                }
-                this.index = index;
-            }
-            else {
-                this.index = -1;
-            }
-            let toDraw = [];
-            let numItems = 100;
-            let rows = this.matrix.rows();
-            let quantityPerRow = rows.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
-            let rowsTotal = quantityPerRow.reduce((prev, cur) => cur + prev, 0);
-            let cols = this.matrix.cols();
-            let quantityPerCol = cols.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
-            let colsTotal = quantityPerCol.reduce((prev, cur) => cur + prev, 0);
-            switch (this.mode) {
-                case Slice.ROW:
-                    let row = this.matrix.getRow(this.index);
-                    if (rowsTotal == 0) {
-                        toDraw = row.map((c) => 0);
-                    }
-                    else {
-                        toDraw = row.map((c) => Math.floor(numItems * c.quantity / rowsTotal));
-                    }
-                    break;
-                case Slice.COL:
-                    let col = this.matrix.getCol(this.index);
-                    if (colsTotal == 0) {
-                        toDraw = col.map((c) => 0);
-                    }
-                    else {
-                        toDraw = col.map((c) => Math.floor(numItems * c.quantity / colsTotal));
-                    }
-                    break;
-                case Slice.COLS:
-                    if (rowsTotal == 0) {
-                        toDraw = rows.map((c) => 0);
-                    }
-                    else {
-                        toDraw = quantityPerRow.map((c) => Math.floor(numItems * c / rowsTotal));
-                    }
-                    break;
-                case Slice.ROWS:
-                    if (colsTotal == 0) {
-                        toDraw = cols.map((c) => 0);
-                    }
-                    else {
-                        toDraw = quantityPerCol.map((c) => Math.floor(numItems * c / colsTotal));
-                    }
-                    break;
-            }
-            this.histogram = bins_3.Histogram.fromArray(toDraw);
-        }
-        addListener(listener) {
-            this.matrix.addListener(listener);
-        }
-        refresh() {
-            this.matrix.refresh();
-        }
-        addItem(bin) {
-            throw Error("Cannot add an item to a matrix slice.");
-        }
-        removeItem(bin) {
-            throw Error("Cannot remove an item from a matrix slice.");
-        }
-        addBin() {
-            throw Error("Cannot add a bin to a matrix slice.");
-        }
-        removeBin() {
-            throw Error("Cannot remove a bin from a matrix slice.");
-        }
-        bins() {
-            return this.histogram.bins();
-        }
-        getBin(bin) {
-            return this.histogram.getBin(bin);
-        }
-        numBins() {
-            return this.histogram.numBins();
-        }
-        selectBin(selection) {
-            this.matrix.selectCol(selection);
-            this.histogram.refresh();
-            this.matrix.refresh();
-        }
-        selectedBin() {
-            return this.matrix.selectedCol();
-        }
-    }
-    exports.MatrixSlice = MatrixSlice;
-    class HeatMap {
-        constructor(sideLength) {
-            this.mat = Array.from({ length: sideLength }, (v, r) => (Array.from({ length: sideLength }, (v, c) => new Cell(r, c, "#000", 1))));
-            this.listeners = new Array();
-            this.selection = -1;
-        }
-        static fromCSVStr(csv) {
-            let dataStr = papaparse_1.parse(csv).data;
-            let data = dataStr.map((r) => r.map((val) => Number.parseFloat(val)));
-            data.forEach((row) => { if (row.length != data.length) {
-                throw Error("The input data must be a square matrix");
-            } });
-            let hm = new HeatMap(data.length);
-            data.forEach((row, rIdx) => {
-                row.forEach((quantity, cIdx) => hm.setCell(rIdx, cIdx, quantity));
-            });
-            return hm;
-        }
-        rowHist() {
-            return new MatrixSlice(this, Slice.ROWS);
-        }
-        colHist() {
-            return new MatrixSlice(this, Slice.COLS);
-        }
-        rowSliceHist(row) {
-            return new MatrixSlice(this, Slice.ROW, row);
-        }
-        refresh() {
-            this.listeners.forEach((listener) => listener.refresh());
-        }
-        addListener(listener) {
-            this.listeners.push(listener);
-            listener.refresh();
-        }
-        setCell(row, col, quantity) {
-            if (row >= 0 && row < this.mat.length && col >= 0 && col < this.mat.length) {
-                this.mat[row][col].quantity = quantity;
-            }
-        }
-        getCell(row, col) {
-            return this.mat[row][col];
-        }
-        getRow(row) {
-            return this.mat[row].map((cell) => new Cell(0, cell.c, cell.color, cell.quantity));
-        }
-        rows() {
-            return Array.from(this.mat);
-        }
-        getCol(col) {
-            return this.mat.map((row) => new Cell(row[col].r, 0, row[col].color, row[col].quantity));
-        }
-        cols() {
-            return Array.from({ length: this.mat.length }, (v, k) => this.getCol(k));
-        }
-        selectCol(col) {
-            if (col >= 0 && col < this.mat.length) {
-                this.selection = col;
-                this.refresh();
-            }
-        }
-        selectedCol() {
-            return this.selection;
-        }
-        sideLength() {
-            return this.mat.length;
-        }
-    }
-    exports.HeatMap = HeatMap;
-});
 define("view/heatmap", ["require", "exports", "d3"], function (require, exports, d3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -1254,31 +1149,57 @@ define("view/heatmap", ["require", "exports", "d3"], function (require, exports,
     }
     exports.SVGHeatmap = SVGHeatmap;
 });
-define("view/transport", ["require", "exports", "view/histogram", "view/heatmap", "model/heatmap", "d3"], function (require, exports, histogram_3, heatmap_1, heatmap_2, d3) {
+define("view/transport", ["require", "exports", "view/histogram", "view/heatmap", "model/heatmap", "d3"], function (require, exports, histogram_2, heatmap_1, heatmap_2, d3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class SVGTransport {
         constructor(divElement, model, conf) {
             this.conf = conf;
             this.div = divElement;
-            let defaultIds = ["svgHeatMap", "svgRowHist", "svgColHist"];
-            this.svgHeatMap = this.div + " > #" + defaultIds[0];
-            this.svgRowHist = this.div + " > #" + defaultIds[1];
-            this.svgColHist = this.div + " > #" + defaultIds[2];
-            this.svgColOverlay = this.div + " > #" + defaultIds[2];
+            let defaultIds = ["svgRowHist", "svgColHist"];
+            this.svgRowHist = this.div + " > #" + defaultIds[0];
+            this.svgColHist = this.div + " > #" + defaultIds[1];
+            this.svgColOverlay = this.div + " > #" + defaultIds[1];
             let d = d3.select(this.div);
-            d.append("svg").attr("id", defaultIds[1]);
-            d.append("br");
             d.append("svg").attr("id", defaultIds[0]);
-            d.append("svg").attr("id", defaultIds[2]).attr("transform", "rotate(90)");
+            d.append("svg").attr("id", defaultIds[1]);
             this.model = model;
-            let rslice = new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.ROWS);
-            let cslice = new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.COLS);
+            this.rslice = new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.ROWS);
+            this.cslice = new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.COLS);
             this.colslices = Array.from({ length: this.model.sideLength() }, (v, k) => new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.COL, k));
-            this.heatmap = new heatmap_1.SVGHeatmap(this.svgHeatMap, this.model, this.conf);
-            this.rowHist = new histogram_3.SVGInteractiveHistogram("rowHist", this.svgRowHist, rslice, this.conf);
-            this.colHist = new histogram_3.SVGHistogram("colHist", this.svgColHist, cslice, this.conf);
+            this.rowHist = new histogram_2.SVGInteractiveHistogram("rowHist", this.svgRowHist, this.rslice, this.conf);
+            this.colHist = new histogram_2.SVGHistogram("colHist", this.svgColHist, this.cslice, this.conf);
             this.model.addListener(this);
+        }
+        refresh() {
+            let svgHeight = $(this.div).height();
+            let svgWidth = $(this.div).width();
+            let sideLength = Math.min((1 / 2) * svgWidth, svgHeight);
+            d3.select(this.svgRowHist).attr("width", sideLength).attr("height", sideLength);
+            d3.select(this.svgColHist).attr("width", sideLength).attr("height", sideLength);
+            this.rowHist.refresh();
+            this.colHist.refresh();
+            if (this.model.selectedCol() != -1) {
+                let slice = this.colslices[this.model.selectedCol()];
+                this.colOverlay = new histogram_2.SVGHistogram("colOverlay", this.svgColOverlay, slice, this.conf);
+                this.colOverlay.refresh();
+            }
+        }
+    }
+    exports.SVGTransport = SVGTransport;
+    class SVGTransportMatrix extends SVGTransport {
+        constructor(divElement, model, conf) {
+            super(divElement, model, conf);
+            let defaultId = "svgHeatmap";
+            this.svgHeatMap = this.div + " > #" + defaultId;
+            d3.select(this.div)
+                .insert("br", this.svgColHist);
+            d3.select(this.div)
+                .insert("svg", this.svgColHist)
+                .attr("id", defaultId);
+            d3.select(this.svgColHist)
+                .attr("transform", "rotate(90)");
+            this.heatmap = new heatmap_1.SVGHeatmap(this.svgHeatMap, this.model, this.conf);
         }
         refresh() {
             let svgHeight = $(this.div).height();
@@ -1291,12 +1212,195 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
             this.heatmap.refresh();
             if (this.model.selectedCol() != -1) {
                 let slice = this.colslices[this.model.selectedCol()];
-                this.colOverlay = new histogram_3.SVGHistogram("colOverlay", this.svgColOverlay, slice, this.conf);
+                this.colOverlay = new histogram_2.SVGHistogram("colOverlay", this.svgColOverlay, slice, this.conf);
                 this.colOverlay.refresh();
             }
         }
     }
-    exports.SVGTransport = SVGTransport;
+    exports.SVGTransportMatrix = SVGTransportMatrix;
+    class SVGIndicatorTransport extends SVGTransport {
+        constructor(divElement, model, conf) {
+            super(divElement, model, conf);
+            let defaultId = "arrowBar";
+            this.svgArrowBar = this.div + " > #" + defaultId;
+            d3.select(this.div)
+                .append("svg")
+                .attr("id", defaultId);
+            let defs = d3.select(this.svgArrowBar).append("defs");
+            defs.append("marker")
+                .attr("id", "arrow")
+                .attr("viewBox", "0 -5, 10, 10")
+                .attr("refX", 5)
+                .attr("refY", 0)
+                .attr("markerWidth", 4)
+                .attr("markerHeight", 4)
+                .attr("orient", "auto")
+                .append("path")
+                .attr("d", "M0,-5L10,0L0,5");
+        }
+        refresh() {
+            super.refresh();
+            let svgWidth = $(this.div).width();
+            let svgHeight = $(this.div).height();
+            d3.select(this.svgArrowBar)
+                .attr("width", svgWidth)
+                .attr("height", svgHeight / 5);
+            if (this.rslice.selectedBin() != -1) {
+                d3.select(this.svgArrowBar)
+                    .selectAll(".arrowIndicator")
+                    .remove();
+                let width = this.colHist.viewBoxSideLength;
+                let colxOffset = this.colHist.xOffset;
+                let rowxOffset = this.rowHist.xOffset;
+                let s = this.colHist.s;
+                let pad = this.conf.padding;
+                let arrowBar = this.svgArrowBar;
+                let arrow = function (sBin, eBin) {
+                    let scale = d3.scaleLinear().domain([0, 100]).range([0, width]);
+                    let start = colxOffset + scale(s * sBin + 0.5 * s);
+                    let end = width + 2 * pad + rowxOffset + scale(s * eBin + 0.5 * s);
+                    let p = `M${start},5  A20,5 0 1,0 ${end},5`;
+                    d3.select(arrowBar)
+                        .append("path")
+                        .attr("d", p)
+                        .attr("class", "arrowIndicator")
+                        .attr("stroke", "#000")
+                        .attr("stroke-width", 2)
+                        .attr("fill", "none")
+                        .attr("marker-end", "url(#arrow)");
+                };
+                let sBin = this.rslice.selectedBin();
+                let slice = this.colslices[sBin];
+                let max = [-Infinity, -Infinity, -Infinity];
+                let maxIdx = [-1, -1, -1];
+                slice.bins().forEach((bin, i) => {
+                    if (bin.length > 0 && bin.length > max[0]) {
+                        max = [bin.length, max[0], max[1]];
+                        maxIdx = [i, maxIdx[0], maxIdx[1]];
+                    }
+                    else if (bin.length > 0 && bin.length > max[1]) {
+                        max = [max[0], bin.length, max[1]];
+                        maxIdx = [maxIdx[0], i, maxIdx[1]];
+                    }
+                    else if (bin.length > 0 && bin.length > max[2]) {
+                        max = [max[0], max[1], bin.length];
+                        maxIdx = [maxIdx[0], maxIdx[1], i];
+                    }
+                });
+                maxIdx.forEach((i) => i >= 0 ? arrow(sBin, i) : "");
+            }
+        }
+    }
+    exports.SVGIndicatorTransport = SVGIndicatorTransport;
+});
+define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/heatmap", "view/textbinder", "data", "view/histogram", "view/entropy", "view/transport", "model/model"], function (require, exports, d3, $, bins_3, heatmap_3, textbinder_1, data_1, histogram_3, entropy_1, transport_1, model_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    let colors = {
+        "border": ["#505050",],
+        "default": Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7)),
+        "rowHist": Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7)),
+        "colHist": Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7)),
+        "colOverlay": ["#000"]
+    };
+    const conf = new model_1.CONF(8, colors, 5);
+    function main() {
+        setupIntro();
+    }
+    exports.main = main;
+    function setupIntro() {
+        let mLeft1 = bins_3.Histogram.fromArray(data_1.chisqr1["leftHistBins"]);
+        let mRight1 = bins_3.Histogram.fromArray(data_1.chisqr1["rightHistBins"]);
+        let hLeft1 = new histogram_3.SVGPhantomHistogram("chisqr-hist-1-left", "#chisqr-1-left-svg", mLeft1, mRight1, conf);
+        let hRight1 = new histogram_3.SVGPhantomHistogram("chisqr-hist-1-right", "#chisqr-1-right-svg", mRight1, mLeft1, conf);
+        hLeft1.refresh();
+        hRight1.refresh();
+        let chisqrval = new textbinder_1.LooseTextBinder("#chisqr-1-val", [mLeft1, mRight1], function (m) {
+            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
+            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
+                .reduce((prev, cur) => prev + cur, 0);
+            return "" + Math.round(c * 100) / 100;
+        });
+        mLeft1.addListener(chisqrval);
+        let mLeft2 = bins_3.Histogram.fromArray(data_1.chisqr2["leftHistBins"]);
+        let mCenter2 = bins_3.Histogram.fromArray(data_1.chisqr2["centerHistBins"]);
+        let mRight2 = bins_3.Histogram.fromArray(data_1.chisqr2["rightHistBins"]);
+        let hLeft2 = new histogram_3.SVGPhantomHistogram("chisqr-hist-2-left", "#chisqr-2-left-svg", mLeft2, mCenter2, conf);
+        let hCenter2 = new histogram_3.SVGHistogram("chisqr-hist-2-center", "#chisqr-2-center-svg", mCenter2, conf);
+        let hRight2 = new histogram_3.SVGPhantomHistogram("chisqr-hist-2-right", "#chisqr-2-right-svg", mRight2, mCenter2, conf);
+        hLeft2.refresh();
+        hCenter2.refresh();
+        hRight2.refresh();
+        let chisqrvalL = new textbinder_1.LooseTextBinder("#chisqr-2-left-val", [mLeft2, mCenter2], function (m) {
+            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
+            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
+                .reduce((prev, cur) => prev + cur, 0);
+            return "" + Math.round(c * 100) / 100;
+        });
+        let chisqrvalR = new textbinder_1.LooseTextBinder("#chisqr-2-right-val", [mRight2, mCenter2], function (m) {
+            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
+            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
+                .reduce((prev, cur) => prev + cur, 0);
+            return "" + Math.round(c * 100) / 100;
+        });
+        mLeft2.addListener(chisqrvalL);
+        mRight2.addListener(chisqrvalR);
+        let mLowEnt = bins_3.Histogram.fromArray(data_1.entropyExs["lowEntropy"]);
+        let mMedEnt = bins_3.Histogram.fromArray(data_1.entropyExs["medEntropy"]);
+        let mHighEnt = bins_3.Histogram.fromArray(data_1.entropyExs["highEntropy"]);
+        let hLowEnt = new histogram_3.SVGHistogram("entropy-ex", "#entropy-ex-active", mLowEnt, conf);
+        let hMedEnt = new histogram_3.SVGHistogram("entropy-ex", "#entropy-ex-active", mMedEnt, conf);
+        let hHighEnt = new histogram_3.SVGHistogram("entropy-ex", "#entropy-ex-active", mHighEnt, conf);
+        let tLowEnt = new textbinder_1.TextBinder("#entropy-ex-val", mLowEnt, function (m) {
+            let total = m.bins().reduce((p, c) => c.length + p, 0);
+            let nats = (a) => Math.log2(total / a);
+            let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
+            return "" + Math.round(entropy * 100) / 100;
+        });
+        let tMedEnt = new textbinder_1.TextBinder("#entropy-ex-val", mMedEnt, function (m) {
+            let total = m.bins().reduce((p, c) => c.length + p, 0);
+            let nats = (a) => Math.log2(total / a);
+            let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
+            return "" + Math.round(entropy * 100) / 100;
+        });
+        let tHighEnt = new textbinder_1.TextBinder("#entropy-ex-val", mHighEnt, function (m) {
+            let total = m.bins().reduce((p, c) => c.length + p, 0);
+            let nats = (a) => Math.log2(total / a);
+            let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
+            return "" + Math.round(entropy * 100) / 100;
+        });
+        let mActiveEnt = mMedEnt;
+        $("#entropy-ex-low").click(() => { mActiveEnt = mLowEnt; mLowEnt.refresh(); });
+        $("#entropy-ex-med").click(() => { mActiveEnt = mMedEnt; mMedEnt.refresh(); });
+        $("#entropy-ex-high").click(() => { mActiveEnt = mHighEnt; mHighEnt.refresh(); });
+        let mInteractiveEnt = bins_3.Histogram.full(8, 1);
+        let interactiveEnt = new entropy_1.SVGIndicatorEntropy("#entropy-ex-interactive", mInteractiveEnt, conf);
+        interactiveEnt.refresh();
+        document.addEventListener("keydown", event => {
+            switch (event.key.toLowerCase()) {
+                case ("h"):
+                    interactiveEnt.hist.selectCol(mInteractiveEnt.selectedBin() - 1);
+                    break;
+                case ("l"):
+                    interactiveEnt.hist.selectCol(mInteractiveEnt.selectedBin() + 1);
+                    break;
+                case ("k"):
+                    interactiveEnt.hist.incrSelectedBin();
+                    break;
+                case ("j"):
+                    interactiveEnt.hist.decrSelectedBin();
+                    break;
+            }
+        });
+        let qModel = bins_3.Histogram.fromArray(data_1.xEntropyExs["q"]);
+        let pModel = bins_3.Histogram.full(8, 1);
+        let interactiveXEnt = new entropy_1.SVGInteractiveCrossEntropy("#xentropy-ex-interactive", pModel, qModel, conf);
+        interactiveXEnt.refresh();
+        let transportMatrix = heatmap_3.HeatMap.fromCSVStr(data_1.transportEx["matrix"]);
+        let interactiveTransport = new transport_1.SVGIndicatorTransport("#transport-ex-interactive", transportMatrix, conf);
+        interactiveTransport.refresh();
+    }
+    main();
 });
 define("main", ["require", "exports", "view/binarytree", "view/histogram", "view/entropy", "view/transport", "view/heatmap", "model/bins", "model/heatmap", "d3", "model/model"], function (require, exports, tree, hist, ent, transport, hm, histModel, matModel, d3, model) {
     "use strict";
@@ -1305,9 +1409,9 @@ define("main", ["require", "exports", "view/binarytree", "view/histogram", "view
         let colors = {
             "border": ["#505050",],
             "default": Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7)),
-            "rowHist": Array.from({ length: 1 }, (v, k) => d3.interpolateBlues(0.5)),
-            "colHist": Array.from({ length: 1 }, (v, k) => d3.interpolateBlues(0.5)),
-            "colOverlay": Array.from({ length: 1 }, (v, k) => d3.interpolateReds(0.7))
+            "rowHist": Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7)),
+            "colHist": Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7)),
+            "colOverlay": ["#000"]
         };
         let conf = new model.CONF(8, colors, 5);
         let m = new histModel.Histogram(8);
@@ -1319,13 +1423,15 @@ define("main", ["require", "exports", "view/binarytree", "view/histogram", "view
         let v = new hist.SVGInteractiveHistogram("v", "#svg", m, conf);
         let both = new ent.SVGEntropy("#plain-entropy0", m, conf);
         window.addEventListener("resize", () => { m.refresh(); });
-        let mat = matModel.HeatMap.fromCSVStr('0,0,0,1,2,2,0,2,2,4,0,2,1,0,0\n1,0,0,1,0,1,2,1,2,0,0,1,0,0,0\n1,1,0,0,1,3,2,8,2,6,5,3,1,0,1\n3,1,4,4,7,3,11,8,7,4,4,5,2,0,0\n0,2,2,3,3,8,6,11,14,5,6,6,3,0,1\n0,3,1,6,8,8,20,12,14,18,8,6,7,5,4\n4,2,4,6,5,12,14,21,24,21,3,3,1,1,2\n2,0,6,11,11,11,16,14,17,13,13,6,3,0,2\n2,5,4,6,14,19,19,16,9,15,4,7,6,3,2\n0,1,7,3,8,7,21,12,13,14,8,7,7,0,1\n0,1,1,5,6,9,10,9,13,11,4,4,1,2,3\n0,1,0,3,5,7,8,7,3,3,4,6,3,1,1\n0,1,5,0,1,3,8,4,4,5,5,1,0,0,0\n0,0,0,2,2,2,4,4,2,1,1,0,0,1,0\n0,0,0,0,1,2,1,1,1,2,2,2,0,0,1');
+        let mat = matModel.HeatMap.fromCSVStr('0,0,0,0,0,0,0,0\n0,2,0,0,0,0,0,1\n0,0,3,0,0,6,2,3\n0,1,0,0,0,0,0,0\n2,0,5,0,0,0,0,1\n2,7,6,1,0,1,0,0\n0,8,4,0,1,2,0,0\n1,3,0,1,1,0,2,1');
         let svgHm = new hm.SVGHeatmap("#hmsvg", mat, conf);
         svgHm.refresh();
         let matSlice = new matModel.MatrixSlice(mat, matModel.Slice.ROWS);
         let svgMatSlice = new hist.SVGInteractiveHistogram("matSlice", "#hmslicesvg", matSlice, conf);
         svgMatSlice.refresh();
-        let svgTransport = new transport.SVGTransport("#plain-transport0", mat, conf);
+        let svgTransportMatrix = new transport.SVGTransportMatrix("#plain-transport0", mat, conf);
+        svgTransportMatrix.refresh();
+        let svgTransport = new transport.SVGIndicatorTransport("#plain-transport1", mat, conf);
         svgTransport.refresh();
         document.addEventListener("keydown", event => {
             switch (event.key.toLowerCase()) {

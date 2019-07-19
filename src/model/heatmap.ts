@@ -69,7 +69,7 @@ export class MatrixSlice implements Bins {
         }
 
         let toDraw: number[] = [];
-        let numItems: number = 100; // this is approximate, due to floor operation
+        let numItems: number = 25; // this is approximate, due to floor operation
 
         let rows = this.matrix.rows();
         let quantityPerRow = rows.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
@@ -217,7 +217,6 @@ export class HeatMap implements Matrix {
      */
     addListener(listener: ModelListener) {
       this.listeners.push(listener);
-      listener.refresh();
     }
 
     setCell(row: number, col: number, quantity: number) {

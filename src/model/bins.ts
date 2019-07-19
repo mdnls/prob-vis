@@ -176,7 +176,6 @@ export class Histogram implements Bins {
      */
     addListener(listener: ModelListener) {
       this.listeners.push(listener);
-      listener.refresh();
     }
 
     /**

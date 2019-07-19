@@ -14,8 +14,8 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Launch Chrome",
-            "url": "file:///Users/max/Projects/probabilities-vis/public/index.html",
+            "name": "Heatmap",
+            "url": "file:///Users/max/Projects/probabilities-vis/src/html/heatmap.html",
             "webRoot": "${workspaceFolder}"
         },
         {
