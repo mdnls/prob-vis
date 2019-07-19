@@ -139,6 +139,9 @@ function setupIntro() {
     let transportMatrix = HeatMap.fromCSVStr(transportEx["matrix"]);
     let interactiveTransport = new SVGIndicatorTransport("#transport-ex-interactive", transportMatrix, conf);
     interactiveTransport.refresh();
-}  
+
+    let interactiveTransportMatrix = new SVGTransportMatrix("#transport-matrix-ex-interactive", transportMatrix, conf);
+    interactiveTransportMatrix.refresh();
+}   
 
 main();

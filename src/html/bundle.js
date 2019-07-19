@@ -1204,9 +1204,10 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
         refresh() {
             let svgHeight = $(this.div).height();
             let svgWidth = $(this.div).width();
-            d3.select(this.svgRowHist).attr("width", (1 / 2) * svgWidth).attr("height", (1 / 2) * svgHeight);
-            d3.select(this.svgHeatMap).attr("width", (1 / 2) * svgWidth).attr("height", (1 / 2) * svgHeight);
-            d3.select(this.svgColHist).attr("width", (1 / 2) * svgWidth).attr("height", (1 / 2) * svgHeight);
+            let boxHeight = Math.min(svgHeight / 2, svgWidth / 2);
+            d3.select(this.svgRowHist).attr("width", boxHeight).attr("height", boxHeight);
+            d3.select(this.svgHeatMap).attr("width", boxHeight).attr("height", boxHeight);
+            d3.select(this.svgColHist).attr("width", boxHeight).attr("height", boxHeight);
             this.rowHist.refresh();
             this.colHist.refresh();
             this.heatmap.refresh();
@@ -1399,6 +1400,8 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
         let transportMatrix = heatmap_3.HeatMap.fromCSVStr(data_1.transportEx["matrix"]);
         let interactiveTransport = new transport_1.SVGIndicatorTransport("#transport-ex-interactive", transportMatrix, conf);
         interactiveTransport.refresh();
+        let interactiveTransportMatrix = new transport_1.SVGTransportMatrix("#transport-matrix-ex-interactive", transportMatrix, conf);
+        interactiveTransportMatrix.refresh();
     }
     main();
 });
