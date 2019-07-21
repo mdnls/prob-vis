@@ -51,48 +51,36 @@
             </h2>
 
             <p>
-                Paragraph: (hook sentence) GANs allow one to draw samples from structured high dimensional distributions...
+                Generative Adversarial Networks are a class of neural architectures that can produce high quality samples of structured, high dimensional data. In particular, GANs make the assumption that this data is controlled by a small number of "factors of variation," which themselves can be modelled with a simple parametric distribution. During training, they learn a map from the factors of variation to the data space.
             </p>
 
             <p>
-                Paragraph: But to do so, they approximate these distributions... This can drastically determine output quality.
+                 At its core, the training process relies on defining some notion of *distance* between a partially trained model and a hypothetical "optimal model" that can connect the factors of variation to the data perfectly. Minimizing this distance implies bringing the two closer together, so that eventually, you have a nearly perfect model. The feasibility of this process at scale depends on how we choose to determine this distance – for example, we *could* decide that two models either have distance zero if they are exactly the same, or infinite distance otherwise. In this case, if we don't already know the optimal model, this distance is neither computable nor informative. 
             </p>
 
             <p>
-                Paragraph: This opens a natural question: how does one determine the quality of an approximated distribution? More generally, when are two distributions similar at all?
+                Instead, this article will explore some of the more creative ways to define distances for GAN training, and in particular it will focus on the differences between information theoretic distance functions and Earth Mover's distance. EM has recently been proposed as improvement to information theoretic distances which can improve training stability and output quality in regimes that are typical for common GAN applications, and so it is important to understand the intuition behind why this is the case.
+            </p>
+            <h3>What does it mean to have a Statistical Distance?</h3>
+            <p>
+                The GAN itself is a map, and since the input to this map is a random variable, so is its output. The data itself is also a random variable, since there are certain items that are fairly likely ("heavy rain" or "slight drizzles") and other outcomes that are definitely impossible ("raining cats and dogs"). So, to determine the distance between a given GAN and the optimal model, we're really asking about the distance between two probability distributions.
             </p>
             <p>
-                <b>Show two distributions normal distributions</b> - 
-                For example, one way to compare two distributions is via the $\chi^2$ test.
+                As a simple example, we can consider distributions in the form of a histogram, where each column represents an event and the boxes in a column represent the relative likelihood of that event. One of the simplest ways to compare histograms is by Euclidean distance*:.
+                $$D(x, y) = \sum_{b \in \text{bins}} \vert b_x - b_y \vert$$
             </p>
-
+            <p>Here, we simply use the magnitude of difference between each bin to say how far apart the distributions are. In the figure, this corresponds to the length of each line above or below a bin.</p>
+            
             <div id="chisqr-1" class="vis-inset col-12">
                 <div class="row h-100">          
                     <svg id="chisqr-1-left-svg" class="col-6"></svg>
                     <svg id="chisqr-1-right-svg" class="col-6"></svg>
                 </div>
             </div>
-            <p>The $\chi^2$ distance is <span id="chisqr-1-val">_</span></p>
 
-            <p>
-                However, this may not always be a good choice:
-                
-                <b>Show (or switch prev diagram) to pathological case for $\chi^2$</b>
-                <div id="chisqr-2" class="vis-inset col-10 offset-1">
-                    <div class="row h-100">
-                        <svg id="chisqr-2-left-svg" class="col-4"></svg>
-                        <svg id="chisqr-2-center-svg" class="col-4"></svg>
-                        <svg id="chisqr-2-right-svg" class="col-4"></svg>
-                    </div>
-                </div>
-                <p>The $\chi^2$ distance from left to center is <span id="chisqr-2-left-val">_</span></p>
-                <p>The $\chi^2$ distance from right to center is <span id="chisqr-2-right-val">_</span></p>
-            </p>
+            <p>When each bin matches exactly, the distance is zero, since the distribution over bins is the same. More importantly, if we make a small change to distribution $X$, by taking an \orangebox for example, this distance will reflect that change and decrease. We can use the distance as a guide to iteratively update $X$ until it matches $Y$. This is the approach that GANs take when approximating $P_d$, the true distribution over data, by the generator distribution $P_\theta$. The parameters $\theta$ are like the boxes, and the statistical distance function is the guide for manipulating $\theta$ to make $P_\theta$ faithful to $P_d$. </p>
 
-            <p>
-                Paragraph: The general framework for training generative models is to pick some notion of similarity between two distributions, and then using numerical optimization techniques to make distributions as similar as possible.
-                This article will explore two alternate perspectives for similarity, which have both gotten attention recently for their roles in the quality of GAN output.
-            </p>
+            <p>The Euclidean distance is good for illustrating this concept, but it isn't used in practice. The original GAN formulation was shown to reduce an upper bound of the Jenson Shannon divergence between $P_d$ and $P_\theta$, an information theoretic distance between distributions based on the idea of entropy. These GANs are infamous for their difficulty to train, and they typically require lots of fine tuning to be implemented successfully. Within the last two years, there has been increasing interest in Earth Mover's distance as a more stable alternative, and the rest of this post is about why.</p>
         </div>
 
         <div id="entropy">
