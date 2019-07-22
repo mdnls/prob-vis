@@ -36,7 +36,7 @@
 
         <h2>
             Table of Contents
-        </h2>
+        </h1>
         <ul>
             <li><p>Entropy of a Probability Distribution</p></li>
             <li><p>Relative Entropy</p></li>
@@ -123,9 +123,9 @@
                 </div>
             </div>
 
-            <p>Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log(\frac{1}{P(\xp{n}{})})$*, which will be an integer. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity representing the number of bits accurately in expectation. Despite this, Huffman codes generate the optimal attainable coding for individual events*, and the lower bound on the expected number of bits transferred is entropy:
+            <p>Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log(\frac{1}{P(\xp{n}{})})$*, which will be an integer quantity. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events*, and the lower bound on the expected number of bits transferred is entropy:
 
-                $$H(P) = \expectedunder{x \sim P}{\log{\frac{1}{x}}}$$
+                $$H(P) = \expectedunder{P}{\log{\frac{1}{x}}}$$
             </p>
             <h2>
                 Cross Entropy 
@@ -134,19 +134,19 @@
             <p>Once you understand entropy as a characteristic of probability distributions, the cross entropy, Kullback–Leibler Divergence (KL), and Jenson Shannon Divergences are all short steps away. Starting with the definition of KL divergence, we can immediately see conections to the coding interpretation of entropy:</p>
 
             <p>
-                $$D_{KL}(P \vert \vert Q) = - \sum_{x} P(x) \log \frac{Q(x)}{P(x)}$$ = \expectedunder{x \sim P}{\log P(x) - \log Q(x)} = \expectedunder{x \sim P}{d(p(x)) - d(q(x))}$$
+                $$D_{KL}(P \vert \vert Q) = - \sum_{x} P(x) \log \frac{Q(x)}{P(x)}$$ = \expectedunder{x \sim P}{\log \frac{1}{Q(x)} - \log \frac{1}{P(x)}} = \expectedunder{x \sim P}{d(q(x)) - d(p(x))}$$
             </p>
 
             <p>This brings us back to the information theoretic perspective on distances between distributions: $P_d$ and $P_\theta$ are similar whe you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
 
-            <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $Q$ using codes from $P$*. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. As a demonstration, observe that for the following distributions, getting KL to zero requires making the two distributions equal.</p>
+            <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$*. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. As a demonstration, observe that for the following distributions, getting KL to zero requires making the two distributions equal.</p>
         
             <div id="xentropy-interactive" class="col-12">
                 <div id="xentropy-ex-interactive" class="h-100">
                     
                 </div>
             </div>
-            <p>$KL(P\vert \vert Q)$ = <span id="entropy-ex-val"></span></p>
+            <p>$KL(P\vert \vert Q)$ = <span id="kl-ex-val">_</span></p>
             
             <p>Paragraph: there are many other ways to use this idea to create a distance between distributions: JSD, KL, XEnt, etc</p>
             <p>Paragraph: however, all of these share one problem: when $q(x)=0$, the tree for $q(x)$ assigns no path at all to $x$.</p>

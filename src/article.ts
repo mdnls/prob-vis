@@ -149,6 +149,18 @@ function setupIntro() {
     let interactiveXEnt = new SVGInteractiveCrossEntropy("#xentropy-ex-interactive", pModel, qModel, conf);
     interactiveXEnt.refresh();
 
+    let relEnt = new LooseTextBinder<Histogram[]>("#kl-ex-val", [pModel, qModel], function (m: Histogram[]) {
+        let p = m[0];
+        let q = m[1];
+        let totalP = p.bins().reduce((prev, c) => c.length + prev, 0);
+        let totalQ = q.bins().reduce((prev, c) => c.length + prev, 0);
+        let natsP = (a: number) => Math.log2(totalP / a);
+        let natsQ = (a: number) => Math.log2(totalQ / a);
+        let kl = p.bins().reduce((prev, c, i) => (c.length / totalP) * (natsQ(q.getBin(i).length) - natsP(c.length)) + prev, 0);
+        return "" + Math.round(kl * 100) / 100;
+    });
+    relEnt.refresh();
+
     // Transport diagram with arrows
     let transportMatrix = HeatMap.fromCSVStr(transportEx["matrix"]);
     let interactiveTransport = new SVGIndicatorTransport("#transport-ex-interactive", transportMatrix, conf);

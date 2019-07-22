@@ -131,15 +131,22 @@
                 Cross Entropy 
             </h2>
 
-            <p>Paragraph: from the perspective of entropy, two distributions are similar if their events typically have the same info content</p>
-            <p>Paragraph: Kullback Leibler formulation: $D_{KL} (P \vert \vert Q) = \sum p(x) \log \frac{p(x)}{q(x)} = $$\expectedunder{x \sim P}{N_p} - \expectedunder{x \sim P}{N_q}$</p>
-            <p><b>Show histograms for $p(x)$ and $q(x)$, highlighting the path length difference for selected event</b></p>
+            <p>Once you understand entropy as a characteristic of probability distributions, the cross entropy, Kullback–Leibler Divergence (KL), and Jenson Shannon Divergences are all short steps away. Starting with the definition of KL divergence, we can immediately see conections to the coding interpretation of entropy:</p>
+
+            <p>
+                $$D_{KL}(P \vert \vert Q) = - \sum_{x} P(x) \log \frac{Q(x)}{P(x)}$$ = \expectedunder{x \sim P}{\log \frac{1}{Q(x)} - \log \frac{1}{P(x)}} = \expectedunder{x \sim P}{d(q(x)) - d(p(x))}$$
+            </p>
+
+            <p>This brings us back to the information theoretic perspective on distances between distributions: $P_d$ and $P_\theta$ are similar whe you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
+
+            <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$*. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. As a demonstration, observe that for the following distributions, getting KL to zero requires making the two distributions equal.</p>
         
             <div id="xentropy-interactive" class="col-12">
                 <div id="xentropy-ex-interactive" class="h-100">
                     
                 </div>
             </div>
+            <p>$KL(P\vert \vert Q)$ = <span id="kl-ex-val">_</span></p>
             
             <p>Paragraph: there are many other ways to use this idea to create a distance between distributions: JSD, KL, XEnt, etc</p>
             <p>Paragraph: however, all of these share one problem: when $q(x)=0$, the tree for $q(x)$ assigns no path at all to $x$.</p>

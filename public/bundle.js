@@ -1409,6 +1409,17 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
         let pModel = bins_3.Histogram.full(8, 1);
         let interactiveXEnt = new entropy_1.SVGInteractiveCrossEntropy("#xentropy-ex-interactive", pModel, qModel, conf);
         interactiveXEnt.refresh();
+        let relEnt = new textbinder_1.LooseTextBinder("#kl-ex-val", [pModel, qModel], function (m) {
+            let p = m[0];
+            let q = m[1];
+            let totalP = p.bins().reduce((prev, c) => c.length + prev, 0);
+            let totalQ = q.bins().reduce((prev, c) => c.length + prev, 0);
+            let natsP = (a) => Math.log2(totalP / a);
+            let natsQ = (a) => Math.log2(totalQ / a);
+            let kl = p.bins().reduce((prev, c, i) => (c.length / totalP) * (natsQ(q.getBin(i).length) - natsP(c.length)) + prev, 0);
+            return "" + Math.round(kl * 100) / 100;
+        });
+        relEnt.refresh();
         let transportMatrix = heatmap_3.HeatMap.fromCSVStr(data_1.transportEx["matrix"]);
         let interactiveTransport = new transport_1.SVGIndicatorTransport("#transport-ex-interactive", transportMatrix, conf);
         interactiveTransport.refresh();

@@ -22,7 +22,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "Article",
-            "url": "file:///Users/max/Projects/probabilities-vis/public/index.html",
+            "url": "file:///Users/max/Projects/probabilities-vis/src/html/index.html",
             "webRoot": "${workspaceFolder}"
         },
     ]
