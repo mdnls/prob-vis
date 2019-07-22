@@ -11,7 +11,8 @@
           TeX: {
               Macros: {
                   expected: ["{\\mathbb{E}[#1]}", 1],
-                  expectedunder: ["{\\mathbb{E}_{#1}[#2]}", 2]
+                  expectedunder: ["{\\mathbb{E}_{#1}[#2]}", 2],
+                  xp: ["x^{(#1)}_{#2}", 2]
               }
           }
         });
@@ -35,7 +36,7 @@
 
         <h2>
             Table of Contents
-        </h1>
+        </h2>
         <ul>
             <li><p>Entropy of a Probability Distribution</p></li>
             <li><p>Relative Entropy</p></li>
@@ -51,7 +52,7 @@
             </h2>
 
             <p>
-                Generative Adversarial Networks are a class of neural architectures that can produce high quality samples of structured, high dimensional data. In particular, GANs make the assumption that this data is controlled by a small number of "factors of variation," which themselves can be modelled with a simple parametric distribution. During training, they learn a map from the factors of variation to the data space.
+                Generative Adversarial Networks are a class of neural architectures that can produce high quality samples of structured, high dimensional data. In particular, GANs make the assumption that this data is controlled by a small number of "factors of variation," which themselves can be modelled with a simple parametric distribution. During training, they learn a map from the factors of variation to the data space – like predicting rain given the humidity and temperature. 
             </p>
 
             <p>
@@ -78,7 +79,7 @@
                 </div>
             </div>
 
-            <p>When each bin matches exactly, the distance is zero, since the distribution over bins is the same. More importantly, if we make a small change to distribution $X$, by taking an \orangebox for example, this distance will reflect that change and decrease. We can use the distance as a guide to iteratively update $X$ until it matches $Y$. This is the approach that GANs take when approximating $P_d$, the true distribution over data, by the generator distribution $P_\theta$. The parameters $\theta$ are like the boxes, and the statistical distance function is the guide for manipulating $\theta$ to make $P_\theta$ faithful to $P_d$. </p>
+            <p>When each bin matches exactly, the distance is zero, since the distribution over bins is the same. More importantly, if we make a small change to distribution $X$, by taking an <svg class="orange box"></svg> for example, this distance will reflect that change and decrease. We can use the distance as a guide to iteratively update $X$ until it matches $Y$. This is the approach that GANs take when approximating $P_d$, the true distribution over data, by the generator distribution $P_\theta$. The parameters $\theta$ are like the boxes, and the statistical distance function is the guide for manipulating $\theta$ to make $P_\theta$ faithful to $P_d$. </p>
 
             <p>The Euclidean distance is good for illustrating this concept, but it isn't used in practice. The original GAN formulation was shown to reduce an upper bound of the Jenson Shannon divergence between $P_d$ and $P_\theta$, an information theoretic distance between distributions based on the idea of entropy. These GANs are infamous for their difficulty to train, and they typically require lots of fine tuning to be implemented successfully. Within the last two years, there has been increasing interest in Earth Mover's distance as a more stable alternative, and the rest of this post is about why.</p>
         </div>
@@ -88,12 +89,10 @@
                 Entropy
             </h2>
 
-            <p>Paragraph: In its original formulation, the GAN framework is shown to minimize JSD, a statistical distance based on entropy <cite>1</cite>.</p>
-            <p>Paragraph: intuition behind entropy is that two distributions are similar if they can be discribed in similar ways </p>
-            <p>Paragraph: crucially, entropy relates probability distributions to the notion of information content. Every event has a quantifiable information. Two distributions are similar, then, if the events they describe typically generate similar amounts of information. </p>
-            <p>Paragraph: formulation: $- \sum p(x) \log p(x) = \expected{ \log \frac{1}{p(x)}}$ </p>
-            <p><b>Show basic histogram, with interactive presets, + table of entropy</b></p>
-
+            <p>The Jenson Shannon Divergence (JSD) between two distributions is a distance function that has its roots in information entropy*. The intuition is that two distributions are similar whe you can communicate their events in similar ways. To formalize this idea, the abstraction at play is the "information channel." An observer Bob has an open channel to Alice, so that he can tell her about samples that he draws from a distribution $P_d$. For simplicity, we assume that Bob is communicating with bits, and that he and Alice have agreed ahead of time on their choice of codes. Under this abstraction, entropy is the minimum number of bits on average that Bob needs to tell Alice about which samples he observes from $P_d$. </p>
+            <p>This quantity depends completely on the "shape" of $P_d$, and in turn it serves as a representation of that shape. For example, under a distribution where <svg class="maroon box"></svg>  and <svg class="blue box"></svg> are the only events that can happen, a single bit is enough for unambiguous communication, so the entropy is $1$.</p>
+            <p><b>simple entropy</b></p>
+            <p>As a general rule of thumb, any distribution where most of the probability mass is consolidated around relatively few events has lower entropy than a distribution with evenly distributed probability mass.</p>
             <p>
                 <div id="entropy-ex" class="vis-inset col-12">
                     <div class="h-100">
@@ -105,30 +104,49 @@
                 <button id="entropy-ex-high">High Entropy</button>
                 <p>$H$ = <span id="entropy-ex-val"></span></p>
             </p>
-            <p>Paragraph: the idea behind this formulation is that information content relates to literal information, transferred over wire via bits</p>
-            <p>Paragraph: using bits to represent events induces a decision tree. $N=\frac{1}{p(x)}$ tells us how many outcomes the tree must have, and $\log N$ is the depth of a tree with $N$ outcomes. This quantity is the information content of $x$.</p>
-            <p>Paragraph: the formula gives us an optimal value, if all encodings are perfect and use the tree optimally. This isn't always the case</p>
-            <p><b>Show the huffman code for an interactive tree along with its entropy and the optimal entropy.</b></p>
-            
+            <p>To understand why, we can explore the process behind constructing an optimal code. First, since entropy is an average over codes for different events, it is helpful to focus on a single event $x_i$ and assume the other events $x_j$ are are just copies that occur with equal likelihood. Then, interpreting $P(x_i)$ as a ratio* $\frac{s_{x_i}}{N}$, we see that $\frac{1}{P(x)} = \frac{N}{s_{x_i}}$ is the number of unique outcomes that we need to distinguish with our code. Each outcome corresponds to all events of a particular $x_i$, which we assume occurs with frequency $s_{x_i}$ out of $N$ trials. </p>
+            <p>To distinguish between these outcomes, we want binary codes of minimal length that can represent $N^* = \frac{1}{P(x_i)}$ different outcomes. The codes can be visualized as paths in a binary decision tree:</p>
+            <p><b>Exhibit a binary tree and paths from root to leaf</b></p>
+            <p>Each layer of the tree represents one bit, and the leaves are distinct outcomes. Adding a layer increases the number of leaves exponentially, so the minimal code length is $d = \log_2 N^* $.</p>
+
+            <p>This means that we can trivially construct an optimal coding when all events have the same likelihood. According to the rule of thumb, this case has the highest entropy of all distributions with $N^*$ outcomes. So, we can now consider the effect of introducing a non-uniform distribution over the outcomes and verify that this is indeed the case.</p>
+
+            <p>We start with the least likely event, say $\xp{1}{}$. As in the previous example, we can construct a uniform distribution of copy outcomes $\xp{1}{i}$ and assign codes with a decision tree of depth $\log_2 \frac{1}{\xp{1}{}}$. Then, to represent an outcome more likely than $\xp{1}{}$ – say, $\xp{2}{}$ – we can simply merge a few of the copies $\xp{1}{i}$, so that a path to any of them is an equivalent way to communicate $\xp{2}{}$. This is advantageous whenever we can find sibling copies to merge, since it allows us to save a bit by opting not to distinguish those siblings at all.</p>
+
+            <p><b>Simple diagram of replacing two $\xp{1}{}$ nodes with an $\xp{2}{}$ node.</b></p>
+
+            <p>Huffman codes implement this idea by constructing a tree from the bottom up, starting with nodes corresponding to the least likely events, $\xp{1}{i}$ and $\xp{1}{j}$. The algorithm creates an internal node to hold these outcomes as leafs, and it is returned to the pool of potential events as a representative of the union outcome $\xp{1}{i} \cup \xp{1}{j}$. Then, the procedure repeats. When, finally, an $\xp{2}{}$ is sucked in as a leaf, its sibling will be a union outcome that has greater depth – since $\xp{2}{}$ is hiding some implicit merged children. In the tree below, these implicit nodes are transparent, where the fully colored nodes are actual outcomes. </p>
+
             <div id="entropy-interactive" class="vis-inset-long col-8 offset-2">
                 <div id="entropy-ex-interactive" class="h-100">
 
                 </div>
             </div>
-            
+
+            <p>Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log(\frac{1}{P(\xp{n}{})})$*, which will be an integer. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity representing the number of bits accurately in expectation. Despite this, Huffman codes generate the optimal attainable coding for individual events*, and the lower bound on the expected number of bits transferred is entropy:
+
+                $$H(P) = \expectedunder{x \sim P}{\log{\frac{1}{x}}}$$
+            </p>
             <h2>
-                Cross Entropy
+                Cross Entropy 
             </h2>
 
-            <p>Paragraph: from the perspective of entropy, two distributions are similar if their events typically have the same info content</p>
-            <p>Paragraph: Kullback Leibler formulation: $D_{KL} (P \vert \vert Q) = \sum p(x) \log \frac{p(x)}{q(x)} = $$\expectedunder{x \sim P}{N_p} - \expectedunder{x \sim P}{N_q}$</p>
-            <p><b>Show histograms for $p(x)$ and $q(x)$, highlighting the path length difference for selected event</b></p>
+            <p>Once you understand entropy as a characteristic of probability distributions, the cross entropy, Kullback–Leibler Divergence (KL), and Jenson Shannon Divergences are all short steps away. Starting with the definition of KL divergence, we can immediately see conections to the coding interpretation of entropy:</p>
+
+            <p>
+                $$D_{KL}(P \vert \vert Q) = - \sum_{x} P(x) \log \frac{Q(x)}{P(x)}$$ = \expectedunder{x \sim P}{\log P(x) - \log Q(x)} = \expectedunder{x \sim P}{d(p(x)) - d(q(x))}$$
+            </p>
+
+            <p>This brings us back to the information theoretic perspective on distances between distributions: $P_d$ and $P_\theta$ are similar whe you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
+
+            <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $Q$ using codes from $P$*. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. As a demonstration, observe that for the following distributions, getting KL to zero requires making the two distributions equal.</p>
         
             <div id="xentropy-interactive" class="col-12">
                 <div id="xentropy-ex-interactive" class="h-100">
                     
                 </div>
             </div>
+            <p>$KL(P\vert \vert Q)$ = <span id="entropy-ex-val"></span></p>
             
             <p>Paragraph: there are many other ways to use this idea to create a distance between distributions: JSD, KL, XEnt, etc</p>
             <p>Paragraph: however, all of these share one problem: when $q(x)=0$, the tree for $q(x)$ assigns no path at all to $x$.</p>

@@ -25,6 +25,17 @@ export function main() {
 }
 
 function setupIntro() {
+    // Setup boxes
+    let cNames = [".maroon", ".red", ".orange", ".yellow", ".lime", ".green", ".blue", ".violet"]
+    let colors = Array.from({length: 8}, (v, k) => d3.interpolateSpectral(k/7));
+    cNames.forEach( (sel: string, i: number) => {
+        d3.selectAll(".box" + sel)
+          .append("rect")
+          .attr("fill", colors[i])
+          .attr("width", "100%")
+          .attr("height", "100%");
+    });
+
 
     // Chi Squared Histogram 1
     let mLeft1 = Histogram.fromArray(chisqr1["leftHistBins"]);
@@ -87,6 +98,7 @@ function setupIntro() {
         let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
         return "" + Math.round(entropy * 100) / 100;
     });
+    tLowEnt.refresh();
 
     let tMedEnt = new TextBinder<Histogram>("#entropy-ex-val", mMedEnt, function (m: Histogram) { 
         let total = m.bins().reduce((p, c) => c.length + p, 0);
@@ -94,6 +106,7 @@ function setupIntro() {
         let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
         return "" + Math.round(entropy * 100) / 100;
     });
+    tMedEnt.refresh();
 
     let tHighEnt = new TextBinder<Histogram>("#entropy-ex-val", mHighEnt, function (m: Histogram) { 
         let total = m.bins().reduce((p, c) => c.length + p, 0);
@@ -101,6 +114,7 @@ function setupIntro() {
         let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
         return "" + Math.round(entropy * 100) / 100;
     });
+    tHighEnt.refresh();
 
     let mActiveEnt = mMedEnt; // used to track the active histogram on window resize
     $("#entropy-ex-low").click(() => {mActiveEnt = mLowEnt; mLowEnt.refresh()});
@@ -142,6 +156,8 @@ function setupIntro() {
 
     let interactiveTransportMatrix = new SVGTransportMatrix("#transport-matrix-ex-interactive", transportMatrix, conf);
     interactiveTransportMatrix.refresh();
+
+
 }   
 
 main();

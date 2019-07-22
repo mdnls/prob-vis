@@ -1310,6 +1310,15 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
     }
     exports.main = main;
     function setupIntro() {
+        let cNames = [".maroon", ".red", ".orange", ".yellow", ".lime", ".green", ".blue", ".violet"];
+        let colors = Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7));
+        cNames.forEach((sel, i) => {
+            d3.selectAll(".box" + sel)
+                .append("rect")
+                .attr("fill", colors[i])
+                .attr("width", "100%")
+                .attr("height", "100%");
+        });
         let mLeft1 = bins_3.Histogram.fromArray(data_1.chisqr1["leftHistBins"]);
         let mRight1 = bins_3.Histogram.fromArray(data_1.chisqr1["rightHistBins"]);
         let hLeft1 = new histogram_3.SVGPhantomHistogram("chisqr-hist-1-left", "#chisqr-1-left-svg", mLeft1, mRight1, conf);
@@ -1358,18 +1367,21 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
             let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
             return "" + Math.round(entropy * 100) / 100;
         });
+        tLowEnt.refresh();
         let tMedEnt = new textbinder_1.TextBinder("#entropy-ex-val", mMedEnt, function (m) {
             let total = m.bins().reduce((p, c) => c.length + p, 0);
             let nats = (a) => Math.log2(total / a);
             let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
             return "" + Math.round(entropy * 100) / 100;
         });
+        tMedEnt.refresh();
         let tHighEnt = new textbinder_1.TextBinder("#entropy-ex-val", mHighEnt, function (m) {
             let total = m.bins().reduce((p, c) => c.length + p, 0);
             let nats = (a) => Math.log2(total / a);
             let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
             return "" + Math.round(entropy * 100) / 100;
         });
+        tHighEnt.refresh();
         let mActiveEnt = mMedEnt;
         $("#entropy-ex-low").click(() => { mActiveEnt = mLowEnt; mLowEnt.refresh(); });
         $("#entropy-ex-med").click(() => { mActiveEnt = mMedEnt; mMedEnt.refresh(); });
