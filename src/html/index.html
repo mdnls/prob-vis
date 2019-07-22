@@ -134,7 +134,12 @@
             <p>Once you understand entropy as a characteristic of probability distributions, the cross entropy, Kullback–Leibler Divergence (KL), and Jenson Shannon Divergences are all short steps away. Starting with the definition of KL divergence, we can immediately see conections to the coding interpretation of entropy:</p>
 
             <p>
-                $$D_{KL}(P \vert \vert Q) = - \sum_{x} P(x) \log \frac{Q(x)}{P(x)}$$ = \expectedunder{x \sim P}{\log \frac{1}{Q(x)} - \log \frac{1}{P(x)}} = \expectedunder{x \sim P}{d(q(x)) - d(p(x))}$$
+                $$
+                \begin{align}
+                D_{KL}(P \vert \vert Q) & = - \sum_{x} P(x) \log \frac{Q(x)}{P(x)} \\
+                & = \expectedunder{x \sim P}{\log \frac{1}{Q(x)} - \log \frac{1}{P(x)}} \\
+                & = \expectedunder{x \sim P}{d(q(x)) - d(p(x))}
+                \end{align}$$
             </p>
 
             <p>This brings us back to the information theoretic perspective on distances between distributions: $P_d$ and $P_\theta$ are similar whe you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
