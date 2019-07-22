@@ -176,7 +176,7 @@ export class SVGSoloEntropy implements ModelListener {
          if(node.itemType) {
             if(node.itemType[0] == "c") {
                let c = d3.color(colors[Number.parseInt(node.itemType[1]) % colors.length]);
-               c.opacity = 0.7;
+               c.opacity = 0.3;
                return c.toString();
             }
             else {

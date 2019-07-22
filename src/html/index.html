@@ -115,7 +115,7 @@
 
             <p><b>Simple diagram of replacing two $\xp{1}{}$ nodes with an $\xp{2}{}$ node.</b></p>
 
-            <p>Huffman codes implement this idea by constructing a tree from the bottom up, starting with nodes corresponding to the least likely events, $\xp{1}{i}$ and $\xp{1}{j}$. The algorithm creates an internal node to hold these outcomes as leafs, and it is returned to the pool of potential events as a representative of the union outcome $\xp{1}{i} \cup \xp{1}{j}$. Then, the procedure repeats. When, finally, an $\xp{2}{}$ is sucked in as a leaf, its sibling will be a union outcome that has greater depth – since $\xp{2}{}$ is hiding some implicit merged children. In the tree below, these implicit nodes are transparent, where the fully colored nodes are actual outcomes. </p>
+            <p>Huffman codes implement this idea by constructing a tree from the bottom up, starting with nodes corresponding to the least likely events, $\xp{1}{i}$ and $\xp{1}{j}$. The algorithm creates an internal node to hold these outcomes as leafs, and it is returned to the pool of potential events as a representative of the union outcome $\xp{1}{i} \cup \xp{1}{j}$. Then, the procedure repeats. When, finally, an $\xp{2}{}$ is sucked in as a leaf, its sibling will be a union outcome that has greater depth, since $\xp{2}{}$ is hiding some implicit merged children. In the tree below, these implicit nodes are transparent, where the fully colored nodes are actual outcomes. </p>
 
             <div id="entropy-interactive" class="vis-inset-long col-8 offset-2">
                 <div id="entropy-ex-interactive" class="h-100">
