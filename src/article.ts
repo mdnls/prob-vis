@@ -3,7 +3,7 @@ import * as $ from "jquery";
 import { Histogram } from "./model/bins";
 import { HeatMap } from "./model/heatmap";
 import { TextBinder, LooseTextBinder } from "./view/textbinder";
-import { chisqr1, chisqr2, entropyExs, xEntropyExs, transportEx } from "./data";
+import { chisqr1, chisqr2, entropyExs, xEntropyExs, transportEx, simpleHist } from "./data";
 import { SVGPhantomHistogram, SVGHistogram } from "./view/histogram";
 import { SVGIndicatorEntropy, SVGInteractiveCrossEntropy } from "./view/entropy";
 import { SVGIndicatorTransport, SVGTransportMatrix } from "./view/transport";
@@ -83,6 +83,10 @@ function setupIntro() {
     mLeft2.addListener(chisqrvalL);
     mRight2.addListener(chisqrvalR);
 
+    // Simple entropy example
+    let mSimpleHist = Histogram.fromArray(simpleHist["hist"]);
+    let hSimpleHist = new SVGHistogram("simple-entropy-ex", "#simple-entropy-ex", mSimpleHist, conf);
+
     // Entropy example distributions
     let mLowEnt = Histogram.fromArray(entropyExs["lowEntropy"]);
     let mMedEnt = Histogram.fromArray(entropyExs["medEntropy"]);
@@ -161,6 +165,27 @@ function setupIntro() {
     });
     relEnt.refresh();
 
+    document.addEventListener("keydown", event => {
+        switch(event.key.toLowerCase()) {
+            case("h"):
+                interactiveXEnt.sourceEnt.hist.selectCol(pModel.selectedBin() - 1);
+                relEnt.refresh();
+                break;
+            case("l"):
+                interactiveXEnt.sourceEnt.hist.selectCol(pModel.selectedBin() + 1);
+                relEnt.refresh();
+                break;
+            case("k"):
+                interactiveXEnt.sourceEnt.hist.incrSelectedBin();
+                relEnt.refresh();
+                break;
+            case("j"):
+                interactiveXEnt.sourceEnt.hist.decrSelectedBin();
+                relEnt.refresh();
+                break;
+        }
+    });
+
     // Transport diagram with arrows
     let transportMatrix = HeatMap.fromCSVStr(transportEx["matrix"]);
     let interactiveTransport = new SVGIndicatorTransport("#transport-ex-interactive", transportMatrix, conf);
@@ -168,7 +193,7 @@ function setupIntro() {
 
     let interactiveTransportMatrix = new SVGTransportMatrix("#transport-matrix-ex-interactive", transportMatrix, conf);
     interactiveTransportMatrix.refresh();
-
+    
 
 }   
 
