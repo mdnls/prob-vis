@@ -1392,7 +1392,7 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
         $("#entropy-ex-med").click(() => { mActiveEnt = mMedEnt; mMedEnt.refresh(); });
         $("#entropy-ex-high").click(() => { mActiveEnt = mHighEnt; mHighEnt.refresh(); });
         let mInteractiveEnt = bins_3.Histogram.full(8, 1);
-        let interactiveEnt = new entropy_1.SVGIndicatorEntropy("#entropy-ex-interactive", mInteractiveEnt, conf);
+        let interactiveEnt = new entropy_1.SVGInteractiveEntropy("#entropy-ex-interactive", mInteractiveEnt, conf);
         interactiveEnt.refresh();
         document.addEventListener("keydown", event => {
             switch (event.key.toLowerCase()) {

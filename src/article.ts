@@ -5,7 +5,7 @@ import { HeatMap } from "./model/heatmap";
 import { TextBinder, LooseTextBinder } from "./view/textbinder";
 import { chisqr1, chisqr2, entropyExs, xEntropyExs, transportEx, simpleHist } from "./data";
 import { SVGPhantomHistogram, SVGHistogram } from "./view/histogram";
-import { SVGIndicatorEntropy, SVGInteractiveCrossEntropy } from "./view/entropy";
+import { SVGInteractiveEntropy, SVGInteractiveCrossEntropy } from "./view/entropy";
 import { SVGIndicatorTransport, SVGTransportMatrix } from "./view/transport";
 import { CONF } from "./model/model";
 // This script controls all of the animations in the article
@@ -127,7 +127,7 @@ function setupIntro() {
 
     // Interactive entropy diagram
     let mInteractiveEnt = Histogram.full(8, 1);
-    let interactiveEnt = new SVGIndicatorEntropy("#entropy-ex-interactive", mInteractiveEnt, conf);
+    let interactiveEnt = new SVGInteractiveEntropy("#entropy-ex-interactive", mInteractiveEnt, conf);
     interactiveEnt.refresh();
 
     document.addEventListener("keydown", event => {
