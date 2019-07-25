@@ -51,10 +51,10 @@ export enum Slice {
  * Immutable bins which implements a histogram representing the rows or columns of a matrix.
  */
 export class MatrixSlice implements Bins {
-    private matrix: Matrix;
-    private histogram: Histogram;
-    private mode: Slice;
-    private index: number;
+    protected matrix: Matrix;
+    protected histogram: Histogram;
+    protected mode: Slice;
+    protected index: number;
     constructor(matrix: Matrix, mode: Slice, index?: number) {
         this.matrix = matrix;
         this.mode = mode;
@@ -258,6 +258,37 @@ export class HeatMap implements Matrix {
 
     sideLength(): number {
         return this.mat.length;
+    }
+}
+
+export class UnnormalizedMatrixSlice extends MatrixSlice {
+    constructor(matrix: Matrix, mode: Slice, index?: number) {
+        super(matrix, mode, index);
+
+
+        let toDraw: number[] = [];
+
+        let rows = this.matrix.rows();
+        let quantityPerRow = rows.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
+
+        let cols = this.matrix.cols();
+        let quantityPerCol = cols.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
+    
+        switch(this.mode) {
+            case Slice.ROW:
+                toDraw = this.matrix.getRow(this.index).map(c => c.quantity);
+                break;
+            case Slice.COL:
+                toDraw = this.matrix.getCol(this.index).map(c => c.quantity);
+                break;
+            case Slice.COLS:
+                toDraw = quantityPerRow;
+                break;
+            case Slice.ROWS:
+                toDraw = quantityPerCol;
+                break;
+        }
+        this.histogram = Histogram.fromArray(toDraw);
     }
 
 }

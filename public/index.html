@@ -7,14 +7,14 @@
     <script src="bundle.js"></script>
     <script type="text/x-mathjax-config">
         MathJax.Hub.Config({
-          tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
-          TeX: {
-              Macros: {
-                  expected: ["{\\mathbb{E}[#1]}", 1],
-                  expectedunder: ["{\\mathbb{E}_{#1}[#2]}", 2],
-                  xp: ["x^{(#1)}_{#2}", 2]
-              }
-          }
+            tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+            TeX: {
+                Macros: {
+                    expected: ["{\\mathbb{E}[#1]}", 1],
+                    expectedunder: ["{\\mathbb{E}_{#1}[#2]}", 2],
+                    xp: ["x^{(#1)}_{#2}", 2]
+                }
+            }
         });
     </script>
     <script type="text/javascript" async
@@ -150,7 +150,7 @@
 
             <p>This brings us back to the information theoretic perspective on distances between distributions: $P_d$ and $P_\theta$ are similar whe you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
 
-            <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$*. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. As a demonstration, observe that for the following distributions, getting KL to zero requires making the two distributions equal.</p>
+            <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$*. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. Still, getting the KL to zero requires equalizing the distributions. You can verify this yourself with the diagram below:</p>
         
             <div id="xentropy-interactive" class="col-12">
                 <div id="xentropy-ex-interactive" class="h-100">
@@ -159,6 +159,17 @@
             </div>
             <p>$KL(P\vert \vert Q)$ = <span id="kl-ex-val">_</span></p>
             
+            <p>The last measurement, Jenson Shannon Divergence, is intended to solve a numerical stability problem with both Cross Entropy and KL, namely that neither are defined when either of $P(x)$ or $Q(x)$ is 0. When $P(x) = 0$, a simple solution is to just omit $x$ from the sum, as though $(0)(\log(0)) = 0$*. But if $Q(x) = 0$, this trick doesn't apply.</p>
+
+            <p>And, following the intuition behind KL, it shouldn't. If we want to know how much further in $Q$'s tree we have to travel to find some event $x$ in $P$'s tree, there is no good answer in this case, because $x$ doesn't exist in $Q$'s tree. JSD solves this problem by introducing a new distribution, $P_m(x) = \frac{P(x) + Q(x)}{2}$, that averages over the two. This guarantees that $P_m(x) \not = 0$ whenever either $Q(x) \not = 0$ or $P(x) \not = 0$. The quantity itself is also an average, over the KL divergences $D_{KL}(P \vert \vert P_m)$ and $D_{KL}(Q \vert \vert P_m)$.</p>
+
+            <p>
+                $$
+                P_m(x) = \frac{P(x)}{Q(x)} \\
+                JSD(P, Q) = D_{KL}(P \vert \vert P_m) + D_{KL}(Q \vert \vert P_m)
+                $$
+            </p>
+
             
             <p>Paragraph: there are many other ways to use this idea to create a distance between distributions: JSD, KL, XEnt, etc</p>
             <p>Paragraph: however, all of these share one problem: when $q(x)=0$, the tree for $q(x)$ assigns no path at all to $x$.</p>

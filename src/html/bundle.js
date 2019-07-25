@@ -282,6 +282,32 @@ define("model/heatmap", ["require", "exports", "model/bins", "papaparse"], funct
         }
     }
     exports.HeatMap = HeatMap;
+    class UnnormalizedMatrixSlice extends MatrixSlice {
+        constructor(matrix, mode, index) {
+            super(matrix, mode, index);
+            let toDraw = [];
+            let rows = this.matrix.rows();
+            let quantityPerRow = rows.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
+            let cols = this.matrix.cols();
+            let quantityPerCol = cols.map((cells) => cells.reduce((prev, cur) => cur.quantity + prev, 0));
+            switch (this.mode) {
+                case Slice.ROW:
+                    toDraw = this.matrix.getRow(this.index).map(c => c.quantity);
+                    break;
+                case Slice.COL:
+                    toDraw = this.matrix.getCol(this.index).map(c => c.quantity);
+                    break;
+                case Slice.COLS:
+                    toDraw = quantityPerRow;
+                    break;
+                case Slice.ROWS:
+                    toDraw = quantityPerCol;
+                    break;
+            }
+            this.histogram = bins_1.Histogram.fromArray(toDraw);
+        }
+    }
+    exports.UnnormalizedMatrixSlice = UnnormalizedMatrixSlice;
 });
 define("view/textbinder", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -329,7 +355,7 @@ define("data", ["require", "exports"], function (require, exports) {
         "q": [2, 7, 4, 2, 5, 1, 3, 2]
     };
     exports.transportEx = {
-        "matrix": "0,0,0,2,0,0,3,0\n0,2,0,0,2,0,0,1\n0,0,3,0,0,6,2,3\n0,1,0,0,0,0,0,4\n2,0,5,0,0,0,0,1\n2,7,6,4,0,1,0,0\n0,8,4,0,3,2,0,0\n1,3,0,1,1,0,2,1"
+        "matrix": "0,0,0,1,1,0,0,0\n1,0,0,0,2,0,0,0\n0,0,1,1,0,0,0,0\n0,0,0,0,2,0,0,0\n0,2,1,0,0,0,1,0\n0,3,2,0,0,0,0,1\n1,2,0,0,0,1,2,1\n0,0,1,0,0,0,0,0"
     };
 });
 define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], function (require, exports, bins_2, d3, $) {
@@ -1167,9 +1193,9 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
             d.append("svg").attr("id", defaultIds[0]);
             d.append("svg").attr("id", defaultIds[1]);
             this.model = model;
-            this.rslice = new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.ROWS);
-            this.cslice = new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.COLS);
-            this.colslices = Array.from({ length: this.model.sideLength() }, (v, k) => new heatmap_2.MatrixSlice(this.model, heatmap_2.Slice.COL, k));
+            this.rslice = new heatmap_2.UnnormalizedMatrixSlice(this.model, heatmap_2.Slice.ROWS);
+            this.cslice = new heatmap_2.UnnormalizedMatrixSlice(this.model, heatmap_2.Slice.COLS);
+            this.colslices = Array.from({ length: this.model.sideLength() }, (v, k) => new heatmap_2.UnnormalizedMatrixSlice(this.model, heatmap_2.Slice.COL, k));
             this.rowHist = new histogram_2.SVGInteractiveHistogram("rowHist", this.svgRowHist, this.rslice, this.conf);
             this.colHist = new histogram_2.SVGHistogram("colHist", this.svgColHist, this.cslice, this.conf);
             this.model.addListener(this);

@@ -1,7 +1,7 @@
 import {SVGInteractiveHistogram, SVGHistogram} from './histogram';
 import {SVGHeatmap} from './heatmap';
 import {BinItem} from "../model/bins";
-import { Matrix, MatrixSlice, Slice } from '../model/heatmap';
+import { Matrix, MatrixSlice, UnnormalizedMatrixSlice, Slice } from '../model/heatmap';
 import { CONF } from '../model/model';
 import {ModelListener} from '../model/model';
 import * as d3 from "d3";
@@ -39,10 +39,10 @@ export class SVGTransport implements ModelListener {
         d.append("svg").attr("id", defaultIds[1]);
 
         this.model = model;
-        this.rslice = new MatrixSlice(this.model, Slice.ROWS);
-        this.cslice = new MatrixSlice(this.model, Slice.COLS);
+        this.rslice = new UnnormalizedMatrixSlice(this.model, Slice.ROWS);
+        this.cslice = new UnnormalizedMatrixSlice(this.model, Slice.COLS);
         this.colslices = Array.from({length: this.model.sideLength()},
-                    (v, k) => new MatrixSlice(this.model, Slice.COL, k));
+                    (v, k) => new UnnormalizedMatrixSlice(this.model, Slice.COL, k));
 
         this.rowHist = new SVGInteractiveHistogram("rowHist", this.svgRowHist, this.rslice, this.conf);
         this.colHist = new SVGHistogram("colHist", this.svgColHist, this.cslice, this.conf);
