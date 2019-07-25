@@ -165,8 +165,8 @@
 
             <p>
                 $$
-                P_m(x) = \frac{P(x)}{Q(x)} \\
-                JSD(P, Q) = D_{KL}(P \vert \vert P_m) + D_{KL}(Q \vert \vert P_m)
+                P_m(x) = \frac{P(x) + Q(x)}{2} \\
+                JSD(P, Q) = \frac{1}{2}(D_{KL}(P \vert \vert P_m) + D_{KL}(Q \vert \vert P_m))
                 $$
             </p>
 
@@ -179,8 +179,7 @@
         <div id="transport">
             <h2>Transport</h2>
 
-            <p>Paragraph: a second option for comparing distributions comes from the idea of transport. How much work do we have to do to turn one distribution into another?</p>
-            <p><b>Show two distributions side by side with arrows indicating transport</b></p>
+            <p>Like entropy, Earth Mover's distance relies on an abstraction to determine the distance between probability distributions, and in this case, that abstraction is the "transport plan."  Simply put, a transport plan is a literal blueprint for turning one distribution into another. It defines, for each event in the source distribution, a set of locations and quantities in the target distribution to which some amount of "mass" should be transported. </p>
 
             <div id="transport-interactive" class="col-12 vis-inset">
                 <div class="h-75">
@@ -189,6 +188,8 @@
                         </div>
                 </div>
             </div>
+
+            <p>In other words, the transport plan gives each of the source events its own distribution over the target events. These distributions are shwon in black in the diagram above.</p>
             <p>Paragraph: we can show the entire transport plan in bulk, by defining a joint distribution</p>
             <p><b>Show the heatmap for the same two distributions</b></p>
 
