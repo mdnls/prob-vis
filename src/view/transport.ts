@@ -145,9 +145,11 @@ export class SVGIndicatorTransport extends SVGTransport {
         let svgWidth = $(this.div).width();
         let svgHeight = $(this.div).height();
 
+        let height = svgHeight/5;
+
         d3.select(this.svgArrowBar)
           .attr("width", svgWidth)
-          .attr("height", svgHeight/5);
+          .attr("height", height);
 
 
         if(this.rslice.selectedBin() != -1) {
@@ -156,17 +158,19 @@ export class SVGIndicatorTransport extends SVGTransport {
               .remove();
 
             let width = this.colHist.viewBoxSideLength;
+
             let colxOffset = this.colHist.xOffset;
             let rowxOffset = this.rowHist.xOffset;
             let s = this.colHist.s;
             let pad = this.conf.padding;
             let arrowBar = this.svgArrowBar;
-            let arrow = function(sBin: number, eBin: number) {
-                let scale = d3.scaleLinear().domain([0, 100]).range([0, width]);
-                let start = colxOffset + scale(s * sBin + 0.5 * s);
-                let end = width + 2 * pad + rowxOffset + scale(s * eBin + 0.5 * s);
 
-                let p = `M${start},5  A20,5 0 1,0 ${end},5`
+            let arrow = function(sBin: number, eBin: number) {
+                let wScale = d3.scaleLinear().domain([0, 100]).range([0, width]);
+                let start = colxOffset + wScale(s * sBin + 0.5 * s);
+                let end = width + 2 * pad + rowxOffset + wScale(s * eBin + 0.5 * s);
+
+                let p = `M${start},0  L ${start},20 L ${end},20 L ${end},5`;
                 d3.select(arrowBar)
                   .append("path")
                   .attr("d", p)
@@ -178,27 +182,8 @@ export class SVGIndicatorTransport extends SVGTransport {
             }
             let sBin = this.rslice.selectedBin();
             let slice = this.colslices[sBin];
-            let max: number[] = [-Infinity, -Infinity, -Infinity];
-            let maxIdx: number[] = [-1, -1, -1];
+            slice.bins().forEach((i) => i.length > 0 ? arrow(sBin, i[0].x) : "");
 
-            // cool kids run quick select
-            // alas
-            slice.bins().forEach((bin: BinItem[], i: number) => {
-                if(bin.length > 0 && bin.length > max[0]) {
-                    max = [bin.length, max[0], max[1]];
-                    maxIdx = [i, maxIdx[0], maxIdx[1]];
-                }
-                else if (bin.length > 0 && bin.length > max[1]) {
-                    max = [max[0], bin.length, max[1]];
-                    maxIdx = [maxIdx[0], i, maxIdx[1]];
-                }
-                else if(bin.length > 0 && bin.length > max[2]) {
-                    max = [max[0], max[1], bin.length];
-                    maxIdx = [maxIdx[0], maxIdx[1], i];
-                }
-            });
-
-            maxIdx.forEach((i) => i >= 0 ? arrow(sBin, i) : "");
         }
     }
 }

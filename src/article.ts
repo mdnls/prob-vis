@@ -193,7 +193,10 @@ function setupIntro() {
 
     let interactiveTransportMatrix = new SVGTransportMatrix("#transport-matrix-ex-interactive", transportMatrix, conf);
     interactiveTransportMatrix.refresh();
-    
+
+    let optTransportMatrix = HeatMap.fromCSVStr(transportEx["opt_matrix"]);
+    let optInterativeTransportMatrix = new SVGTransportMatrix("#opt-transport-matrix-ex-interactive", optTransportMatrix, conf);
+    optInterativeTransportMatrix.refresh();
 
 }   
 
