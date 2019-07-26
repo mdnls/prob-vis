@@ -1319,12 +1319,54 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
         "colHist": Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7)),
         "colOverlay": ["#000"]
     };
+    let attnHash = {};
+    let attn = undefined;
     const conf = new model_1.CONF(8, colors, 5);
     function main() {
         setupIntro();
     }
     exports.main = main;
+    function setAttn(id) {
+        attn = attnHash[id];
+    }
+    function registerAttn(id, m) {
+        attnHash[id] = m;
+        $(id).click(() => setAttn(id));
+    }
+    function userInput(dir) {
+        if (attn) {
+            attn(dir);
+        }
+    }
     function setupIntro() {
+        document.addEventListener("keydown", event => {
+            switch (event.key.toLowerCase()) {
+                case ("h"):
+                case ("a"):
+                case ("arrowleft"):
+                    userInput("left");
+                    break;
+                case ("l"):
+                case ("d"):
+                case ("arrowright"):
+                    userInput("right");
+                    break;
+                case ("k"):
+                case ("w"):
+                case ("arrowup"):
+                    userInput("up");
+                    break;
+                case ("j"):
+                case ("s"):
+                case ("arrowdown"):
+                    userInput("down");
+                    break;
+            }
+        });
+        $("body").on("swiperight", () => userInput("right"));
+        $("body").on("swipeleft", () => userInput("left"));
+        $("body").on("swipeup", () => userInput("up"));
+        $("body").on("swipedown", () => userInput("down"));
         let cNames = [".maroon", ".red", ".orange", ".yellow", ".lime", ".green", ".blue", ".violet"];
         let colors = Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7));
         cNames.forEach((sel, i) => {
@@ -1406,22 +1448,23 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
         let mInteractiveEnt = bins_3.Histogram.full(8, 1);
         let interactiveEnt = new entropy_1.SVGInteractiveEntropy("#entropy-ex-interactive", mInteractiveEnt, conf);
         interactiveEnt.refresh();
-        document.addEventListener("keydown", event => {
-            switch (event.key.toLowerCase()) {
-                case ("h"):
+        let interactiveEntHandler = function (dir) {
+            switch (dir) {
+                case ("left"):
                     interactiveEnt.hist.selectCol(mInteractiveEnt.selectedBin() - 1);
                     break;
-                case ("l"):
+                case ("right"):
                     interactiveEnt.hist.selectCol(mInteractiveEnt.selectedBin() + 1);
                     break;
-                case ("k"):
+                case ("up"):
                     interactiveEnt.hist.incrSelectedBin();
                     break;
-                case ("j"):
+                case ("down"):
                     interactiveEnt.hist.decrSelectedBin();
                     break;
             }
-        });
+        };
+        registerAttn("#entropy-interactive", interactiveEntHandler);
         let qModel = bins_3.Histogram.fromArray(data_1.xEntropyExs["q"]);
         let pModel = bins_3.Histogram.full(8, 1);
         let interactiveXEnt = new entropy_1.SVGInteractiveCrossEntropy("#xentropy-ex-interactive", pModel, qModel, conf);
@@ -1437,30 +1480,32 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
             return "" + Math.round(kl * 100) / 100;
         });
         relEnt.refresh();
-        document.addEventListener("keydown", event => {
-            switch (event.key.toLowerCase()) {
-                case ("h"):
+        let interactiveXEntHandler = function (dir) {
+            switch (dir) {
+                case ("left"):
                     interactiveXEnt.sourceEnt.hist.selectCol(pModel.selectedBin() - 1);
                     relEnt.refresh();
                     break;
-                case ("l"):
+                case ("right"):
                     interactiveXEnt.sourceEnt.hist.selectCol(pModel.selectedBin() + 1);
                     relEnt.refresh();
                     break;
-                case ("k"):
+                case ("up"):
                     interactiveXEnt.sourceEnt.hist.incrSelectedBin();
                     relEnt.refresh();
                     break;
-                case ("j"):
+                case ("down"):
                     interactiveXEnt.sourceEnt.hist.decrSelectedBin();
                     relEnt.refresh();
                     break;
             }
-        });
+        };
+        registerAttn("#xentropy-interactive", interactiveXEntHandler);
         let transportMatrix = heatmap_3.HeatMap.fromCSVStr(data_1.transportEx["matrix"]);
         let interactiveTransport = new transport_1.SVGIndicatorTransport("#transport-ex-interactive", transportMatrix, conf);
         interactiveTransport.refresh();
-        let interactiveTransportMatrix = new transport_1.SVGTransportMatrix("#transport-matrix-ex-interactive", transportMatrix, conf);
+        let intTransportMatrix = heatmap_3.HeatMap.fromCSVStr(data_1.transportEx["matrix"]);
+        let interactiveTransportMatrix = new transport_1.SVGTransportMatrix("#transport-matrix-ex-interactive", intTransportMatrix, conf);
         interactiveTransportMatrix.refresh();
         let optTransportMatrix = heatmap_3.HeatMap.fromCSVStr(data_1.transportEx["opt_matrix"]);
         let optInterativeTransportMatrix = new transport_1.SVGTransportMatrix("#opt-transport-matrix-ex-interactive", optTransportMatrix, conf);

@@ -7,7 +7,7 @@ import { chisqr1, chisqr2, entropyExs, xEntropyExs, transportEx, simpleHist } fr
 import { SVGPhantomHistogram, SVGHistogram } from "./view/histogram";
 import { SVGInteractiveEntropy, SVGInteractiveCrossEntropy } from "./view/entropy";
 import { SVGIndicatorTransport, SVGTransportMatrix } from "./view/transport";
-import { CONF } from "./model/model";
+import { CONF, Model } from "./model/model";
 // This script controls all of the animations in the article
 
 
@@ -18,13 +18,76 @@ let colors = {
     "colHist": Array.from({length: 8}, (v, k) => d3.interpolateSpectral(k/7)),
     "colOverlay": ["#000"]
 }
+
+let attnHash: {[id: string] : (key: string) => any} = {};
+
+let attn: (key: string) => any = undefined;
+
 const conf: CONF = new CONF(8, colors, 5);
 
 export function main() {
     setupIntro();
 }
 
+/**
+ * Give attention to a particular dom element.
+ * @param id a dom element which has attention
+ */
+function setAttn(id: string) {
+    attn = attnHash[id];
+}
+/**
+ * Register a dom element as a potential selectable item. Associate with it a function that handles direction input from the user.
+ * @param id id of a dom element
+ * @param m direction handler
+ */
+function registerAttn(id: string, m: (key: string) => any) {
+    attnHash[id] = m;
+    $(id).click(() => setAttn(id));
+}
+
+/**
+ * Handle a direction input from the user by calling the current attention handler.
+ * @param dir either "up", "down", "left", or "right"
+ */
+function userInput(dir: string) {
+    if(attn) {
+        attn(dir);
+    }
+}
+
 function setupIntro() {
+    // key handler
+    document.addEventListener("keydown", event => {
+        switch(event.key.toLowerCase()) {
+            case("h"):
+            case("a"):
+            case("arrowleft"):
+                userInput("left");
+                break;
+            case("l"):
+            case("d"):
+            case("arrowright"):
+                userInput("right");
+                break;
+            case("k"):
+            case("w"):
+            case("arrowup"):
+                userInput("up");
+                break;
+            case("j"):
+            case("s"):
+            case("arrowdown"):
+                userInput("down");
+                break;
+        }
+    });
+    $("body").on("swiperight", () => userInput("right"));
+    $("body").on("swipeleft", () => userInput("left"));
+    $("body").on("swipeup", () => userInput("up"));
+    $("body").on("swipedown", () => userInput("down"));
+
+
     // Setup boxes
     let cNames = [".maroon", ".red", ".orange", ".yellow", ".lime", ".green", ".blue", ".violet"]
     let colors = Array.from({length: 8}, (v, k) => d3.interpolateSpectral(k/7));
@@ -130,22 +193,24 @@ function setupIntro() {
     let interactiveEnt = new SVGInteractiveEntropy("#entropy-ex-interactive", mInteractiveEnt, conf);
     interactiveEnt.refresh();
 
-    document.addEventListener("keydown", event => {
-        switch(event.key.toLowerCase()) {
-            case("h"):
+    let interactiveEntHandler = function(dir: string) {
+        switch(dir) {
+            case("left"):
                 interactiveEnt.hist.selectCol(mInteractiveEnt.selectedBin() - 1);
                 break;
-            case("l"):
+            case("right"):
                 interactiveEnt.hist.selectCol(mInteractiveEnt.selectedBin() + 1);
                 break;
-            case("k"):
+            case("up"):
                 interactiveEnt.hist.incrSelectedBin();
                 break;
-            case("j"):
+            case("down"):
                 interactiveEnt.hist.decrSelectedBin();
                 break;
+
         }
-    });
+    };
+    registerAttn("#entropy-interactive", interactiveEntHandler);
 
     // Interactive cross entropy diagram
     let qModel = Histogram.fromArray(xEntropyExs["q"]);
@@ -165,33 +230,36 @@ function setupIntro() {
     });
     relEnt.refresh();
 
-    document.addEventListener("keydown", event => {
-        switch(event.key.toLowerCase()) {
-            case("h"):
+    let interactiveXEntHandler = function(dir: string) {
+        switch(dir) {
+            case("left"):
                 interactiveXEnt.sourceEnt.hist.selectCol(pModel.selectedBin() - 1);
                 relEnt.refresh();
                 break;
-            case("l"):
+            case("right"):
                 interactiveXEnt.sourceEnt.hist.selectCol(pModel.selectedBin() + 1);
                 relEnt.refresh();
                 break;
-            case("k"):
+            case("up"):
                 interactiveXEnt.sourceEnt.hist.incrSelectedBin();
                 relEnt.refresh();
                 break;
-            case("j"):
+            case("down"):
                 interactiveXEnt.sourceEnt.hist.decrSelectedBin();
                 relEnt.refresh();
                 break;
+
         }
-    });
+    };
+    registerAttn("#xentropy-interactive", interactiveXEntHandler);
 
     // Transport diagram with arrows
     let transportMatrix = HeatMap.fromCSVStr(transportEx["matrix"]);
     let interactiveTransport = new SVGIndicatorTransport("#transport-ex-interactive", transportMatrix, conf);
     interactiveTransport.refresh();
 
-    let interactiveTransportMatrix = new SVGTransportMatrix("#transport-matrix-ex-interactive", transportMatrix, conf);
+    let intTransportMatrix  = HeatMap.fromCSVStr(transportEx["matrix"]); // this is a copy. having a second instance is useful to disable synced refresh between these views.
+    let interactiveTransportMatrix = new SVGTransportMatrix("#transport-matrix-ex-interactive", intTransportMatrix, conf);
     interactiveTransportMatrix.refresh();
 
     let optTransportMatrix = HeatMap.fromCSVStr(transportEx["opt_matrix"]);
