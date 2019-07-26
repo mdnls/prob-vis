@@ -189,17 +189,16 @@
                 </div>
             </div>
 
-            <p>In other words, the transport plan gives each of the source events its own distribution over the target events, shown in black in the diagram above.</p>
-
-
-            <p>Paragraph: we can show the entire transport plan in bulk, by defining a joint distribution</p>
-            <p><b>Show the heatmap for the same two distributions</b></p>
+            <p>In other words, the transport plan gives each of the source events its own distribution over the target events, shown in black in the diagram above. It may not be obvious at first, but these types of transport plans are exactly equivalent to a probabalistic joint distribution, where the source and target distributions are marginals. Here's the same transport plan, but this time represented as marginals of a joint distribution.</p>
 
             <div id="transport-matrix-interactive" class="col-12 vis-inset-long" style="margin: 20px">
                 <div id="transport-matrix-ex-interactive" class="h-100">
 
                 </div>
             </div>
+
+            <p>For each cell, its location $(i, j)$ indicates that the cell corresponds to source event $x_i$ and target event $x_j$. The joint distribution assigns a value $p(i, j) = s$, which can be interpreted as a transfer of $s$ units of "probability mass" from $x_i$ to $x_j$.</p>
+            
             <p>Transport cost: $\iint_{X \times Y} p(x, y) c(x, y) dx dy$ - ie. for rectangles of size $dx dy$, we transport $p(x, y)$ of them, and each costs $c(x, y)$</p> 
             <p>Wasserstein Distance: the minimum transport cost to get from $p$ to $q$.</p>
             <div id="opt-transport-matrix-interactive" class="col-12 vis-inset-long" style="margin: 20px">

@@ -84,7 +84,7 @@ export class SVGTransportMatrix extends SVGTransport {
           .insert("svg", this.svgColHist)
           .attr("id", defaultId);
         d3.select(this.svgColHist)
-          .attr("transform", "rotate(90.01)");
+          .attr("style", "transform: rotate(90deg)");
 
         this.heatmap = new SVGHeatmap(this.svgHeatMap, this.model, this.conf);
     }
