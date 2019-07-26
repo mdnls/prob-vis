@@ -199,16 +199,26 @@
                 </div>
             </div>
 
-            <p>For each cell, its location $(i, j)$ indicates that the cell corresponds to source event $x_i$ and target event $x_j$. The joint distribution assigns a value $p(i, j) = s$, which can be interpreted as a transfer of $s$ units of "probability mass" from $x_i$ to $x_j$.</p>
             
-            <p>Transport cost: $\iint_{X \times Y} p(x, y) c(x, y) dx dy$ - ie. for rectangles of size $dx dy$, we transport $p(x, y)$ of them, and each costs $c(x, y)$</p> 
-            <p>Wasserstein Distance: the minimum transport cost to get from $p$ to $q$.</p>
+            <p>For each cell, its location $(i, j)$ indicates that the cell corresponds to source event $x_i$ and target event $x_j$. The joint distribution assigns a value $p(i, j) = s$, which can be interpreted as a transfer of $s$ units of "probability mass" from $x_i$ to $x_j$.</p>
+
+            <p>Before we can use a transport plan as a distance function, we need a way to squeeze a number out of it that represents the actual distance quantity. The most natural way is to assign a cost when each elements is transported, proportional both to the amount of mass being moved and to the distance it is moved over. Think of the actual costs involved in, for example, moving heavy boxes across the city – every mile traveled costs a certain amount of gas, and if you take one trip per box then the cost is multiplied by the total number of boxes. Provided that you can actually define a distance $d(x_i, x_j)$ between statistical events, you can use it define the cost of a transport plan in the same way: </p>
+
+            <p>
+                $$
+                C = \sum_{x_i, x_j} d(x_i, x_j) P(x_i, x_j)
+                $$
+            </p>
+
+            <p>Of course, this distance has more to do with a particular transport plan than it does with either of its marginal distributions. So, to convert transport cost into a distance function for probability distributions, we add the condition that $d(P, Q)$ is the minimum cost under all possible transport plans that convert $P$ to $Q$. This is similar to the earlier stipulation that Bob communicates events to Alice optimally, so that entropy has a meaningful value. For comparison, here is an optimal transport plan between the same two distributions as in the previous example:</p>
+            
             <div id="opt-transport-matrix-interactive" class="col-12 vis-inset-long" style="margin: 20px">
                     <div id="opt-transport-matrix-ex-interactive" class="h-100">
     
                     </div>
-                </div>
-            <p>Paragraph: wasserstein distance is "more general" than entropy distances</p>
+            </div>
+            <p>This plan has a total cost of $30$ box-columns, where the original plan costs $70$ box-columns. Under the optimal plan, the nonzer ocells in the joint distributions are clustered around the diagonal, since minimizing the transportation distance means bringing $i$ as close to $j$ as possible.</p>
+        
         </div>
 
         <div id="convergence">
