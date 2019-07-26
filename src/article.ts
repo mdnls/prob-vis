@@ -82,10 +82,10 @@ function setupIntro() {
                 break;
         }
     });
-    $("body").on("swiperight", () => userInput("right"));
-    $("body").on("swipeleft", () => userInput("left"));
-    $("body").on("swipeup", () => userInput("up"));
-    $("body").on("swipedown", () => userInput("down"));
+    $("h1").on("swiperight", () => {alert("foo"); userInput("right")});
+    $(".container").on("swipeleft", () => {alert("foo2"); userInput("left")});
+    $(".container").on("swipeup", () => userInput("up"));
+    $(".container").on("swipedown", () => userInput("down"));
 
 
     // Setup boxes

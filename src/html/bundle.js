@@ -1363,10 +1363,10 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
                     break;
             }
         });
-        $("body").on("swiperight", () => userInput("right"));
-        $("body").on("swipeleft", () => userInput("left"));
-        $("body").on("swipeup", () => userInput("up"));
-        $("body").on("swipedown", () => userInput("down"));
+        $("h1").on("swiperight", () => { alert("foo"); userInput("right"); });
+        $(".container").on("swipeleft", () => { alert("foo2"); userInput("left"); });
+        $(".container").on("swipeup", () => userInput("up"));
+        $(".container").on("swipedown", () => userInput("down"));
         let cNames = [".maroon", ".red", ".orange", ".yellow", ".lime", ".green", ".blue", ".violet"];
         let colors = Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7));
         cNames.forEach((sel, i) => {
