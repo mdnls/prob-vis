@@ -1504,12 +1504,42 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
         let transportMatrix = heatmap_3.HeatMap.fromCSVStr(data_1.transportEx["matrix"]);
         let interactiveTransport = new transport_1.SVGIndicatorTransport("#transport-ex-interactive", transportMatrix, conf);
         interactiveTransport.refresh();
+        let interactiveTransportHandler = function (dir) {
+            switch (dir) {
+                case ("left"):
+                    interactiveTransport.rowHist.selectCol(transportMatrix.selectedCol() - 1);
+                    break;
+                case ("right"):
+                    interactiveTransport.rowHist.selectCol(transportMatrix.selectedCol() + 1);
+            }
+        };
+        registerAttn("#transport-interactive", interactiveTransportHandler);
         let intTransportMatrix = heatmap_3.HeatMap.fromCSVStr(data_1.transportEx["matrix"]);
         let interactiveTransportMatrix = new transport_1.SVGTransportMatrix("#transport-matrix-ex-interactive", intTransportMatrix, conf);
         interactiveTransportMatrix.refresh();
+        let interactiveTransportMatrixHandler = function (dir) {
+            switch (dir) {
+                case ("left"):
+                    interactiveTransportMatrix.rowHist.selectCol(intTransportMatrix.selectedCol() - 1);
+                    break;
+                case ("right"):
+                    interactiveTransportMatrix.rowHist.selectCol(intTransportMatrix.selectedCol() + 1);
+            }
+        };
+        registerAttn("#transport-matrix-interactive", interactiveTransportMatrixHandler);
         let optTransportMatrix = heatmap_3.HeatMap.fromCSVStr(data_1.transportEx["opt_matrix"]);
         let optInterativeTransportMatrix = new transport_1.SVGTransportMatrix("#opt-transport-matrix-ex-interactive", optTransportMatrix, conf);
         optInterativeTransportMatrix.refresh();
+        let optInteractiveTransportMatrixHandler = function (dir) {
+            switch (dir) {
+                case ("left"):
+                    optInterativeTransportMatrix.rowHist.selectCol(optTransportMatrix.selectedCol() - 1);
+                    break;
+                case ("right"):
+                    optInterativeTransportMatrix.rowHist.selectCol(optTransportMatrix.selectedCol() + 1);
+            }
+        };
+        registerAttn("#opt-transport-matrix-interactive", optInteractiveTransportMatrixHandler);
     }
     main();
 });

@@ -257,15 +257,44 @@ function setupIntro() {
     let transportMatrix = HeatMap.fromCSVStr(transportEx["matrix"]);
     let interactiveTransport = new SVGIndicatorTransport("#transport-ex-interactive", transportMatrix, conf);
     interactiveTransport.refresh();
+    let interactiveTransportHandler = function(dir: string) {
+        switch(dir) {
+            case("left"):
+                interactiveTransport.rowHist.selectCol(transportMatrix.selectedCol() - 1);
+                break;
+            case("right"):
+                interactiveTransport.rowHist.selectCol(transportMatrix.selectedCol() + 1);
+        }
+    };
+    registerAttn("#transport-interactive", interactiveTransportHandler);
 
     let intTransportMatrix  = HeatMap.fromCSVStr(transportEx["matrix"]); // this is a copy. having a second instance is useful to disable synced refresh between these views.
     let interactiveTransportMatrix = new SVGTransportMatrix("#transport-matrix-ex-interactive", intTransportMatrix, conf);
     interactiveTransportMatrix.refresh();
+    let interactiveTransportMatrixHandler = function(dir: string) {
+        switch(dir) {
+            case("left"):
+                interactiveTransportMatrix.rowHist.selectCol(intTransportMatrix.selectedCol() - 1);
+                break;
+            case("right"):
+                interactiveTransportMatrix.rowHist.selectCol(intTransportMatrix.selectedCol() + 1);
+        }
+    };
+    registerAttn("#transport-matrix-interactive", interactiveTransportMatrixHandler);
 
     let optTransportMatrix = HeatMap.fromCSVStr(transportEx["opt_matrix"]);
     let optInterativeTransportMatrix = new SVGTransportMatrix("#opt-transport-matrix-ex-interactive", optTransportMatrix, conf);
     optInterativeTransportMatrix.refresh();
-
+    let optInteractiveTransportMatrixHandler = function(dir: string) {
+        switch(dir) {
+            case("left"):
+                optInterativeTransportMatrix.rowHist.selectCol(optTransportMatrix.selectedCol() - 1);
+                break;
+            case("right"):
+                optInterativeTransportMatrix.rowHist.selectCol(optTransportMatrix.selectedCol() + 1);
+        }
+    };
+    registerAttn("#opt-transport-matrix-interactive", optInteractiveTransportMatrixHandler);
 }   
 
 main();
