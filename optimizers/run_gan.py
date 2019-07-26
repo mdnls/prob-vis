@@ -1,6 +1,5 @@
-from pytorch.utils import *
+from utils import *
 import numpy as np
-import torch.nn as nn
 import matplotlib.pyplot as plt
 import torch
 

@@ -1,8 +1,5 @@
-import torch
-import numpy as np
-from pytorch.utils import *
+from utils import *
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 # Generate matrices for wgan at each step by doing a ton of samples, quantizing, and setting the right indices
 # Do this at each step
