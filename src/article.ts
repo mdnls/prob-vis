@@ -300,10 +300,14 @@ function setupIntro() {
     // Optimizers
     let wEMean = optimizers["wganEasy"]["mean"];
     let wECov = optimizers["wganEasy"]["cov"];
-    let svgGAnim = new SVGAnimatedGaussian("wgan-easy", "#wgan-easy-optim-ex", 15, wEMean, wECov, [[-1, 5], [-1, 5]], conf);
-    $("#wgan-easy-play").click(() => svgGAnim.play());
-    $("#wgan-easy-pause").click(() => svgGAnim.pause());
-    $("#wgan-easy-reset").click(() => svgGAnim.reset());
+    let svgWEAnim = new SVGAnimatedGaussian("wgan-easy", "#wgan-easy-optim-ex", 15, wEMean, wECov, [[-1, 5], [-1, 5]], conf);
+
+    let gEMean = optimizers["ganEasy"]["mean"];
+    let gECov = optimizers["ganEasy"]["cov"];
+    let svgGEAnim = new SVGAnimatedGaussian("gan-easy", "#gan-easy-optim-ex", 15, gEMean, gECov, [[-1, 5], [-1, 5]], conf);
+    $("#gan-comp-easy-play").click(() => { svgWEAnim.play(); svgGEAnim.play(); });
+    $("#gan-comp-easy-pause").click(() => { svgWEAnim.pause(); svgGEAnim.pause(); });
+    $("#gan-comp-easy-reset").click(() => { svgWEAnim.reset(); svgGEAnim.reset(); });
 }   
 
 main();

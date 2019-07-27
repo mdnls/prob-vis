@@ -220,15 +220,24 @@
             <h2>How does this distinction affect training of generative models?</h2>
             <p>Paragraph: in general, training a generative model is feasible under either distance</p>
             <p>Paragraph: For example, consider "nice" distributions:</p>
-            <div id="wgan-easy-optim" class="col-12 vis-inset-long">
-                <svg id="wgan-easy-optim-ex" class="h-100">
+            <div id="gan-comp-easy" class="col-12 vis-inset-long">
+                <div class="row h-100 anim">
+                    <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
+                        <svg id="wgan-easy-optim-ex" class="col-12 h-100" style="padding: 0px;">
 
-                </svg>
+                        </svg>
+                    </div>
+                    <div class="col-6 h-100" style="padding: 20px 20px 20px 10px">
+                        <svg id="gan-easy-optim-ex" class="col-12 h-100" style="padding: 0px;">
+
+                        </svg>
+                    </div>
+                </div>
             </div>
 
-            <button id="wgan-easy-play">Play</button>
-            <button id="wgan-easy-pause">Pause</button>
-            <button id="wgan-easy-reset">Reset</button>
+            <button id="gan-comp-easy-play">Play</button>
+            <button id="gan-comp-easy-pause">Pause</button>
+            <button id="gan-comp-easy-reset">Reset</button>
 
             <p>Paragraph: however there are cases when entropy breaks:</p>
             <p><b>Show animation of 2D convergence when distributions don't have the same support</b></p>

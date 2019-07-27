@@ -44,3 +44,6 @@ b {
   display: inline-flex;
   align-self: center;
   position: relative; }
+
+.anim svg {
+  border: 2px solid black; }
