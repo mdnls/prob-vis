@@ -24,6 +24,10 @@ export class SVGGaussian2D implements ModelListener {
         this.conf = conf;
         this.bounds = bounds;
         gaussian.addListener(this);
+
+        d3.select(this.svg)
+            .append("text")
+            .attr("id", "thetaLog");
     }
 
     refresh() {
@@ -66,6 +70,8 @@ export class SVGGaussian2D implements ModelListener {
             return svgHeight - yOffset - hScale(relY);
         }
 
+
+
         let pcomponents = this.gaussian.eigenVectors();
         let mean = this.gaussian.meanVal();
         let v1 = pcomponents[0];
@@ -74,7 +80,10 @@ export class SVGGaussian2D implements ModelListener {
 
         let rx = pscales[0];
         let ry = pscales[1];
-        let angle = (v1[0] == v2[0]) ? 0 : Math.atan( (v1[1] - v2[1]) / (v1[0] - v2[0]) );
+        let angle = ((v1[0] == 0) ? Math.PI : - Math.atan( v1[1] / v1[0] ));
+
+        d3.select("#thetaLog")
+        .text(180 * angle / Math.PI);
 
         let data = Array.from({length: colors.length}, (v, k) => {
             k = colors.length - k - 1;
@@ -90,7 +99,7 @@ export class SVGGaussian2D implements ModelListener {
         });
 
         d3.select(this.svg)
-          .selectAll(".levelCurve ." + this.name)
+          .selectAll("." + this.name)
           .remove();
         
         d3.select(this.svg)
@@ -102,13 +111,53 @@ export class SVGGaussian2D implements ModelListener {
           .attr("ry", (d) => d.ry)
           .attr("cx", (d) => d.cx)
           .attr("cy", (d) => d.cy)
-          //.attr("style", (d) => "transform: rotate(" + d.theta + "rad); transform-origin: center center;")
-          .attr("transform", (d) => "rotate(" + d.theta + "rad)")
+          .attr("transform", (d) => "rotate(" + Math.floor(180 * d.theta / Math.PI) + " " + d.cx + " " + d.cy + ")")
           .attr("fill", (d) => d.color)
+          .attr("class", "levelCurve " + this.name);
 
     }
 
     assign(mean: number[], cov: number[][]) {
         this.gaussian.assign(mean, cov);
+    }
+}
+
+
+
+export class SVGAnimatedGaussian extends SVGGaussian2D {
+    protected means: number[][];
+    protected covs: number[][][];
+    protected frame: number;
+    protected fps: number;
+    protected timerId: NodeJS.Timer;
+    constructor(name: string, svgElement: string, fps: number, means: number[][], covs: number[][][], bounds: number[][], conf: CONF) {
+        super(name, svgElement, new Gaussian2D(means[0], covs[0]), bounds, conf);
+        this.means = means;
+        this.covs = covs;
+        this.fps = fps;
+        this.frame = 0;
+    }
+
+    play() {
+        let i = 0;
+        this.timerId = setInterval(() => { 
+            if(this.frame >= this.means.length) {
+                this.pause();
+                this.reset();
+                return;
+            }
+            this.assign(this.means[this.frame], this.covs[this.frame]); 
+            this.frame++;
+        }, 1000/this.fps);
+    }
+
+    pause() {
+        clearInterval(this.timerId);
+        delete this.timerId;
+    }
+
+    reset() {
+        this.frame = 0;
+        this.assign(this.means[this.frame], this.covs[this.frame]);
     }
 }

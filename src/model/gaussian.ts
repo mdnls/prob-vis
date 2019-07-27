@@ -55,8 +55,14 @@ export class Gaussian2D implements Model {
         v1 = [v1[0]/v1_mag, v1[1]/v1_mag];
         v2 = [v2[0]/v2_mag, v2[1]/v2_mag];
 
-        this.eigvals = [e1, e2];
-        this.eigvecs = [v1, v2];
+        if(e2 > e1) {
+            this.eigvals = [e2, e1];
+            this.eigvecs = [v2, v1];
+        }
+        else {
+            this.eigvals = [e1, e2];
+            this.eigvecs = [v1, v2];
+        }
 
         this.refresh();
     }

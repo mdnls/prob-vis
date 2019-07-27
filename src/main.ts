@@ -8,7 +8,8 @@ import matModel = require("./model/heatmap");
 import d3 = require("d3");
 import model = require("./model/model");
 import { Gaussian2D } from "./model/gaussian";
-import { SVGGaussian2D } from "./view/gaussian";
+import { SVGGaussian2D, SVGAnimatedGaussian } from "./view/gaussian";
+import { optimizers } from "./data";
 
 export function main() {
     let colors = {
@@ -89,8 +90,10 @@ export function main() {
     let phanthist = new hist.SVGPhantomHistogram("phist", "#phantomhist", m, phantom, conf);
     phanthist.refresh();
 
-    let g = new Gaussian2D([1, 1], [[1, 0], [0, 1]]);
-    let svgG = new SVGGaussian2D("gssn", "#gaussian", g, [[-1, 5], [-1, 5]], conf);
-    svgG.refresh();
+
+    let mean = optimizers["wganEasy"]["mean"];
+    let cov = optimizers["wganEasy"]["cov"];
+    let svgGAnim = new SVGAnimatedGaussian("gssn", "#gaussian", 20, mean, cov, [[-1, 5], [-1, 5]], conf);
+    svgGAnim.play();
 }
 main();

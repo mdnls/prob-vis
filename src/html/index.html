@@ -32,7 +32,7 @@
 
         <h2>
             Table of Contents
-        </h1>
+        </h2>
         <ul>
             <li><p>Entropy of a Probability Distribution</p></li>
             <li><p>Relative Entropy</p></li>
@@ -220,7 +220,16 @@
             <h2>How does this distinction affect training of generative models?</h2>
             <p>Paragraph: in general, training a generative model is feasible under either distance</p>
             <p>Paragraph: For example, consider "nice" distributions:</p>
-            <p><b>Show animation of 2D convergence when distributions have the same support</b></p>
+            <div id="wgan-easy-optim" class="col-12 vis-inset-long">
+                <svg id="wgan-easy-optim-ex" class="h-100">
+
+                </svg>
+            </div>
+
+            <button id="wgan-easy-play">Play</button>
+            <button id="wgan-easy-pause">Pause</button>
+            <button id="wgan-easy-reset">Reset</button>
+            
             <p>Paragraph: however there are cases when entropy breaks:</p>
             <p><b>Show animation of 2D convergence when distributions don't have the same support</b></p>
             <p>Paragraph: in particular, low dimensional manifolds are a "worst case" for entropy measures</p>

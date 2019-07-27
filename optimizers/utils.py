@@ -17,12 +17,21 @@ class Gaussian():
         '''
         return np.random.multivariate_normal(self.m, self.S, n)
 
+class Uniform():
+    def __init__(self, low, high, dim):
+        self.low = low
+        self.high = high
+        self.dim = dim
+    def sample(self, n):
+        return np.random.uniform(self.low, self.high, (n, self.dim))
+
 class Generator(nn.Module):
     def __init__(self, input_dim, output_dim):
         super(Generator, self).__init__()
         self.out = nn.Linear(input_dim, output_dim, bias=True) # learn a linear transformation of gaussian
     def forward(self, input):
         return self.out(input)
+
 
 class Net(nn.Module):
     # MLP net with set input dimensionality, given intermediate layer dims, and fixed outputs

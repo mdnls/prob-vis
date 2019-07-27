@@ -3,10 +3,11 @@ import * as $ from "jquery";
 import { Histogram } from "./model/bins";
 import { HeatMap } from "./model/heatmap";
 import { TextBinder, LooseTextBinder } from "./view/textbinder";
-import { chisqr1, chisqr2, entropyExs, xEntropyExs, transportEx, simpleHist } from "./data";
+import { chisqr1, chisqr2, entropyExs, xEntropyExs, transportEx, simpleHist, optimizers } from "./data";
 import { SVGPhantomHistogram, SVGHistogram } from "./view/histogram";
 import { SVGInteractiveEntropy, SVGInteractiveCrossEntropy } from "./view/entropy";
 import { SVGIndicatorTransport, SVGTransportMatrix } from "./view/transport";
+import { SVGAnimatedGaussian } from "./view/gaussian"
 import { CONF, Model } from "./model/model";
 // This script controls all of the animations in the article
 
@@ -295,6 +296,14 @@ function setupIntro() {
         }
     };
     registerAttn("#opt-transport-matrix-interactive", optInteractiveTransportMatrixHandler);
+
+    // Optimizers
+    let wEMean = optimizers["wganEasy"]["mean"];
+    let wECov = optimizers["wganEasy"]["cov"];
+    let svgGAnim = new SVGAnimatedGaussian("wgan-easy", "#wgan-easy-optim-ex", 15, wEMean, wECov, [[-1, 5], [-1, 5]], conf);
+    $("#wgan-easy-play").click(() => svgGAnim.play());
+    $("#wgan-easy-pause").click(() => svgGAnim.pause());
+    $("#wgan-easy-reset").click(() => svgGAnim.reset());
 }   
 
 main();
