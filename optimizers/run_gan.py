@@ -43,8 +43,6 @@ for i in range(NUM_ITER):
         source_samples = torch.tensor(line_sample(SAMPLE_SIZE), dtype=torch.float)
 
         gen_samples = generator.forward(unit_samples).detach()
-        print(torch.mean(discriminator(source_samples)))
-        print(torch.mean(1 - discriminator(gen_samples)))
         disc_loss = -torch.mean(torch.log(discriminator(source_samples)) + torch.log(1 - discriminator(gen_samples)))
         disc_loss.backward()
         disc_optim.step()

@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="764df277-1605-4ecf-863a-83b4602e625f" name="Default Changelist" comment="" />
+    <list default="true" id="764df277-1605-4ecf-863a-83b4602e625f" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frame_cov.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frame_cov.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frame_mean.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frame_mean.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frames/wganNice/frame_cov.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frames/wganNice/frame_cov.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frames/wganNice/frame_mean.npy" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frames/wganNice/frame_means.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frames/wganNice/frame_means.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/run_gan.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_gan.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wgan_nice.avi" beforeDir="false" afterPath="$PROJECT_DIR$/wgan_nice.avi" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wgan_nice_graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/wgan_nice_graph.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,8 +48,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/run_gan.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="165">
-              <caret line="14" column="26" selection-start-line="14" selection-start-column="26" selection-end-line="14" selection-end-column="26" />
+            <state relative-caret-position="473">
+              <caret line="57" column="25" selection-start-line="57" selection-start-column="25" selection-end-line="57" selection-end-column="25" />
             </state>
           </provider>
         </entry>
@@ -43,8 +57,20 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/wgan_nice_graph.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-121">
-              <caret line="25" column="18" selection-start-line="25" selection-start-column="18" selection-end-line="25" selection-end-column="18" />
+            <state relative-caret-position="608">
+              <caret line="106" column="11" selection-start-line="106" selection-start-column="11" selection-end-line="106" selection-end-column="11" />
+              <folding>
+                <element signature="e#0#19#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/gan_nice_graph.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="15">
+              <caret line="12" selection-start-line="12" selection-end-line="12" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -114,6 +140,8 @@
         <option value="$PROJECT_DIR$/pytorch/wgan_nice_graph.py" />
         <option value="$PROJECT_DIR$/pytorch/mip_transport.py" />
         <option value="$PROJECT_DIR$/utils.py" />
+        <option value="$PROJECT_DIR$/run_gan.py" />
+        <option value="$PROJECT_DIR$/gan_nice_graph.py" />
         <option value="$PROJECT_DIR$/wgan_nice_graph.py" />
       </list>
     </option>
@@ -175,6 +203,28 @@
     </option>
   </component>
   <component name="RunManager" selected="Python.wgan_nice_graph">
+    <configuration name="gan_nice_graph" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="optimizers" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/gan_nice_graph.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="run" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="optimizers" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -245,10 +295,12 @@
       <item itemvalue="Python.run" />
       <item itemvalue="Python.run_gan" />
       <item itemvalue="Python.wgan_nice_graph" />
+      <item itemvalue="Python.gan_nice_graph" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.wgan_nice_graph" />
+        <item itemvalue="Python.gan_nice_graph" />
         <item itemvalue="Python.run_gan" />
         <item itemvalue="Python.run" />
       </list>
@@ -275,23 +327,23 @@
       <workItem from="1564093925054" duration="284000" />
       <workItem from="1564106559698" duration="1205000" />
       <workItem from="1564157708088" duration="467000" />
-      <workItem from="1564175178285" duration="7436000" />
+      <workItem from="1564175178285" duration="14367000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="28939000" />
+    <option name="totallyTimeSpent" value="35870000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
+    <frame x="501" y="0" width="1179" height="1050" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4992272" visible="true" weight="0.11721612" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.4992272" visible="true" weight="0.16886544" />
       <window_info id="Structure" order="1" sideWeight="0.5007728" side_tool="true" weight="0.14606741" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.22142857" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.22142857" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -305,7 +357,7 @@
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-      <window_info anchor="right" id="SciView" order="3" visible="true" weight="0.2759463" />
+      <window_info anchor="right" id="SciView" order="3" visible="true" weight="0.39753738" />
       <window_info anchor="right" id="Database" order="4" />
     </layout>
   </component>
@@ -314,7 +366,8 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/optimizers$run_gan.coverage" NAME="run_gan Coverage Results" MODIFIED="1563720841304" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pytorch" />
-    <SUITE FILE_PATH="coverage/optimizers$wgan_nice_graph.coverage" NAME="wgan_nice_graph Coverage Results" MODIFIED="1564249598145" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
+    <SUITE FILE_PATH="coverage/optimizers$gan_nice_graph.coverage" NAME="gan_nice_graph Coverage Results" MODIFIED="1564262290868" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/optimizers$wgan_nice_graph.coverage" NAME="wgan_nice_graph Coverage Results" MODIFIED="1564265775684" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/" />
     <SUITE FILE_PATH="coverage/optimizers$run.coverage" NAME="run Coverage Results" MODIFIED="1563719201517" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="editorHistoryManager">
@@ -324,13 +377,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="420">
           <caret line="31" selection-start-line="31" selection-end-line="31" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/run_gan.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
-          <caret line="14" column="26" selection-start-line="14" selection-start-column="26" selection-end-line="14" selection-end-column="26" />
         </state>
       </provider>
     </entry>
@@ -368,10 +414,27 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/run_gan.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="473">
+          <caret line="57" column="25" selection-start-line="57" selection-start-column="25" selection-end-line="57" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gan_nice_graph.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="12" selection-start-line="12" selection-end-line="12" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/wgan_nice_graph.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-121">
-          <caret line="25" column="18" selection-start-line="25" selection-start-column="18" selection-end-line="25" selection-end-column="18" />
+        <state relative-caret-position="608">
+          <caret line="106" column="11" selection-start-line="106" selection-start-column="11" selection-end-line="106" selection-end-column="11" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
           </folding>
