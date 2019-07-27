@@ -7,6 +7,8 @@ import histModel = require("model/bins");
 import matModel = require("./model/heatmap");
 import d3 = require("d3");
 import model = require("./model/model");
+import { Gaussian2D } from "./model/gaussian";
+import { SVGGaussian2D } from "./view/gaussian";
 
 export function main() {
     let colors = {
@@ -86,5 +88,9 @@ export function main() {
 
     let phanthist = new hist.SVGPhantomHistogram("phist", "#phantomhist", m, phantom, conf);
     phanthist.refresh();
+
+    let g = new Gaussian2D([1, 1], [[1, 0], [0, 1]]);
+    let svgG = new SVGGaussian2D("gssn", "#gaussian", g, [[-1, 5], [-1, 5]], conf);
+    svgG.refresh();
 }
 main();

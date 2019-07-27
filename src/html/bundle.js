@@ -1543,7 +1543,149 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
     }
     main();
 });
-define("main", ["require", "exports", "view/binarytree", "view/histogram", "view/entropy", "view/transport", "view/heatmap", "model/bins", "model/heatmap", "d3", "model/model"], function (require, exports, tree, hist, ent, transport, hm, histModel, matModel, d3, model) {
+define("model/gaussian", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class Gaussian2D {
+        constructor(mean, cov) {
+            this.listeners = [];
+            this.assign(mean, cov);
+        }
+        refresh() {
+            this.listeners.forEach((l) => l.refresh());
+        }
+        addListener(listener) {
+            this.listeners.push(listener);
+        }
+        assign(mean, cov) {
+            if (mean.length != 2) {
+                throw RangeError("Mean must be a length 2 array");
+            }
+            if (cov.length != 2 || cov[0].length != 2 || cov[1].length != 2) {
+                throw RangeError("Covariance must be a 2x2 array");
+            }
+            this.mean = mean;
+            this.cov = cov;
+            let tr = cov[0][0] + cov[1][1];
+            let det = (cov[0][0] * cov[1][1]) - (cov[0][1] * cov[1][0]);
+            let e1 = (tr + Math.sqrt((tr * tr) - 4 * det)) / 2;
+            let e2 = (tr - Math.sqrt((tr * tr) - 4 * det)) / 2;
+            let v1 = [0, 0];
+            let v2 = [0, 0];
+            if (cov[0][1] == 0 && cov[1][0] == 0) {
+                v1 = [1, 0];
+                v2 = [0, 1];
+            }
+            else if (cov[0][1] == 0) {
+                v1 = [e1 - cov[1][1], cov[1][0]];
+                v2 = [e2 - cov[1][1], cov[1][0]];
+            }
+            else {
+                v1 = [cov[0][1], e1 - cov[0][0]];
+                v2 = [cov[0][1], e2 - cov[0][0]];
+            }
+            let v1_mag = Math.sqrt((v1[0] * v1[0] + v1[1] * v1[1]));
+            let v2_mag = Math.sqrt((v2[0] * v2[0] + v2[1] * v2[1]));
+            v1 = [v1[0] / v1_mag, v1[1] / v1_mag];
+            v2 = [v2[0] / v2_mag, v2[1] / v2_mag];
+            this.eigvals = [e1, e2];
+            this.eigvecs = [v1, v2];
+            this.refresh();
+        }
+        eigenVectors() {
+            return Array.from(this.eigvecs);
+        }
+        eigenValues() {
+            return Array.from(this.eigvals);
+        }
+        meanVal() {
+            return Array.from(this.mean);
+        }
+        covMatrix() {
+            return Array.from(this.cov);
+        }
+    }
+    exports.Gaussian2D = Gaussian2D;
+});
+define("view/gaussian", ["require", "exports", "d3", "jquery"], function (require, exports, d3, $) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class SVGGaussian2D {
+        constructor(name, svgElement, gaussian, bounds, conf) {
+            this.name = name;
+            this.svg = svgElement;
+            this.gaussian = gaussian;
+            this.conf = conf;
+            this.bounds = bounds;
+            gaussian.addListener(this);
+        }
+        refresh() {
+            let pad = this.conf.padding;
+            let svgWidth = $(this.svg).width();
+            let svgHeight = $(this.svg).height();
+            let viewBoxSideLength = Math.min(svgWidth, svgHeight) - 2 * pad;
+            let xOffset = (svgWidth - viewBoxSideLength) / 2;
+            let yOffset = (svgHeight - viewBoxSideLength) / 2;
+            let wScale = d3.scaleLinear().domain([this.bounds[0][0], this.bounds[0][1]]).range([0, viewBoxSideLength]);
+            let hScale = d3.scaleLinear().domain([this.bounds[1][0], this.bounds[1][1]]).range([0, viewBoxSideLength]);
+            this.pad = pad;
+            this.width = svgWidth;
+            this.height = svgHeight;
+            this.viewBoxSideLength = viewBoxSideLength;
+            this.xOffset = xOffset;
+            this.yOffset = yOffset;
+            let gaussScale = 32;
+            let colors = this.conf.colors[this.name];
+            if (colors == undefined) {
+                colors = this.conf.colors["default"];
+            }
+            function absX(relX) {
+                return xOffset + wScale(relX);
+            }
+            function absY(relY) {
+                return svgHeight - yOffset - hScale(relY);
+            }
+            let pcomponents = this.gaussian.eigenVectors();
+            let mean = this.gaussian.meanVal();
+            let v1 = pcomponents[0];
+            let v2 = pcomponents[1];
+            let pscales = this.gaussian.eigenValues();
+            let rx = pscales[0];
+            let ry = pscales[1];
+            let angle = (v1[0] == v2[0]) ? 0 : Math.atan((v1[1] - v2[1]) / (v1[0] - v2[0]));
+            let data = Array.from({ length: colors.length }, (v, k) => {
+                k = colors.length - k - 1;
+                return {
+                    "cx": absX(mean[0]),
+                    "cy": absY(mean[1]),
+                    "rx": (rx * gaussScale * k),
+                    "ry": (ry * gaussScale * k),
+                    "theta": angle,
+                    "color": colors[k],
+                };
+            });
+            d3.select(this.svg)
+                .selectAll(".levelCurve ." + this.name)
+                .remove();
+            d3.select(this.svg)
+                .selectAll(".levelCurve ." + this.name)
+                .data(data)
+                .enter()
+                .append("ellipse")
+                .attr("rx", (d) => d.rx)
+                .attr("ry", (d) => d.ry)
+                .attr("cx", (d) => d.cx)
+                .attr("cy", (d) => d.cy)
+                .attr("transform", (d) => "rotate(" + d.theta + "rad)")
+                .attr("fill", (d) => d.color);
+        }
+        assign(mean, cov) {
+            this.gaussian.assign(mean, cov);
+        }
+    }
+    exports.SVGGaussian2D = SVGGaussian2D;
+});
+define("main", ["require", "exports", "view/binarytree", "view/histogram", "view/entropy", "view/transport", "view/heatmap", "model/bins", "model/heatmap", "d3", "model/model", "model/gaussian", "view/gaussian"], function (require, exports, tree, hist, ent, transport, hm, histModel, matModel, d3, model, gaussian_1, gaussian_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function main() {
@@ -1608,6 +1750,9 @@ define("main", ["require", "exports", "view/binarytree", "view/histogram", "view
         phantom.setAll(2);
         let phanthist = new hist.SVGPhantomHistogram("phist", "#phantomhist", m, phantom, conf);
         phanthist.refresh();
+        let g = new gaussian_1.Gaussian2D([1, 1], [[1, 0], [0, 1]]);
+        let svgG = new gaussian_2.SVGGaussian2D("gssn", "#gaussian", g, [[-1, 5], [-1, 5]], conf);
+        svgG.refresh();
     }
     exports.main = main;
     main();
