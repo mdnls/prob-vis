@@ -177,7 +177,7 @@
 
             <p>Like entropy, Earth Mover's distance relies on an abstraction to determine the distance between probability distributions, and in this case, that abstraction is the "transport plan."  Simply put, a transport plan is a literal blueprint for turning one distribution into another – for each event in the source distribution, it defines the locations and quantities in the target distribution to which some amount of "mass" should be transported.</p>
 
-            <div id="transport-interactive" class="col-12 vis-inset">
+            <div id="transport-interactive" class="col-6 mx-auto vis-inset">
                 <div class="h-75">
                         <div id="transport-ex-interactive" class="h-100">
         
@@ -188,7 +188,7 @@
             
             <p>In other words, the transport plan gives each of the source events its own distribution over the target events, shown in black in the diagram above. It may not be obvious at first, but these types of transport plans are exactly equivalent to a probabalistic joint distribution, where the source and target distributions are marginals. Here's the same transport plan, but this time represented as marginals of a joint distribution.</p>
 
-            <div id="transport-matrix-interactive" class="col-12 vis-inset-long" style="margin: 20px">
+            <div id="transport-matrix-interactive" class="col-6 mx-auto vis-inset-long" style="margin: 20px">
                 <div id="transport-matrix-ex-interactive" class="h-100">
 
                 </div>
@@ -207,7 +207,7 @@
 
             <p>Of course, this distance has more to do with a particular transport plan than it does with either of its marginal distributions. So, to convert transport cost into a distance function for probability distributions, we add the condition that $d(P, Q)$ is the minimum cost under all possible transport plans that convert $P$ to $Q$. This is similar to the earlier stipulation that Bob communicates events to Alice optimally, so that entropy has a meaningful value. For comparison, here is an optimal transport plan between the same two distributions as in the previous example:</p>
             
-            <div id="opt-transport-matrix-interactive" class="col-12 vis-inset-long" style="margin: 20px">
+            <div id="opt-transport-matrix-interactive" class="col-6 mx-auto vis-inset-long" style="margin: 20px">
                     <div id="opt-transport-matrix-ex-interactive" class="h-100">
     
                     </div>
@@ -229,7 +229,7 @@
             <button id="wgan-easy-play">Play</button>
             <button id="wgan-easy-pause">Pause</button>
             <button id="wgan-easy-reset">Reset</button>
-            
+
             <p>Paragraph: however there are cases when entropy breaks:</p>
             <p><b>Show animation of 2D convergence when distributions don't have the same support</b></p>
             <p>Paragraph: in particular, low dimensional manifolds are a "worst case" for entropy measures</p>

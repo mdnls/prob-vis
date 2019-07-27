@@ -1,18 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="764df277-1605-4ecf-863a-83b4602e625f" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wgan_nice_graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/wgan_nice_graph.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../public/bundle.js" beforeDir="false" afterPath="$PROJECT_DIR$/../public/bundle.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../public/bundle.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/../public/bundle.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/data.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../src/data.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/html/bundle.js" beforeDir="false" afterPath="$PROJECT_DIR$/../src/html/bundle.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/html/bundle.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/../src/html/bundle.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../src/main.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../src/view/gaussian.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../src/view/gaussian.ts" afterDir="false" />
-    </list>
+    <list default="true" id="764df277-1605-4ecf-863a-83b4602e625f" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,7 +43,7 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/wgan_nice_graph.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="375">
+            <state relative-caret-position="-121">
               <caret line="25" column="18" selection-start-line="25" selection-start-column="18" selection-end-line="25" selection-end-column="18" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
@@ -286,12 +275,12 @@
       <workItem from="1564093925054" duration="284000" />
       <workItem from="1564106559698" duration="1205000" />
       <workItem from="1564157708088" duration="467000" />
-      <workItem from="1564175178285" duration="7047000" />
+      <workItem from="1564175178285" duration="7436000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="28550000" />
+    <option name="totallyTimeSpent" value="28939000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
@@ -381,7 +370,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/wgan_nice_graph.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="375">
+        <state relative-caret-position="-121">
           <caret line="25" column="18" selection-start-line="25" selection-start-column="18" selection-end-line="25" selection-end-column="18" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
