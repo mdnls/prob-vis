@@ -127,6 +127,8 @@ export class SVGGaussian2D implements ModelListener {
 export class SVGAnimatedGaussian extends SVGGaussian2D {
     protected means: number[][];
     protected covs: number[][][];
+    protected curMean: number[];
+    protected curCov: number[][];
     protected frame: number;
     protected fps: number;
     protected timerId: NodeJS.Timer;
@@ -136,17 +138,35 @@ export class SVGAnimatedGaussian extends SVGGaussian2D {
         this.covs = covs;
         this.fps = fps;
         this.frame = 0;
+        this.curMean = this.means[0];
+        this.curCov = this.covs[0];
     }
 
     play() {
+        let alpha = 0.01;
         let i = 0;
+        let ewma_helper = function(arr: number[], prev: number[]) {
+            if(arr.length != 2 || arr.length != 2) {
+                throw RangeError("Must be length 2 input.");
+            }
+            return [
+                alpha * arr[0] + (1-alpha)*arr[0],
+                alpha * arr[1] + (1-alpha)*arr[1]
+            ];
+
+        }
         this.timerId = setInterval(() => { 
             if(this.frame >= this.means.length) {
                 this.pause();
                 this.reset();
                 return;
             }
-            this.assign(this.means[this.frame], this.covs[this.frame]); 
+            this.curMean = ewma_helper(this.means[this.frame], this.curMean);
+            this.curCov = [
+                ewma_helper(this.covs[this.frame][0], this.curCov[0]),
+                ewma_helper(this.covs[this.frame][1], this.curCov[1]),
+            ];
+            this.assign(this.curMean, this.curCov); 
             this.frame++;
         }, 1000/this.fps);
     }
@@ -158,6 +178,8 @@ export class SVGAnimatedGaussian extends SVGGaussian2D {
 
     reset() {
         this.frame = 0;
-        this.assign(this.means[this.frame], this.covs[this.frame]);
+        this.curMean = this.means[0];
+        this.curCov = this.covs[0];
+        this.assign(this.curMean, this.curCov);
     }
 }

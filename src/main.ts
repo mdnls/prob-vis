@@ -93,7 +93,7 @@ export function main() {
 
     let mean = optimizers["wganEasy"]["mean"];
     let cov = optimizers["wganEasy"]["cov"];
-    let svgGAnim = new SVGAnimatedGaussian("gssn", "#gaussian", 20, mean, cov, [[-1, 5], [-1, 5]], conf);
+    let svgGAnim = new SVGAnimatedGaussian("gssn", "#gaussian", 15, mean, cov, [[-1, 5], [-1, 5]], conf);
     svgGAnim.play();
 }
 main();

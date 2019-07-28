@@ -29,8 +29,7 @@ discriminator = Net([2, 128, 128, 128, 1], output="linear")
 generator = Net([2, 128, 128, 128, 2], output="linear")
 
 source = Gaussian(TARGET_M, TARGET_S)
-#unit = Gaussian(np.array([0]), np.array([[5]]))
-unit = Uniform(-1, 1, 2)
+unit = Gaussian(np.array([0, 0]), np.array([[1, 0], [0, 1]]))
 
 disc_optim = torch.optim.RMSprop(discriminator.parameters(), lr=LEARN_RATE)
 gen_optim = torch.optim.RMSprop(generator.parameters(), lr=LEARN_RATE)
