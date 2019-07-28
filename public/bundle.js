@@ -1483,15 +1483,15 @@ define("view/gaussian", ["require", "exports", "model/gaussian", "d3", "jquery"]
             this.curCov = this.covs[0];
         }
         play() {
-            let alpha = 0.01;
+            let alpha = 0.3;
             let i = 0;
             let ewma_helper = function (arr, prev) {
                 if (arr.length != 2 || arr.length != 2) {
                     throw RangeError("Must be length 2 input.");
                 }
                 return [
-                    alpha * arr[0] + (1 - alpha) * arr[0],
-                    alpha * arr[1] + (1 - alpha) * arr[1]
+                    alpha * arr[0] + (1 - alpha) * prev[0],
+                    alpha * arr[1] + (1 - alpha) * prev[1]
                 ];
             };
             this.timerId = setInterval(() => {

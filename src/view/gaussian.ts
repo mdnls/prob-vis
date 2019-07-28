@@ -143,15 +143,15 @@ export class SVGAnimatedGaussian extends SVGGaussian2D {
     }
 
     play() {
-        let alpha = 0.01;
+        let alpha = 0.3;
         let i = 0;
         let ewma_helper = function(arr: number[], prev: number[]) {
             if(arr.length != 2 || arr.length != 2) {
                 throw RangeError("Must be length 2 input.");
             }
             return [
-                alpha * arr[0] + (1-alpha)*arr[0],
-                alpha * arr[1] + (1-alpha)*arr[1]
+                alpha * arr[0] + (1-alpha)*prev[0],
+                alpha * arr[1] + (1-alpha)*prev[1]
             ];
 
         }
