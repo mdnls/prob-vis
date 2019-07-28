@@ -1755,10 +1755,10 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
         registerAttn("#opt-transport-matrix-interactive", optInteractiveTransportMatrixHandler);
         let wEMean = data_1.optimizers["wganEasy"]["mean"];
         let wECov = data_1.optimizers["wganEasy"]["cov"];
-        let svgWEAnim = new gaussian_2.SVGAnimatedGaussian("wgan-easy", "#wgan-easy-optim-ex", 15, wEMean, wECov, [[-1, 5], [-1, 5]], conf);
+        let svgWEAnim = new gaussian_2.SVGAnimatedGaussian("wgan-easy", "#wgan-easy-optim-ex", 15, wEMean, wECov, [[-2, 4], [-2, 4]], conf);
         let gEMean = data_1.optimizers["ganEasy"]["mean"];
         let gECov = data_1.optimizers["ganEasy"]["cov"];
-        let svgGEAnim = new gaussian_2.SVGAnimatedGaussian("gan-easy", "#gan-easy-optim-ex", 15, gEMean, gECov, [[-1, 5], [-1, 5]], conf);
+        let svgGEAnim = new gaussian_2.SVGAnimatedGaussian("gan-easy", "#gan-easy-optim-ex", 15, gEMean, gECov, [[-2, 4], [-2, 4]], conf);
         $("#gan-comp-easy-play").click(() => { svgWEAnim.play(); svgGEAnim.play(); });
         $("#gan-comp-easy-pause").click(() => { svgWEAnim.pause(); svgGEAnim.pause(); });
         $("#gan-comp-easy-reset").click(() => { svgWEAnim.reset(); svgGEAnim.reset(); });
