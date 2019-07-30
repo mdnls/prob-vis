@@ -7,9 +7,9 @@ import { chisqr1, chisqr2, entropyExs, xEntropyExs, transportEx, simpleHist, opt
 import { SVGPhantomHistogram, SVGHistogram } from "./view/histogram";
 import { SVGInteractiveEntropy, SVGInteractiveCrossEntropy } from "./view/entropy";
 import { SVGIndicatorTransport, SVGTransportMatrix } from "./view/transport";
-import { SVGAnimatedGaussian } from "./view/gaussian"
+import { SVGAnimatedGaussian, SVGAnimatedPoints } from "./view/gaussian"
 import { CONF, Model } from "./model/model";
-import { Gaussian2D } from "./model/gaussian";
+import { Gaussian2D, Line2D } from "./model/gaussian";
 import { SVGLabeledBinaryTree, SVGBinaryTree } from "./view/binarytree";
 // This script controls all of the animations in the article
 
@@ -308,20 +308,38 @@ function setupIntro() {
     let wECov = optimizers["wganEasy"]["cov"];
     let wETargetMean = optimizers["wganEasy"]["targetMean"];
     let wETargetCov = optimizers["wganEasy"]["targetCov"];
-    let wTarget = new Gaussian2D(wETargetMean, wETargetCov);
+    let wETarget = new Gaussian2D(wETargetMean, wETargetCov);
 
-    let svgWEAnim = new SVGAnimatedGaussian("wgan-easy", "#wgan-easy-optim-ex", 15, wEMean, wECov, wTarget, [[-2, 4], [-2, 4]], conf);
+    let svgWEAnim = new SVGAnimatedGaussian("wgan-easy", "#wgan-easy-optim-ex", 15, wEMean, wECov, wETarget, [[-2, 4], [-2, 4]], conf);
 
     let gEMean = optimizers["ganEasy"]["mean"];
     let gECov = optimizers["ganEasy"]["cov"];
     let gETargetMean = optimizers["ganEasy"]["targetMean"];
     let gETargetCov = optimizers["ganEasy"]["targetCov"];
-    let gTarget = new Gaussian2D(gETargetMean, gETargetCov);
+    let gETarget = new Gaussian2D(gETargetMean, gETargetCov);
 
-    let svgGEAnim = new SVGAnimatedGaussian("gan-easy", "#gan-easy-optim-ex", 15, gEMean, gECov, gTarget, [[-2, 4], [-2, 4]], conf);
+    let svgGEAnim = new SVGAnimatedGaussian("gan-easy", "#gan-easy-optim-ex", 15, gEMean, gECov, gETarget, [[-2, 4], [-2, 4]], conf);
     $("#gan-comp-easy-play").click(() => { svgWEAnim.play(); svgGEAnim.play(); });
     $("#gan-comp-easy-pause").click(() => { svgWEAnim.pause(); svgGEAnim.pause(); });
     $("#gan-comp-easy-reset").click(() => { svgWEAnim.reset(); svgGEAnim.reset(); });
+
+    let wMPoints = optimizers["wganManifold"]["points"];
+    let wMTargetMean = optimizers["wganManifold"]["targetMean"];
+    let wMTargetSlope = optimizers["wganManifold"]["targetSlope"];
+    let wMTarget = new Line2D(wMTargetSlope, wMTargetMean);
+
+    let svgWMAnim = new SVGAnimatedPoints("wgan-manifold", "#wgan-manifold-optim-ex", 15, wMPoints, wMTarget, [[-2, 4], [-2, 4]], conf);
+
+    let gMPoints = optimizers["ganManifold"]["points"];
+    let gMTargetMean = optimizers["ganManifold"]["targetMean"];
+    let gMTargetSlope = optimizers["ganManifold"]["targetSlope"];
+    let gMTarget = new Line2D(gMTargetSlope, gMTargetMean);
+
+    let svgGMAnim = new SVGAnimatedPoints("wgan-manifold", "#wgan-manifold-optim-ex", 15, gMPoints, gMTarget, [[-2, 4], [-2, 4]], conf);
+
+    $("#gan-comp-manifold-play").click(() => { svgWMAnim.play(); svgGMAnim.play(); });
+    $("#gan-comp-manifold-pause").click(() => { svgWMAnim.pause(); svgGMAnim.pause(); });
+    $("#gan-comp-manifold-reset").click(() => { svgWMAnim.reset(); svgGMAnim.reset(); });
 }   
 
 main();

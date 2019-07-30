@@ -208,6 +208,7 @@ export class SVGAnimatedGaussian extends SVGGaussian2D implements Animated {
 
 export class SVGAnimatedPoints implements Animated {
     protected points: number[][][];
+    protected curpoints: [number, number][];
     protected target: Line2D;
     protected name: string;
     protected svg: string;
@@ -225,6 +226,7 @@ export class SVGAnimatedPoints implements Animated {
         this.points = points;
         this.bounds = bounds;
         this.conf = conf;
+        this.curpoints = points[0].map((p) => [p[0], p[1]]);
 
         this.frame = 0;
 
@@ -290,6 +292,19 @@ export class SVGAnimatedPoints implements Animated {
             end = [v2*x_slope + x_int, v2*y_slope + y_int];
         }
 
+        let alpha = 0.3;
+        let i = 0;
+        let ewma_helper = function(arr: number[], prev: number[]): [number, number] {
+            if(arr.length != 2 || arr.length != 2) {
+                throw RangeError("Must be length 2 input.");
+            }
+            return [
+                alpha * arr[0] + (1-alpha)*prev[0],
+                alpha * arr[1] + (1-alpha)*prev[1]
+            ];
+
+        }
+
         this.timerId = setInterval(() => { 
             if(this.frame < this.points.length) {
                 let target = this.target;
@@ -313,24 +328,24 @@ export class SVGAnimatedPoints implements Animated {
                     .attr("stroke-width", 1);
 
                 let lineFn = d3.line()
-                                .x((d) => d[0])
-                                .y((d) => d[1])
+                                .x((d) => absX(d[0]))
+                                .y((d) => absY(d[1]))
                                 .curve(d3.curveBasis);
                     
-                let n: [number, number][] = this.points[this.frame].map((p) => [absX(p[0]), absY(p[1])]);
                 
+                let c = this.curpoints.map((p, k) => ewma_helper(this.points[this.frame][k], p))
                 d3.select(this.svg)
                     .select("#dataLine")
                     .remove();
                 d3.select(this.svg)
                     .append("path")
-                    .attr("d", lineFn(n))
+                    .attr("d", lineFn(c))
                     .attr("id", "dataLine")
-                    .attr("stroke", "red")
+                    .attr("stroke", colors[0])
                     .attr("stroke-width", 2)
                     .attr("fill", "none");
                     
-                
+                this.curpoints = c;
                 this.frame++;
             }
             else {

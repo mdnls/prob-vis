@@ -13,7 +13,8 @@
                 Macros: {
                     expected: ["{\\mathbb{E}[#1]}", 1],
                     expectedunder: ["{\\mathbb{E}_{#1}[#2]}", 2],
-                    xp: ["x^{(#1)}_{#2}", 2]
+                    xp: ["x^{(#1)}_{#2}", 2],
+                    hvec: ["\\langle {#1} \\rangle", 1]
                 }
             }
         });
@@ -30,17 +31,26 @@
             <p><b>You can interact with elements on this page by tapping on them, clicking on them, and using the arrow keys.</b></p>
         </div>
         
-        <h2>
-            Table of Contents
-        </h2>
-        <ul>
-            <li><p>Entropy of a Probability Distribution</p></li>
-            <li><p>Relative Entropy</p></li>
-            <li><p>Transport Plans</p></li>
-            <li><p>Earthmover's Distance</p></li>
-            <li><p>Fitting "Nice" Distributions</p></li>
-            <li><p>Fitting "Real" Distributions</p></li>
-        </ul>
+        
+        <!-- 1. Sell out -->
+        <div id="gan-comp-easy" class="col-12 vis-inset-long">
+            <div class="row h-100 anim">
+                <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
+                    <svg id="wgan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
+                        
+                    </svg>
+                </div>
+                <div class="col-6 h-100" style="padding: 20px 20px 20px 10px">
+                    <svg id="gan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
+                        
+                    </svg>
+                </div>
+            </div>
+            
+            <button id="gan-comp-easy-play">Play</button>
+            <button id="gan-comp-easy-pause">Pause</button>
+            <button id="gan-comp-easy-reset">Reset</button>
+        </div>
         
         <div id="intro">
             <h2>
@@ -108,13 +118,13 @@
             </p>
             <p>To understand why, we can explore the process behind constructing an optimal code. First, since entropy is an average over codes for different events, it is helpful to focus on a single event $x_i$ and assume the other events $x_j$ are are just copies that occur with equal likelihood. Then, interpreting $P(x_i)$ as a ratio* $\frac{s_{x_i}}{N}$, we see that $\frac{1}{P(x)} = \frac{N}{s_{x_i}}$ is the number of unique outcomes that we need to distinguish with our code. Each outcome corresponds to all events of a particular $x_i$, which we assume occurs with frequency $s_{x_i}$ out of $N$ trials. </p>
             <p>To distinguish between these outcomes, we want binary codes of minimal length that can represent $N^* = \frac{1}{P(x_i)}$ different outcomes. The codes can be visualized as paths in a binary decision tree:</p>
-
+            
             <div id="labeled-tree" class="vis-inset-medium col-8 offset-2">
                 <svg id="labeled-tree-ex" class="h-100 w-100">
-
+                    
                 </svg>
             </div>
-
+            
             <p>Each layer of the tree represents one bit, and the leaves are distinct outcomes. Adding a layer increases the number of leaves exponentially, so the minimal code length is $d = \log_2 N^* $.</p>
             
             <p>This means that we can trivially construct an optimal coding when all events have the same likelihood. According to the rule of thumb, this case has the highest entropy of all distributions with $N^*$ outcomes. So, we can now consider the effect of introducing a non-uniform distribution over the outcomes and verify that this is indeed the case.</p>
@@ -238,8 +248,9 @@
                 Earlier, we introduced the assumption that typical data tends to lie in a low dimensional manifold. We can now analyze the expected behavior of JSD and EM in this setting. 
             </p>
             
+            <p>$\rangle$</p>
             <p>
-                First, lets consider what a simple manafold distribution might actually look like. Consider a distribution $P$ in $\mathbf{R}^2$ that assigns uniform probability to points in the closed line segment starting at $\vec{a} = <a_1, a_2>$ and ending at $\vec{b} = <b_1, b_2>$. This distribution lies on a $1$-dimensional manifold in $\mathbf{R}^2$ – if we want, we can parametetrize line segment as $f_P(t) = t \vec{a} + (1-t) \vec{b}$, for $t \in [0, 1]$, so that $t$ is our single factor of variation. Then, the probability of drawing a point on the segment from $f(t_1)$ to $f(t_2)$ is just $\frac{\vert t_2 - t_1 \vert}{1} = \vert t_2 - t_1 \vert$.  
+                First, lets consider what a simple manafold distribution might actually look like. Consider a distribution $P$ in $\mathbf{R}^2$ that assigns uniform probability to points in the closed line segment starting at $\vec{a} = \hvec{a_1, a_2}$ and ending at $\vec{b} = \hvec{b_1, b_2}$. This distribution lies on a $1$-dimensional manifold in $\mathbf{R}^2$ – if we want, we can parametetrize line segment as $f_P(t) = t \vec{a} + (1-t) \vec{b}$, for $t \in [0, 1]$, so that $t$ is our single factor of variation. Then, the probability of drawing a point on the segment from $f(t_1)$ to $f(t_2)$ is just $\frac{\vert t_2 - t_1 \vert}{1} = \vert t_2 - t_1 \vert$.  
             </p>
             
             <p>
@@ -265,6 +276,25 @@
             <p>
                 Meanwhile, this case is nothing special for Earth Mover's distance. As long as the euclidean distance is defined between pair
             </p>
+                        
+            <div id="gan-comp-manifold" class="col-12 vis-inset-long">
+                <div class="row h-100 anim">
+                    <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
+                        <svg id="wgan-manifold-optim-ex" class="col-12 h-100" style="padding: 0px">
+                            
+                        </svg>
+                    </div>
+                    <div class="col-6 h-100" style="padding: 20px 20px 20px 10px">
+                        <svg id="gan-manifold-optim-ex" class="col-12 h-100" style="padding: 0px">
+                            
+                        </svg>
+                    </div>
+                </div>
+                
+                <button id="gan-comp-manifold-play">Play</button>
+                <button id="gan-comp-manifold-pause">Pause</button>
+                <button id="gan-comp-manifold-reset">Reset</button>
+            </div>
         </div>
         <div id="convergence">
             <h2>How does this distinction affect training of generative models?</h2>
@@ -286,34 +316,15 @@
                 Similarly, the more recent WGAN paper presents a similar training methodology, where training steps applied to the discriminator turn it into a differentiable approximation of the EM distance between $P_\theta$ and $P_d$.
             </p>
             
-            <div id="gan-comp-easy" class="col-12 vis-inset-long">
-                <div class="row h-100 anim">
-                    <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
-                        <svg id="wgan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
-                            
-                        </svg>
-                    </div>
-                    <div class="col-6 h-100" style="padding: 20px 20px 20px 10px">
-                        <svg id="gan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
-                            
-                        </svg>
-                    </div>
-                </div>
+            
+            <div id="conclusion">
+                <h2>Conclusion</h2>
             </div>
             
-            <button id="gan-comp-easy-play">Play</button>
-            <button id="gan-comp-easy-pause">Pause</button>
-            <button id="gan-comp-easy-reset">Reset</button>
+            <div id="citations">
+                <ol>
+                    <li>Goodfellow Paper</li>
+                </ol>
+            </div>
         </div>
-        
-        <div id="conclusion">
-            <h2>Conclusion</h2>
-        </div>
-        
-        <div id="citations">
-            <ol>
-                <li>Goodfellow Paper</li>
-            </ol>
-        </div>
-    </div>
-</body>
+    </body>
