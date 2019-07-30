@@ -1,5 +1,6 @@
 import { ModelListener, CONF } from "../model/model";
-import {Gaussian2D} from "../model/gaussian";
+import {Gaussian2D, Line2D} from "../model/gaussian";
+import {Animated} from "./animated";
 import * as d3 from "d3";
 import * as $ from "jquery";
 
@@ -9,6 +10,7 @@ export class SVGGaussian2D implements ModelListener {
     protected name: string;
     protected svg: string;
     protected bounds: number[][];
+    protected strokeOnly: boolean;
 
     width: number;
     height: number;
@@ -17,17 +19,20 @@ export class SVGGaussian2D implements ModelListener {
     yOffset: number;
     pad: number;
 
+
     constructor(name: string, svgElement: string, gaussian: Gaussian2D, bounds: number[][], conf: CONF) {
         this.name = name;
         this.svg = svgElement;
         this.gaussian = gaussian;
         this.conf = conf;
         this.bounds = bounds;
+        this.strokeOnly = false;
         gaussian.addListener(this);
 
-        d3.select(this.svg)
-            .append("text")
-            .attr("id", "thetaLog");
+    }
+
+    stroke(onOff: boolean): void {
+        this.strokeOnly = onOff;
     }
 
     refresh() {
@@ -82,9 +87,6 @@ export class SVGGaussian2D implements ModelListener {
         let ry = pscales[1];
         let angle = ((v1[0] == 0) ? Math.PI : - Math.atan( v1[1] / v1[0] ));
 
-        d3.select("#thetaLog")
-        .text(180 * angle / Math.PI);
-
         let data = Array.from({length: colors.length}, (v, k) => {
             k = colors.length - k - 1;
             return {
@@ -102,6 +104,7 @@ export class SVGGaussian2D implements ModelListener {
           .selectAll("." + this.name)
           .remove();
         
+        let strokeOnly = this.strokeOnly;
         d3.select(this.svg)
           .selectAll(".levelCurve ." + this.name)
           .data(data)
@@ -112,7 +115,9 @@ export class SVGGaussian2D implements ModelListener {
           .attr("cx", (d) => d.cx)
           .attr("cy", (d) => d.cy)
           .attr("transform", (d) => "rotate(" + Math.floor(180 * d.theta / Math.PI) + " " + d.cx + " " + d.cy + ")")
-          .attr("fill", (d) => d.color)
+          .attr("fill", (d) => strokeOnly ? "none" : d.color)
+          .attr("stroke", (d) => "#000")
+          .attr("stroke-width", (d) => strokeOnly ? 2 : 1)
           .attr("class", "levelCurve " + this.name);
 
     }
@@ -124,22 +129,34 @@ export class SVGGaussian2D implements ModelListener {
 
 
 
-export class SVGAnimatedGaussian extends SVGGaussian2D {
+export class SVGAnimatedGaussian extends SVGGaussian2D implements Animated {
     protected means: number[][];
     protected covs: number[][][];
+    protected svgTarget: SVGGaussian2D;
     protected curMean: number[];
     protected curCov: number[][];
     protected frame: number;
     protected fps: number;
     protected timerId: NodeJS.Timer;
-    constructor(name: string, svgElement: string, fps: number, means: number[][], covs: number[][][], bounds: number[][], conf: CONF) {
+    constructor(name: string, svgElement: string, fps: number, 
+            means: number[][],
+            covs: number[][][], 
+            target: Gaussian2D,
+            bounds: number[][],
+            conf: CONF) {
         super(name, svgElement, new Gaussian2D(means[0], covs[0]), bounds, conf);
         this.means = means;
         this.covs = covs;
+        this.svgTarget = new SVGGaussian2D(this.name + "-target", svgElement, target, bounds, conf);
         this.fps = fps;
         this.frame = 0;
         this.curMean = this.means[0];
         this.curCov = this.covs[0];
+
+        this.svgTarget.stroke(true);
+        this.stroke(false);
+
+        this.svgTarget.refresh();
     }
 
     play() {
@@ -156,19 +173,23 @@ export class SVGAnimatedGaussian extends SVGGaussian2D {
 
         }
         this.timerId = setInterval(() => { 
-            if(this.frame >= this.means.length) {
-                this.pause();
-                this.reset();
-                return;
+            if(this.frame < this.means.length) {
+                this.curMean = ewma_helper(this.means[this.frame], this.curMean);
+                this.curCov = [
+                    ewma_helper(this.covs[this.frame][0], this.curCov[0]),
+                    ewma_helper(this.covs[this.frame][1], this.curCov[1]),
+                ];
+                this.assign(this.curMean, this.curCov); 
+                this.frame++;
+    
+                this.svgTarget.refresh();
             }
-            this.curMean = ewma_helper(this.means[this.frame], this.curMean);
-            this.curCov = [
-                ewma_helper(this.covs[this.frame][0], this.curCov[0]),
-                ewma_helper(this.covs[this.frame][1], this.curCov[1]),
-            ];
-            this.assign(this.curMean, this.curCov); 
-            this.frame++;
+            else {
+                // do nothing ie freeze the animation at the last frame
+                this.pause();
+            }
         }, 1000/this.fps);
+        
     }
 
     pause() {
@@ -181,5 +202,151 @@ export class SVGAnimatedGaussian extends SVGGaussian2D {
         this.curMean = this.means[0];
         this.curCov = this.covs[0];
         this.assign(this.curMean, this.curCov);
+    }
+}
+
+
+export class SVGAnimatedPoints implements Animated {
+    protected points: number[][][];
+    protected target: Line2D;
+    protected name: string;
+    protected svg: string;
+    protected fps: number; 
+    protected bounds: number[][];
+    protected conf: CONF;
+    protected timerId: NodeJS.Timer;
+    protected frame: number;
+
+    constructor(name: string, svgElement: string, fps: number, points: number[][][], target: Line2D, bounds: number[][], conf: CONF) {
+        this.target = target;
+        this.name = name;
+        this.svg = svgElement;
+        this.fps = fps;
+        this.points = points;
+        this.bounds = bounds;
+        this.conf = conf;
+
+        this.frame = 0;
+
+        d3.select(this.svg)
+            .append("line")
+            .attr("id", "targetLine");
+    }
+
+    play() {
+        let svgWidth = $(this.svg).width();
+        let svgHeight = $(this.svg).height();
+
+        let viewBoxSideLength = Math.min(svgWidth, svgHeight);
+        let xOffset = (svgWidth - viewBoxSideLength)/2;
+        let yOffset = (svgHeight - viewBoxSideLength)/2;
+
+        let wScale = d3.scaleLinear().domain([this.bounds[0][0], this.bounds[0][1]]).range([0, viewBoxSideLength]);
+        let hScale = d3.scaleLinear().domain([this.bounds[1][0], this.bounds[1][1]]).range([0, viewBoxSideLength]);
+
+        let colors = this.conf.colors[this.name];
+        if(colors == undefined) {
+            colors = this.conf.colors["default"];
+        }
+
+        function absX(relX: number) {
+            return xOffset + wScale(relX);
+        }
+        function absY(relY: number) {
+            return svgHeight - yOffset - hScale(relY);
+        }
+
+        // get target line coordinates by finding where it intersects the boundaries, like that trick in SMO
+
+        let start: number[] = [];
+        let end: number[] = [];
+
+        let x_low = this.bounds[0][0];
+        let x_high = this.bounds[0][1];
+        let y_low = this.bounds[1][0];
+        let y_high = this.bounds[1][1];
+        let x_slope = this.target.slope()[0];
+        let y_slope = this.target.slope()[1];
+        let x_int = this.target.intercept()[0];
+        let y_int = this.target.intercept()[1];
+
+        let u1 = (x_low - x_int)/x_slope;
+        let u2 = (y_low - y_int)/y_slope;
+        
+        if(u1*x_slope + x_int > u2*x_slope + x_int) {
+            start = [u1*x_slope + x_int, u1*y_slope + y_int]
+        }
+        else {
+            start = [u2*x_slope + x_int, u2*y_slope + y_int]
+        }
+
+        let v1 = (x_high - x_int) / x_slope;
+        let v2 = (y_high - y_int) / y_slope;
+        
+        if(v1*x_slope + x_int < v2*x_slope + x_int) {
+            end = [v1*x_slope + x_int, v1*y_slope + y_int];
+        } 
+        else {
+            end = [v2*x_slope + x_int, v2*y_slope + y_int];
+        }
+
+        this.timerId = setInterval(() => { 
+            if(this.frame < this.points.length) {
+                let target = this.target;
+    
+                d3.select(this.svg)
+                    .selectAll(".point")
+                    .remove();
+    
+                d3.select(this.svg)
+                    .select("#targetLine")
+                    .remove();
+                
+                d3.select(this.svg)
+                    .append("line")
+                    .attr("id", "targetLine")
+                    .attr("x1", absX(start[0]))
+                    .attr("x2", absX(end[0]))
+                    .attr("y1", absY(start[1]))
+                    .attr("y2", absY(end[1]))
+                    .attr("stroke", "rgba(0, 0, 0, 0.5)")
+                    .attr("stroke-width", 1);
+
+                let lineFn = d3.line()
+                                .x((d) => d[0])
+                                .y((d) => d[1])
+                                .curve(d3.curveBasis);
+                    
+                let n: [number, number][] = this.points[this.frame].map((p) => [absX(p[0]), absY(p[1])]);
+                
+                d3.select(this.svg)
+                    .select("#dataLine")
+                    .remove();
+                d3.select(this.svg)
+                    .append("path")
+                    .attr("d", lineFn(n))
+                    .attr("id", "dataLine")
+                    .attr("stroke", "red")
+                    .attr("stroke-width", 2)
+                    .attr("fill", "none");
+                    
+                
+                this.frame++;
+            }
+            else {
+                // do nothing ie freeze the animation at the last frame
+                this.pause();
+            }
+
+        }, 1000/this.fps);
+    }
+
+    pause() {
+        clearInterval(this.timerId);
+        delete this.timerId;
+    }
+
+    reset() {
+        this.frame = 0;
     }
 }

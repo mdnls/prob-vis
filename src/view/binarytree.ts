@@ -26,7 +26,9 @@ export class SVGBinaryTree implements ModelListener {
     height: number;
     viewBoxWidth: number;
     viewBoxHeight: number;
- 
+    itemSize: number;
+    pad: number;
+
     /**
      * Draw a binary tree with some number of distinguishable (ie. tied to a leaf) outcomes.
      * @param svgElement the selector for the svg element to draw in.
@@ -114,6 +116,8 @@ export class SVGBinaryTree implements ModelListener {
        this.height = svgHeight;
        this.viewBoxWidth = viewBoxWidth;
        this.viewBoxHeight = viewBoxHeight;
+       this.itemSize = itemSize;
+       this.pad = pad;
  
        function absX(relX: number) {
           return pad + wScale(relX);
@@ -173,7 +177,7 @@ export class SVGBinaryTree implements ModelListener {
 
       this.tree.treeMap(this.nodeColor, this.leafColor);
  
-       this.tree.treeMap(
+      this.tree.treeMap(
           (layerIdx, nodeIdx, node) => {
              addEdge(this.svg, node, node.left(), layerIdx + 1, 2 * nodeIdx);
              addEdge(this.svg, node, node.right(), layerIdx + 1, 2 * nodeIdx + 1);
@@ -208,3 +212,63 @@ export class SVGBinaryTree implements ModelListener {
     }
  }
  
+
+ export class SVGLabeledBinaryTree extends SVGBinaryTree {
+    constructor(svgElement: string, initialDepth: number, conf: CONF) {
+       super(svgElement, initialDepth, conf);
+    }
+
+    refresh() {
+      super.refresh();
+
+      let wScale = d3.scaleLinear().domain([0, 100]).range([0, this.viewBoxWidth])
+      let hScale = d3.scaleLinear().domain([0, 100]).range([0, this.viewBoxHeight]);
+
+      let pad = this.pad;
+      let itemSize = this.itemSize; 
+
+      function absX(relX: number) {
+         return pad + wScale(relX);
+      }
+      function absY(relY: number) {
+         return pad + hScale(relY);
+      }
+
+      d3.select(this.svg)
+         .selectAll(".edgeLabel")
+         .remove();
+
+      let fontSize = 12;
+      let labelPad = 4;
+      function addEdgeLabel(svg: string, parent: TreeItem, child: TreeItem) {
+         let isRightEdge = parent.x < child.x;
+         d3.select(svg)
+            .append("rect")
+            .attr("class", "edgeLabel")
+            .attr("x", (absX(parent.x + itemSize/2) + absX(child.x + itemSize/2)) /2 - fontSize/2 - labelPad/2)
+            .attr("y", (absY(parent.y + itemSize/2) + absY(child.y + itemSize/2)) /2 - fontSize + labelPad/2)
+            .attr("width", fontSize+labelPad)
+            .attr("height", fontSize+labelPad)
+            .attr("fill", "#FFF")
+            .attr("stroke", "#000")
+            .attr("rx", labelPad)
+            .attr("stroke-width", "1");
+
+         d3.select(svg)
+             .append("text")
+             .attr("class", "edgeLabel")
+             .attr("x", (absX(parent.x + itemSize/2) + absX(child.x + itemSize/2)) /2 )
+             .attr("y", (absY(parent.y + itemSize/2) + absY(child.y + itemSize/2)) /2 + labelPad/2)
+             .attr("text-anchor", "middle")
+             .attr("font-size", fontSize + "px")
+             .text(isRightEdge ? "1" : "0");
+       }
+
+       this.tree.treeMap(
+         (layerIdx, nodeIdx, node) => {
+            addEdgeLabel(this.svg, node, node.left());
+            addEdgeLabel(this.svg, node, node.right());
+         },
+         (layerIdx, leaf) => {});
+    }
+ }

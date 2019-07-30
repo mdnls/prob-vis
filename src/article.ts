@@ -9,6 +9,8 @@ import { SVGInteractiveEntropy, SVGInteractiveCrossEntropy } from "./view/entrop
 import { SVGIndicatorTransport, SVGTransportMatrix } from "./view/transport";
 import { SVGAnimatedGaussian } from "./view/gaussian"
 import { CONF, Model } from "./model/model";
+import { Gaussian2D } from "./model/gaussian";
+import { SVGLabeledBinaryTree, SVGBinaryTree } from "./view/binarytree";
 // This script controls all of the animations in the article
 
 
@@ -150,6 +152,10 @@ function setupIntro() {
     // Simple entropy example
     let mSimpleHist = Histogram.fromArray(simpleHist["hist"]);
     let hSimpleHist = new SVGHistogram("simple-entropy-ex", "#simple-entropy-ex", mSimpleHist, conf);
+
+    // Labeled Binary Tree
+    let labeledBinTree = new SVGLabeledBinaryTree("#labeled-tree-ex", 4, conf); //SVGLabeledBinaryTree("#labeled-tree-ex", 4, conf);
+    labeledBinTree.refresh();
 
     // Entropy example distributions
     let mLowEnt = Histogram.fromArray(entropyExs["lowEntropy"]);
@@ -300,11 +306,19 @@ function setupIntro() {
     // Optimizers
     let wEMean = optimizers["wganEasy"]["mean"];
     let wECov = optimizers["wganEasy"]["cov"];
-    let svgWEAnim = new SVGAnimatedGaussian("wgan-easy", "#wgan-easy-optim-ex", 15, wEMean, wECov, [[-2, 4], [-2, 4]], conf);
+    let wETargetMean = optimizers["wganEasy"]["targetMean"];
+    let wETargetCov = optimizers["wganEasy"]["targetCov"];
+    let wTarget = new Gaussian2D(wETargetMean, wETargetCov);
+
+    let svgWEAnim = new SVGAnimatedGaussian("wgan-easy", "#wgan-easy-optim-ex", 15, wEMean, wECov, wTarget, [[-2, 4], [-2, 4]], conf);
 
     let gEMean = optimizers["ganEasy"]["mean"];
     let gECov = optimizers["ganEasy"]["cov"];
-    let svgGEAnim = new SVGAnimatedGaussian("gan-easy", "#gan-easy-optim-ex", 15, gEMean, gECov, [[-2, 4], [-2, 4]], conf);
+    let gETargetMean = optimizers["ganEasy"]["targetMean"];
+    let gETargetCov = optimizers["ganEasy"]["targetCov"];
+    let gTarget = new Gaussian2D(gETargetMean, gETargetCov);
+
+    let svgGEAnim = new SVGAnimatedGaussian("gan-easy", "#gan-easy-optim-ex", 15, gEMean, gECov, gTarget, [[-2, 4], [-2, 4]], conf);
     $("#gan-comp-easy-play").click(() => { svgWEAnim.play(); svgGEAnim.play(); });
     $("#gan-comp-easy-pause").click(() => { svgWEAnim.pause(); svgGEAnim.pause(); });
     $("#gan-comp-easy-reset").click(() => { svgWEAnim.reset(); svgGEAnim.reset(); });

@@ -33,6 +33,9 @@ b {
 .vis-inset {
   height: 250px; }
 
+.vis-inset-medium {
+  height: 350px; }
+
 .vis-inset-long {
   height: 500px; }
 

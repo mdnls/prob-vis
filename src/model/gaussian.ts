@@ -1,5 +1,33 @@
 import { Model, ModelListener } from "./model";
 
+
+export class Line2D implements Model { 
+
+    private listeners: ModelListener[];
+    
+    protected m: number[];
+    protected b: number[];
+
+    constructor(slope: number[], intercept: number[]) {
+        this.m = slope;
+        this.b = intercept;
+    }
+
+    slope(): number[] {
+        return Array.from(this.m);
+    }
+
+    intercept(): number[] {
+        return Array.from(this.b);
+    }
+    
+    addListener(listener: ModelListener) {
+        this.listeners.push(listener);
+    }
+    refresh() {
+        this.listeners.forEach((l) => l.refresh());
+    }
+}
 export class Gaussian2D implements Model {
     private listeners: ModelListener[];
 

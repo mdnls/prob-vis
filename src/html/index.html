@@ -1,7 +1,7 @@
 <head>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script data-main="article" src="require.js"></script>
@@ -20,8 +20,8 @@
     </script>
     <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
-    </script>
-    <link rel="stylesheet" type="text/css" href="styles.css">
+</script>
+<link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
     <div class="container">
@@ -29,7 +29,7 @@
         <div class="atn">
             <p><b>You can interact with elements on this page by tapping on them, clicking on them, and using the arrow keys.</b></p>
         </div>
-
+        
         <h2>
             Table of Contents
         </h2>
@@ -41,20 +41,20 @@
             <li><p>Fitting "Nice" Distributions</p></li>
             <li><p>Fitting "Real" Distributions</p></li>
         </ul>
-
+        
         <div id="intro">
             <h2>
                 Introduction
             </h2>
-
+            
             <p>
                 Generative Adversarial Networks are a class of neural architectures that can produce high quality samples of structured, high dimensional data. In particular, GANs make the assumption that this data is controlled by a small number of "factors of variation," which themselves can be modelled with a simple parametric distribution. During training, they learn a map from the factors of variation to the data space – like predicting rain given the humidity and temperature. 
             </p>
-
+            
             <p>
-                 At its core, the training process relies on defining some notion of *distance* between a partially trained model and a hypothetical "optimal model" that can connect the factors of variation to the data perfectly. Minimizing this distance implies bringing the two closer together, so that eventually, you have a nearly perfect model. The feasibility of this process at scale depends on how we choose to determine this distance – for example, we *could* decide that two models either have distance zero if they are exactly the same, or infinite distance otherwise. In this case, if we don't already know the optimal model, this distance is neither computable nor informative. 
+                At its core, the training process relies on defining some notion of *distance* between a partially trained model and a hypothetical "optimal model" that can connect the factors of variation to the data perfectly. Minimizing this distance implies bringing the two closer together, so that eventually, you have a nearly perfect model. The feasibility of this process at scale depends on how we choose to determine this distance – for example, we *could* decide that two models either have distance zero if they are exactly the same, or infinite distance otherwise. In this case, if we don't already know the optimal model, this distance is neither computable nor informative. 
             </p>
-
+            
             <p>
                 Instead, this article will explore some of the more creative ways to define distances for GAN training, and in particular it will focus on the differences between information theoretic distance functions and Earth Mover's distance. EM has recently been proposed as improvement to information theoretic distances which can improve training stability and output quality in regimes that are typical for common GAN applications, and so it is important to understand the intuition behind why this is the case.
             </p>
@@ -74,17 +74,17 @@
                     <svg id="chisqr-1-right-svg" class="col-6"></svg>
                 </div>
             </div>
-
+            
             <p>When each bin matches exactly, the distance is zero, since the distribution over bins is the same. More importantly, if we make a small change to distribution $X$, by taking an <svg class="orange box"></svg> for example, this distance will reflect that change and decrease. We can use the distance as a guide to iteratively update $X$ until it matches $Y$. This is the approach that GANs take when approximating $P_d$, the true distribution over data, by the generator distribution $P_\theta$. The parameters $\theta$ are like the boxes, and the statistical distance function is the guide for manipulating $\theta$ to make $P_\theta$ faithful to $P_d$. </p>
-
+            
             <p>The Euclidean distance is good for illustrating this concept, but it isn't used in practice. The original GAN formulation was shown to reduce an upper bound of the Jenson Shannon divergence between $P_d$ and $P_\theta$, an information theoretic distance between distributions based on the idea of entropy. These GANs are infamous for their difficulty to train, and they typically require lots of fine tuning to be implemented successfully. Within the last two years, there has been increasing interest in Earth Mover's distance as a more stable alternative, and the rest of this post is about why.</p>
         </div>
-
+        
         <div id="entropy">
             <h2>
                 Entropy
             </h2>
-
+            
             <p>The Jenson Shannon Divergence (JSD) between two distributions is a distance function that has its roots in information entropy*. The intuition is that two distributions are similar whe you can communicate their events in similar ways. To formalize this idea, the abstraction at play is the "information channel." An observer Bob has an open channel to Alice, so that he can tell her about samples that he draws from a distribution $P_d$. For simplicity, we assume that Bob is communicating with bits, and that he and Alice have agreed ahead of time on their choice of codes. Under this abstraction, entropy is the minimum number of bits on average that Bob needs to tell Alice about which samples he observes from $P_d$. </p>
             <p>This quantity depends completely on the "shape" of $P_d$, and in turn it serves as a representation of that shape. For example, under a distribution where <svg class="maroon box"></svg>  and <svg class="blue box"></svg> are the only events that can happen, a single bit is enough for unambiguous communication, so the entropy is $1$.</p>
             <p>
@@ -108,33 +108,39 @@
             </p>
             <p>To understand why, we can explore the process behind constructing an optimal code. First, since entropy is an average over codes for different events, it is helpful to focus on a single event $x_i$ and assume the other events $x_j$ are are just copies that occur with equal likelihood. Then, interpreting $P(x_i)$ as a ratio* $\frac{s_{x_i}}{N}$, we see that $\frac{1}{P(x)} = \frac{N}{s_{x_i}}$ is the number of unique outcomes that we need to distinguish with our code. Each outcome corresponds to all events of a particular $x_i$, which we assume occurs with frequency $s_{x_i}$ out of $N$ trials. </p>
             <p>To distinguish between these outcomes, we want binary codes of minimal length that can represent $N^* = \frac{1}{P(x_i)}$ different outcomes. The codes can be visualized as paths in a binary decision tree:</p>
-            <p><b>Exhibit a binary tree and paths from root to leaf</b></p>
-            <p>Each layer of the tree represents one bit, and the leaves are distinct outcomes. Adding a layer increases the number of leaves exponentially, so the minimal code length is $d = \log_2 N^* $.</p>
 
-            <p>This means that we can trivially construct an optimal coding when all events have the same likelihood. According to the rule of thumb, this case has the highest entropy of all distributions with $N^*$ outcomes. So, we can now consider the effect of introducing a non-uniform distribution over the outcomes and verify that this is indeed the case.</p>
+            <div id="labeled-tree" class="vis-inset-medium col-8 offset-2">
+                <svg id="labeled-tree-ex" class="h-100 w-100">
 
-            <p>We start with the least likely event, say $\xp{1}{}$. As in the previous example, we can construct a uniform distribution of copy outcomes $\xp{1}{i}$ and assign codes with a decision tree of depth $\log_2 \frac{1}{\xp{1}{}}$. Then, to represent an outcome more likely than $\xp{1}{}$ – say, $\xp{2}{}$ – we can simply merge a few of the copies $\xp{1}{i}$, so that a path to any of them is an equivalent way to communicate $\xp{2}{}$. This is advantageous whenever we can find sibling copies to merge, since it allows us to save a bit by opting not to distinguish those siblings at all.</p>
-
-            <p><b>Simple diagram of replacing two $\xp{1}{}$ nodes with an $\xp{2}{}$ node.</b></p>
-
-            <p>Huffman codes implement this idea by constructing a tree from the bottom up, starting with nodes corresponding to the least likely events, $\xp{1}{i}$ and $\xp{1}{j}$. The algorithm creates an internal node to hold these outcomes as leafs, and it is returned to the pool of potential events as a representative of the union outcome $\xp{1}{i} \cup \xp{1}{j}$. Then, the procedure repeats. When, finally, an $\xp{2}{}$ is sucked in as a leaf, its sibling will be a union outcome that has greater depth, since $\xp{2}{}$ is hiding some implicit merged children. In the tree below, these implicit nodes are transparent, where the fully colored nodes are actual outcomes. </p>
-
-            <div id="entropy-interactive" class="vis-inset-long col-8 offset-2">
-                <div id="entropy-ex-interactive" class="h-100">
-
-                </div>
+                </svg>
             </div>
 
+            <p>Each layer of the tree represents one bit, and the leaves are distinct outcomes. Adding a layer increases the number of leaves exponentially, so the minimal code length is $d = \log_2 N^* $.</p>
+            
+            <p>This means that we can trivially construct an optimal coding when all events have the same likelihood. According to the rule of thumb, this case has the highest entropy of all distributions with $N^*$ outcomes. So, we can now consider the effect of introducing a non-uniform distribution over the outcomes and verify that this is indeed the case.</p>
+            
+            <p>We start with the least likely event, say $\xp{1}{}$. As in the previous example, we can construct a uniform distribution of copy outcomes $\xp{1}{i}$ and assign codes with a decision tree of depth $\log_2 \frac{1}{\xp{1}{}}$. Then, to represent an outcome more likely than $\xp{1}{}$ – say, $\xp{2}{}$ – we can simply merge a few of the copies $\xp{1}{i}$, so that a path to any of them is an equivalent way to communicate $\xp{2}{}$. This is advantageous whenever we can find sibling copies to merge, since it allows us to save a bit by opting not to distinguish those siblings at all.</p>
+            
+            <p><b>Simple diagram of replacing two $\xp{1}{}$ nodes with an $\xp{2}{}$ node.</b></p>
+            
+            <p>Huffman codes implement this idea by constructing a tree from the bottom up, starting with nodes corresponding to the least likely events, $\xp{1}{i}$ and $\xp{1}{j}$. The algorithm creates an internal node to hold these outcomes as leafs, and it is returned to the pool of potential events as a representative of the union outcome $\xp{1}{i} \cup \xp{1}{j}$. Then, the procedure repeats. When, finally, an $\xp{2}{}$ is sucked in as a leaf, its sibling will be a union outcome that has greater depth, since $\xp{2}{}$ is hiding some implicit merged children. In the tree below, these implicit nodes are transparent, where the fully colored nodes are actual outcomes. </p>
+            
+            <div id="entropy-interactive" class="vis-inset-long col-8 offset-2">
+                <div id="entropy-ex-interactive" class="h-100">
+                    
+                </div>
+            </div>
+            
             <p>Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log(\frac{1}{P(\xp{n}{})})$*, which will be an integer quantity. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events*, and the lower bound on the expected number of bits transferred is entropy:
-
+                
                 $$H(P) = \expectedunder{P}{\log{\frac{1}{x}}}$$
             </p>
             <h2>
                 Cross Entropy 
             </h2>
-
+            
             <p>Once you understand entropy as a characteristic of probability distributions, the cross entropy, Kullback–Leibler Divergence (KL), and Jenson Shannon Divergences are all short steps away. Starting with the definition of KL divergence, we can immediately see conections to the coding interpretation of entropy:</p>
-
+            
             <p>
                 $$
                 \begin{align}
@@ -143,11 +149,11 @@
                 & = \expectedunder{x \sim P}{d(q(x)) - d(p(x))}
                 \end{align}$$
             </p>
-
+            
             <p>This brings us back to the information theoretic perspective on distances between distributions: $P_d$ and $P_\theta$ are similar whe you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
-
+            
             <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$*. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. Still, getting the KL to zero requires equalizing the distributions. You can verify this yourself with the diagram below:</p>
-        
+            
             <div id="xentropy-interactive" class="col-12">
                 <div id="xentropy-ex-interactive" class="h-100">
                     
@@ -156,99 +162,154 @@
             <p>$KL(P\vert \vert Q)$ = <span id="kl-ex-val">_</span></p>
             
             <p>The last measurement, Jenson Shannon Divergence, is intended to solve a numerical stability problem with both Cross Entropy and KL, namely that neither are defined when either of $P(x)$ or $Q(x)$ is 0. When $P(x) = 0$, a simple solution is to just omit $x$ from the sum, as though $(0)(\log(0)) = 0$*. But if $Q(x) = 0$, this trick doesn't apply.</p>
-
+            
             <p>And, following the intuition behind KL, it shouldn't. If we want to know how much further in $Q$'s tree we have to travel to find some event $x$ in $P$'s tree, there is no good answer in this case, because $x$ doesn't exist in $Q$'s tree. JSD solves this problem by introducing a new distribution, $P_m(x) = \frac{P(x) + Q(x)}{2}$, that averages over the two. This guarantees that $P_m(x) \not = 0$ whenever either $Q(x) \not = 0$ or $P(x) \not = 0$. The quantity itself is also an average, over the KL divergences $D_{KL}(P \vert \vert P_m)$ and $D_{KL}(Q \vert \vert P_m)$.</p>
-
+            
             <p>
                 $$
                 P_m(x) = \frac{P(x) + Q(x)}{2} \\
                 JSD(P, Q) = \frac{1}{2}(D_{KL}(P \vert \vert P_m) + D_{KL}(Q \vert \vert P_m))
                 $$
             </p>
-
+            
             
             <p>Paragraph: there are many other ways to use this idea to create a distance between distributions: JSD, KL, XEnt, etc</p>
             <p>Paragraph: however, all of these share one problem: when $q(x)=0$, the tree for $q(x)$ assigns no path at all to $x$.</p>
             <p>Glue paragraph: instead, we can look at transport metrics [IPMs] which handle this issue more nicely</p>
         </div>
-
+        
         <div id="transport">
             <h2>Transport</h2>
-
+            
             <p>Like entropy, Earth Mover's distance relies on an abstraction to determine the distance between probability distributions, and in this case, that abstraction is the "transport plan."  Simply put, a transport plan is a literal blueprint for turning one distribution into another – for each event in the source distribution, it defines the locations and quantities in the target distribution to which some amount of "mass" should be transported.</p>
-
+            
             <div id="transport-interactive" class="col-6 mx-auto vis-inset">
                 <div class="h-75">
-                        <div id="transport-ex-interactive" class="h-100">
-        
-                        </div>
+                    <div id="transport-ex-interactive" class="h-100">
+                        
+                    </div>
                 </div>
             </div>
-
+            
             
             <p>In other words, the transport plan gives each of the source events its own distribution over the target events, shown in black in the diagram above. It may not be obvious at first, but these types of transport plans are exactly equivalent to a probabalistic joint distribution, where the source and target distributions are marginals. Here's the same transport plan, but this time represented as marginals of a joint distribution.</p>
-
+            
             <div id="transport-matrix-interactive" class="col-6 mx-auto vis-inset-long" style="margin: 20px">
                 <div id="transport-matrix-ex-interactive" class="h-100">
-
+                    
                 </div>
             </div>
-
+            
             
             <p>For each cell, its location $(i, j)$ indicates that the cell corresponds to source event $x_i$ and target event $x_j$. The joint distribution assigns a value $p(i, j) = s$, which can be interpreted as a transfer of $s$ units of "probability mass" from $x_i$ to $x_j$.</p>
-
+            
             <p>Before we can use a transport plan as a distance function, we need a way to squeeze a number out of it that represents the actual distance quantity. The most natural way is to assign a cost when each elements is transported, proportional both to the amount of mass being moved and to the distance it is moved over. Think of the actual costs involved in, for example, moving heavy boxes across the city – every mile traveled costs a certain amount of gas, and if you take one trip per box then the cost is multiplied by the total number of boxes. Provided that you can actually define a distance $d(x_i, x_j)$ between statistical events, you can use it define the cost of a transport plan in the same way: </p>
-
+            
             <p>
                 $$
-                C = \sum_{x_i, x_j} d(x_i, x_j) P(x_i, x_j)
+                C = \sum_{x_i, x_j} d(x_i, x_j) p(x_i, x_j)
                 $$
             </p>
-
-            <p>Of course, this distance has more to do with a particular transport plan than it does with either of its marginal distributions. So, to convert transport cost into a distance function for probability distributions, we add the condition that $d(P, Q)$ is the minimum cost under all possible transport plans that convert $P$ to $Q$. This is similar to the earlier stipulation that Bob communicates events to Alice optimally, so that entropy has a meaningful value. For comparison, here is an optimal transport plan between the same two distributions as in the previous example:</p>
+            
+            <p>Of course, this distance has more to do with a particular transport plan than it does with either of its marginal distributions. In order to define the Earth Mover's distance for probability distributions, we add the condition that $d(P, Q)$ is the minimum cost under all possible transport plans that convert $P$ to $Q$. This makes the quantity representative of the similarities between $P$ and $Q$, similar to how entropy becomes a meaningful value under the stipulation that Bob and Alice communicate to each other using optimal codes. So, the full formulation of EM is given by:
+            </p>
+            
+            <p>
+                $$ 
+                EM(P, Q) = \inf_{p \in \Gamma(P, Q)} [ \sum_{x_i, x_j} d(x_i, x_j) p(x_i, x_j) ]
+                $$
+            </p>
+            <p>where $\Gamma(P, Q)$ is the set of all joint distributions whose marginals are $P$ and $Q$.</p>
+            <p>For comparison, we can take the same two distributions in the previous example, and compute an optimal transport plan between them by searching over $\Gamma(P, Q)$.</p>
             
             <div id="opt-transport-matrix-interactive" class="col-6 mx-auto vis-inset-long" style="margin: 20px">
-                    <div id="opt-transport-matrix-ex-interactive" class="h-100">
-    
-                    </div>
+                <div id="opt-transport-matrix-ex-interactive" class="h-100">
+                    
+                </div>
             </div>
-            <p>This plan has a total cost of $30$ box-columns, where the original plan costs $70$ box-columns. Under the optimal plan, the nonzero cells in the joint distributions are clustered around the diagonal, since minimizing the transportation distance means bringing $i$ as close to $j$ as possible.</p>
-        
+            <p>This plan has a total cost of $30$ box-columns, where the original plan costs $70$ box-columns. Under the optimal plan, we see that the nonzero cells in the joint distributions are clustered around the diagonal, since minimizing the transportation distance means bringing $i$ as close to $j$ as possible.</p>
+            
+            <p>As a bonus, the EM Distance is more robust than the entropy based measurements. If $P(x_i) = 0$, then the transport plan just doesn't move any mass away from $x_i$, and if $Q(x_j) = 0$, the plan just doesn't move any mass to $x_j$. In either case, the only effect is that $p(x_i, x_j) = 0$ for all $x_i$ with $P(x_i) = 0$ and for all $Q(x_j) = 0$ – this is a general property of joint distributions.</p>
         </div>
-
+        
+        <div id="manifold">
+            <h2>Manifold Learning: The Pathological Case</h2>
+            <p>
+                Earlier, we introduced the assumption that typical data tends to lie in a low dimensional manifold. We can now analyze the expected behavior of JSD and EM in this setting. 
+            </p>
+            
+            <p>
+                First, lets consider what a simple manafold distribution might actually look like. Consider a distribution $P$ in $\mathbf{R}^2$ that assigns uniform probability to points in the closed line segment starting at $\vec{a} = <a_1, a_2>$ and ending at $\vec{b} = <b_1, b_2>$. This distribution lies on a $1$-dimensional manifold in $\mathbf{R}^2$ – if we want, we can parametetrize line segment as $f_P(t) = t \vec{a} + (1-t) \vec{b}$, for $t \in [0, 1]$, so that $t$ is our single factor of variation. Then, the probability of drawing a point on the segment from $f(t_1)$ to $f(t_2)$ is just $\frac{\vert t_2 - t_1 \vert}{1} = \vert t_2 - t_1 \vert$.  
+            </p>
+            
+            <p>
+                The distribution $P$ represents $P_d$, the distribution we want to match. For $P_\theta$, we introduce a second manifold distribution, $Q$. Like $P$, we will assume $Q$ is a line segment, this time connecting the points $\vec{u} = (u_1, u_2)$ and $\vec{v} = (v_1, v_2)$. This distribution has its own parametrized line segment, $f_Q(t) = t \vec{u} + (1-t) \vec{v}$.
+            </p>
+            
+            <p>
+                Because these two distributions lie in $1$ dimensional manifolds, they obviously can't have an intersection with more than $1$ dimension. This can only happen when $\vec{a}$, $\vec{b}$, $\vec{u}$, and $\vec{v}$ all lie on the same line together. Otherwise, even if they're just slightly misaligned, the intersection is either a single point or none at all.
+            </p>
+            
+            <p>
+                The effect is that any misalignment causes either $P(x)$ or $Q(x)$ to be $0$ at almost all points, except for the potential singleton point where $f_p(t) = f_q(t)$. This breaks KL, and really mangles JSD - tracing out its definition, we see that JSD is constant ...
+            </p>
+            
+            <p>
+                [math math math]
+            </p>
+            
+            <p>
+                Any incremental step of $Q \gets Q'$ that can't immediately fix the misalignment will also have $JSD(P\vert \vert Q')= \log(2)$, and this means that the gradient of JSD becomes $0$. It no longer gives any information about how to incrementally bring $Q$ to $P$, and so for manifold distributions JSD becomes as helpful as the binary distance. 
+            </p>
+            
+            <p>
+                Meanwhile, this case is nothing special for Earth Mover's distance. As long as the euclidean distance is defined between pair
+            </p>
+        </div>
         <div id="convergence">
             <h2>How does this distinction affect training of generative models?</h2>
-            <p>Paragraph: in general, training a generative model is feasible under either distance</p>
-            <p>Paragraph: For example, consider "nice" distributions:</p>
+            
+            <p>
+                When discussing entropy, we were able to build a rich understanding of the measurement by constructing the Huffman tree, and were in turn able to derive closed forms for Entropy, KL, and JSD. Unfortunately, Earth Mover's Distane is much mroe difficult to compute exactly, and there is no analogous closed form that we can use to compute EM between $P$ and $Q$ directly.
+                
+            </p>
+            <p>
+                Even if there were such a formula, there is another problem that has been glossed over up to this point: calculating the distance between $P_\theta$ and $P_d$ requires knowledge of $P_d (x)$, which we would typically not be able to calculate exactly. This in turn prevents us from calculating both the distance $d(P_\theta, P_d)$ and its gradient. No matter the computation power, reseource access, or network capacity, the key problem in training a GAN at scale is constructing a training scheme that can circumvent this calculation and still minimize a distance between $P_\theta$ and $P_d$.
+            </p>
+            <p>
+                In the original, and now famous method, a discriminator network $D(x)$ has the goal of predicting whether a given sample was generated by $P_d$. It is trained to maximize the joint log-likelihood of predicting false on $x \sim P_\theta(x)$ and true on $x^* \sim P_d(x)$, while the generator network $G(x)$ that induces $P_theta$ is simultaneously trained to maximize the likelihood that $x$ is predicted as true. 
+            </p>
+            <p>
+                The paper shows that, assuming $D(x)$ is optimal, this log likelihood loss is equivalent to JSD, up to a constant. That assumption isn't true during training, but partially maximizing the discriminator gives a good enough approximation that the generator can approach $P_d$.
+            </p>
+            <p>
+                Similarly, the more recent WGAN paper presents a similar training methodology, where training steps applied to the discriminator turn it into a differentiable approximation of the EM distance between $P_\theta$ and $P_d$.
+            </p>
+            
             <div id="gan-comp-easy" class="col-12 vis-inset-long">
                 <div class="row h-100 anim">
                     <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
                         <svg id="wgan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
-
+                            
                         </svg>
                     </div>
                     <div class="col-6 h-100" style="padding: 20px 20px 20px 10px">
                         <svg id="gan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
-
+                            
                         </svg>
                     </div>
                 </div>
             </div>
-
+            
             <button id="gan-comp-easy-play">Play</button>
             <button id="gan-comp-easy-pause">Pause</button>
             <button id="gan-comp-easy-reset">Reset</button>
-
-            <p>Paragraph: however there are cases when entropy breaks:</p>
-            <p><b>Show animation of 2D convergence when distributions don't have the same support</b></p>
-            <p>Paragraph: in particular, low dimensional manifolds are a "worst case" for entropy measures</p>
-            <p>Paragraph: images have this kind of distribution</p>
         </div>
-
+        
         <div id="conclusion">
             <h2>Conclusion</h2>
         </div>
-
+        
         <div id="citations">
             <ol>
                 <li>Goodfellow Paper</li>

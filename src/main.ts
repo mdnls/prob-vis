@@ -7,8 +7,8 @@ import histModel = require("model/bins");
 import matModel = require("./model/heatmap");
 import d3 = require("d3");
 import model = require("./model/model");
-import { Gaussian2D } from "./model/gaussian";
-import { SVGGaussian2D, SVGAnimatedGaussian } from "./view/gaussian";
+import { Gaussian2D, Line2D } from "./model/gaussian";
+import { SVGGaussian2D, SVGAnimatedGaussian, SVGAnimatedPoints } from "./view/gaussian";
 import { optimizers } from "./data";
 
 export function main() {
@@ -22,11 +22,9 @@ export function main() {
     let conf: model.CONF = new model.CONF(8, colors, 5);
     let m = new histModel.Histogram(8);
 
-    let vt = new tree.SVGBinaryTree("#treesvg", 4, conf);
-    vt.setDepth(6);
+    let vt = new tree.SVGLabeledBinaryTree("#treesvg", 4, conf);
+    vt.refresh();
 
-    let i = 0;
-    setInterval(() => {vt.setDepth((i++ % 6) + 1)}, 500);
 
     m.setAll(1);
 
@@ -91,9 +89,12 @@ export function main() {
     phanthist.refresh();
 
 
-    let mean = optimizers["wganEasy"]["mean"];
-    let cov = optimizers["wganEasy"]["cov"];
-    let svgGAnim = new SVGAnimatedGaussian("gssn", "#gaussian", 15, mean, cov, [[-1, 5], [-1, 5]], conf);
-    svgGAnim.play();
+    let mean = optimizers["wganManifold"]["targetMean"];
+    let slope = optimizers["wganManifold"]["targetSlope"];
+    let points = optimizers["wganManifold"]["points"];
+    let target = new Line2D(slope, mean);
+
+    let svgpts = new SVGAnimatedPoints("points", "#points", 20, points, target, [[-2, 4], [-2, 4]], conf);
+    svgpts.play();
 }
 main();
