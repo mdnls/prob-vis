@@ -20,6 +20,6 @@
     "watch": "npm run watch:scss & npm run watch:html",
     "watch:scss": "watch 'npm run build' src/scss",
     "watch:html": "watch 'npm run build' src/html",
-    "build": "node-sass src/scss -o public/ && cp src/html/* public/"
+    "build": "node-sass src/scss -o public/ && cp -r src/html/* public/"
   }
 }
