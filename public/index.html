@@ -121,7 +121,7 @@
             
             <p>We start with the least likely event, say $\xp{1}{}$. As in the previous example, we can construct a uniform distribution of copy outcomes $\xp{1}{i}$ and assign codes with a decision tree of depth $\log_2 \frac{1}{\xp{1}{}}$. Then, to represent an outcome more likely than $\xp{1}{}$ – say, $\xp{2}{}$ – we can simply merge a few of the copies $\xp{1}{i}$, so that a path to any of them is an equivalent way to communicate $\xp{2}{}$. This is advantageous whenever we can find sibling copies to merge, since it allows us to save a bit by opting not to distinguish those siblings at all.</p>
             
-            <p><b>Simple diagram of replacing two $\xp{1}{}$ nodes with an $\xp{2}{}$ node.</b></p>
+            <p><img src="images/tree_replace.svg" class="col-md-10 offset-md-1 col-xs-12"/></p>
             
             <p>Huffman codes implement this idea by constructing a tree from the bottom up, starting with nodes corresponding to the least likely events, $\xp{1}{i}$ and $\xp{1}{j}$. The algorithm creates an internal node to hold these outcomes as leafs, and it is returned to the pool of potential events as a representative of the union outcome $\xp{1}{i} \cup \xp{1}{j}$. Then, the procedure repeats. When, finally, an $\xp{2}{}$ is sucked in as a leaf, its sibling will be a union outcome that has greater depth, since $\xp{2}{}$ is hiding some implicit merged children. In the tree below, these implicit nodes are transparent, where the fully colored nodes are actual outcomes. </p>
             
