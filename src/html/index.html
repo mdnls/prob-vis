@@ -31,30 +31,8 @@
 <body>
     <div class="container">
         <h1>Statistical Distances and Their Implications to GAN Training</h1>
-        <div class="atn">
-            <p><b>You can interact with elements on this page by tapping on them, clicking on them, and using the arrow keys.</b></p>
-        </div>
         
         
-        <!-- 1. Sell out -->
-        <div id="gan-comp-easy" class="col-12 vis-inset-long">
-            <div class="row h-100 anim">
-                <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
-                    <svg id="wgan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
-                        
-                    </svg>
-                </div>
-                <div class="col-6 h-100" style="padding: 20px 20px 20px 10px">
-                    <svg id="gan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
-                        
-                    </svg>
-                </div>
-            </div>
-        </div>
-            
-        <a id="gan-comp-easy-play" class="animcontrol"><img class="anim-btn" src="images/play.svg" /></a>
-        <a id="gan-comp-easy-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
-        <a id="gan-comp-easy-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
         <div id="intro">
             <h2>
                 Introduction
@@ -332,7 +310,6 @@
 
         <div id="convergence">
             <h2>How does this distinction affect training of generative models?</h2>
-            \
             <p>
                 When discussing entropy, we were able to build a rich understanding of the measurement by constructing the Huffman tree, and were in turn able to derive closed forms for Entropy, KL, and JSD. Unfortunately, Earth Mover's Distance is much more difficult to compute exactly, and there is no analogous closed form that we can use to compute EM between $P$ and $Q$ directly.
                 
@@ -349,6 +326,32 @@
             <p>
                 Similarly, the more recent WGAN paper presents a similar training methodology, where training steps applied to the discriminator turn it into a differentiable approximation of the EM distance between $P_{\theta}$ and $P_d$.
             </p>
+
+            <p>
+                As a control example, we can observe the training of a GAN and WGAN on "nice" distributions, in this case a fixed Gaussian distribution. The following animation plots the output statistics of points sampled from two separate generator networks with the same architecture, as the left generator is trained to minimize the approximate upper bound of Earth Mover's Distance and the right is trained to minimize the approximate upper bound of the Jenson Shannon Divergence.
+            </p>
+            
+            <div id="gan-comp-easy" class="col-12 vis-inset-long">
+                <div class="row h-100 anim">
+                    <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
+                        <svg id="wgan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
+                            
+                        </svg>
+                    </div>
+                    <div class="col-6 h-100" style="padding: 20px 20px 20px 10px">
+                        <svg id="gan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
+                            
+                        </svg>
+                    </div>
+                </div>
+            </div>
+                
+            <a id="gan-comp-easy-play" class="animcontrol"><img class="anim-btn" src="images/play.svg" /></a>
+            <a id="gan-comp-easy-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
+            <a id="gan-comp-easy-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
+
+            <p>As we can see, both generators have a fairly easy time learning the target distribution. But, if we instead try to fit the generators to to a $1$-dimensional manifold distribution, we see that the minimizing the EM upper bound is successful where minimizing the JSD upper bound is not.</p>
+
             <div id="gan-comp-manifold" class="col-12 vis-inset-long">
                     <div class="row h-100 anim">
                         <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
@@ -368,7 +371,6 @@
                 <a id="gan-comp-manifold-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
                 <a id="gan-comp-manifold-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
             </div>
-
 
         
             <div id="conclusion">
