@@ -72,3 +72,11 @@ b {
     vertical-align: super;
     font-size: smaller;
 }
+
+.touchable {
+    img {
+        height: 30px;
+        width: 30px;
+    }
+    float: right;
+}
