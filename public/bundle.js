@@ -1842,6 +1842,11 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
         $(".container").on("swipedown", () => userInput("down"));
         $(".up").click(() => { userInput("up"); });
         $(".down").click(() => { userInput("down"); });
+        window.addEventListener("keydown", function (e) {
+            if ([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+                e.preventDefault();
+            }
+        }, false);
         let cNames = [".maroon", ".red", ".orange", ".yellow", ".lime", ".green", ".blue", ".violet"];
         let colors = Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7));
         cNames.forEach((sel, i) => {

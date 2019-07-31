@@ -109,7 +109,7 @@
                         <svg id="simple-entropy-ex" class="col-12 h-100"></svg>
                     </div>
                 </div>
-                <p class="figdesc">Since there are only two possible events in this distribution, its outcomes can be described with a single bit.</p>
+                <p class="figdesc">Since there are only two possible events in this distribution, its events can be described with a single bit.</p>
             </div>
             <p>As a general rule of thumb, any distribution where most of the probability mass is consolidated around relatively few events has lower entropy than a distribution with evenly distributed probability mass.</p>
             <div class="fig">
@@ -123,8 +123,8 @@
                 <button id="entropy-ex-high">High Entropy</button>
                 <p class="figdesc">An example of a distribution with $H$ = <span id="entropy-ex-val"></span>.</p>
             </div>
-            <p>To understand why, we can explore the process behind constructing an optimal code. First, since entropy is an average over codes for different events, it is helpful to focus on a single event $x_i$ and assume the other events $x_j$ are just copies that occur with equal likelihood. Then, interpreting $P(x_i)$ as a ratio $\frac{s_{x_i}}{N}$, we see that $\frac{1}{P(x)} = \frac{N}{s_{x_i}}$ is the number of unique outcomes that we need to distinguish with our code<span id="fn_bayesian" class="fn"><a href="#fn_bayesian_t">2</a></span>. Each outcome corresponds to all events of a particular $x_i$, which we assume occurs with frequency $s_{x_i}$ out of $N$ trials. </p>
-            <p>To distinguish between these outcomes, we want binary codes of minimal length that can represent $N^* = \frac{1}{P(x_i)}$ different outcomes. The codes can be visualized as paths in a binary decision tree:</p>
+            <p>To understand why, we can explore the process behind constructing an optimal code. First, since entropy is an average over codes for different events, it is helpful to focus on a single event $x_i$ and assume the other events $x_j$ are just copies that occur with equal likelihood. Then, interpreting $P(x_i)$ as a ratio $\frac{s_{x_i}}{N}$, we see that $\frac{1}{P(x)} = \frac{N}{s_{x_i}}$ is the number of unique events that we need to distinguish with our code<span id="fn_bayesian" class="fn"><a href="#fn_bayesian_t">2</a></span>. Each outcome corresponds to all events of a particular $x_i$, which we assume occurs with frequency $s_{x_i}$ out of $N$ trials. </p>
+            <p>To distinguish between the events, we want at least $N^* = \frac{1}{P(x_i)}$ unique binary codes to assign to different events. These codes can be visualized as paths in a binary decision tree:</p>
             
             <div class="fig">
                 <div id="labeled-tree" class="vis-inset-medium col-8 offset-2">
@@ -136,11 +136,11 @@
             </div>
 
             
-            <p>Each layer of the tree represents one bit, and the leaves are distinct outcomes. Adding a layer increases the number of leaves exponentially, so we need a minimum of $d = \log_2 N^* $ to guarantee at least $N^*$ unique leaves.</p>
+            <p>Each layer of the tree represents one bit, and each leaf corresponds to the binary code for the path to that leaf. Adding a layer increases the number of leaves exponentially, so we need a minimum of $d = \log_2 N^* $ layers to guarantee at least $N^*$ unique codes.</p>
             
-            <p>This means that we can trivially construct an optimal coding when all events have the same likelihood. According to the rule of thumb, this case has the highest entropy of all distributions with $N^*$ outcomes. So, we can now consider the effect of introducing a non-uniform distribution over the outcomes and verify that this is indeed the case. At this point, we will introduce the notation $x^{(1)}_i$, $x^{(2)}_i$, and so on. The upper indices identify a set $x^{(k)}$ of unique events, each having the same probability. We will build an optimal code for each of the different $x^{(k)}_i$ iteratively, and the probability of the $x^{(k)}$ will determine the point at those events have their codes assigned.</p>
+            <p>This means that we can trivially construct an optimal coding when all events have the same likelihood. According to the rule of thumb, this case has the highest entropy of all distributions with $N^*$ events. So, we can now consider the effect of introducing a non-uniform distribution over the events and verify that this is indeed the case. At this point, we will introduce the notation $x^{(1)}_i$, $x^{(2)}_i$, and so on. The upper indices identify a set $x^{(k)}$ of unique events, each having the same probability. We will build an optimal code for each of the different $x^{(k)}_i$ iteratively, and the probability of the $x^{(k)}$ will determine the point at which those events have their codes assigned.</p>
             
-            <p>We start with the least likely event, say $\xp{1}{1}$. We want to match this event with an <i>outcome</i>, or a unique path to a leaf of the tree, in a way that allocates an optimal number of bits to that event. As in the previous example, we can start with a uniform distribution of copy outcomes $\xp{1}{i}$ and assign codes with a decision tree of depth $\log_2 \frac{1}{\xp{1}{}}$. Then, to represent an outcome more likely than $\xp{1}{}$ – say, $\xp{2}{1}$ – we can simply merge a few of the copies $\xp{1}{i}$, so that a path to any of them is an equivalent way to communicate $\xp{2}{1}$. This is advantageous whenever we can find sibling copies to merge, since it allows us to save a bit by opting not to distinguish those siblings at all.</p>
+            <p>We start with the least likely event, say $\xp{1}{1}$. We want to match this event with a unique path to a leaf of the tree, in a way that allocates an optimal number of bits to that event. As in the previous example, we can start with a uniform distribution of copy events $\xp{1}{i}$ and assign codes with a decision tree of depth $\log_2 \frac{1}{\xp{1}{}}$. Then, to represent an event more likely than $\xp{1}{}$ – say, $\xp{2}{1}$ – we can simply merge a few of the copies $\xp{1}{i}$, so that a path to any of them is an equivalent way to communicate $\xp{2}{1}$. This is advantageous whenever we can find sibling copies to merge, since it allows us to save a bit by opting not to distinguish those siblings at all.</p>
             
             <div class="fig">
                 <img src="images/tree_replace.svg" class="col-md-10 offset-md-1 col-xs-12"/>
@@ -148,7 +148,7 @@
             </div>
 
             
-            <p>By repeatedly merging nodes in this way, we can add all the $\xp{k}{}$ so that the most likely events always have the shortest codes. This procedure is called the Huffman Algorith, and the resulting codes are Huffman codes. The algorithm creates an internal node to hold these outcomes as leafs, and it is returned to the pool of potential events as a representative of the union outcome $\xp{1}{i} \cup \xp{1}{j}$. Then, the procedure repeats. When, finally, an $\xp{2}{}$ is sucked in as a leaf, its sibling will be a union outcome that has greater depth, since $\xp{2}{}$ is hiding some implicit merged children. In the tree below, these implicit nodes are transparent, where the fully colored nodes are actual outcomes. </p>
+            <p>Iterating this process, we can create a leaf for any $\xp{k}{}$ event by merging two $\xp{k-1}{}$ leaves. From the bottom up, this means starting with a tree of all $\xp{1}{}$ leaves and merging as many as possible, keeping only enough $\xp{1}{}$ leafs to represent the $\xp{1}{}$ events in $P$. Then, in the next layer, the algorithm freezes leaves for any $\xp{2}{}$ events in $P$, merging the leftover nodes. This repeats until all $\xp{k}{i}$ have a place in the tree. In the diagram below, we can see all the merged nodes for events in the histogram, along with the fully colored nodes representing actual $\xp{k}{i}$ leafs. </p>
             
             <div class="fig">
                 <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" class="inputBtn" /></a>
@@ -166,7 +166,8 @@
                 <p class="figdesc">For a given distribution, the Huffman Tree allocates the shortest codes to the most likely events.</p>
             </div>
             
-            <p>Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log_2(\frac{1}{P(\xp{n}{})})$, which will be an integer quantity. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events<span id="fn_arthm_coding" class="fn"><a href="#fn_arthm_coding_t">3</a></span>, and the lower bound on the expected number of bits transferred is the entropy:
+            <p></p>
+            <p>This procedure is called the Huffman Algorithm, and it can be used to efficiently construct optimal codes for the events in $P$. Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log_2(\frac{1}{P(\xp{n}{})})$, which will be an integer quantity. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events<span id="fn_arthm_coding" class="fn"><a href="#fn_arthm_coding_t">3</a></span>, and the lower bound on the expected number of bits transferred is the entropy:
                 
                 $$H(P) = \expectedunder{P}{\log_2{\frac{1}{P(x)}}}$$
             </p>
@@ -187,7 +188,7 @@
             
             <p>This brings us back to the information-theoretic perspective on distances between distributions: $P_d$ and $P_{\theta}$ are similar when you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
             
-            <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. Still, getting the KL to zero requires equalizing the distributions. You can verify this yourself with the diagram below:</p>
+            <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. Cross entropy is the <i>total</i> expected number of bits when communicating events from $P$ using the code for $Q$, and it can be defined as the $H(P) + D_{KL}(P \vert \vert Q)$ – the entropy of $P$, plus the extra bits we have to send when the code for $Q$ is not optimal for $P$. Minimizing either of these differences forces $P$ to be similar to $Q$, which is exactly what we need to train a GAN. You can try minimizing KL yourself by manipulating the left distribution in the figure below: </p>
             
             <div class="fig">
                 <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" class="inputBtn" /></a>
@@ -311,7 +312,7 @@
             </p>
             
             <p>
-                First, lets consider what a simple manifold distribution might actually look like. Consider a distribution $P$ in $\mathbf{R}^2$ that assigns uniform probability to points in the closed line segment starting at $\vec{a} = \hvec{a_1, a_2}$ and ending at $\vec{b} = \hvec{b_1, b_2}$. This distribution lies on a $1$-dimensional manifold in $\mathbf{R}^2$ – if we want, we can parametetrize line segment as $f_P(t) = t \vec{a} + (1-t) \vec{b}$, for $t \in [0, 1]$, so that $t$ is our single factor of variation. Then, the probability of drawing a point on the segment from $f(t_1)$ to $f(t_2)$ is just $\frac{\vert t_2 - t_1 \vert}{1} = \vert t_2 - t_1 \vert$.  
+                First, lets consider what a simple manifold distribution might actually look like. Consider a distribution $P$ in $\mathbf{R}^2$ that assigns uniform probability to points in the closed line segment starting at $\vec{a} = \hvec{a_1, a_2}$ and ending at $\vec{b} = \hvec{b_1, b_2}$. This distribution lies on a $1$-dimensional manifold in $\mathbf{R}^2$ – if we want, we can parametrize line segment as $f_P(t) = t \vec{a} + (1-t) \vec{b}$, for $t \in [0, 1]$, so that $t$ is our single factor of variation. Then, the probability of drawing a point on the segment from $f(t_1)$ to $f(t_2)$ is just $\frac{\vert t_2 - t_1 \vert}{1} = \vert t_2 - t_1 \vert$.  
             </p>
             
             <p>
@@ -357,11 +358,11 @@
             <h2>How does this distinction affect training of generative models?</h2>
             
             <p>
-                When discussing entropy, we were able to build a rich understanding of the measurement by constructing the Huffman tree, and were in turn able to derive closed forms for Entropy, KL, and JSD. Unfortunately, Earth Mover's Distane is much more difficult to compute exactly, and there is no analogous closed form that we can use to compute EM between $P$ and $Q$ directly.
+                When discussing entropy, we were able to build a rich understanding of the measurement by constructing the Huffman tree, and were in turn able to derive closed forms for Entropy, KL, and JSD. Unfortunately, Earth Mover's Distance is much more difficult to compute exactly, and there is no analogous closed form that we can use to compute EM between $P$ and $Q$ directly.
                 
             </p>
             <p>
-                Even if there were such a formula, there is another problem that has been glossed over up to this point: calculating the distance between $P_{\theta}$ and $P_d$ requires knowledge of $P_d (x)$, which we would typically not be able to calculate exactly. This in turn prevents us from calculating both the distance $d(P_{\theta}, P_d)$ and its gradient. No matter the computation power, reseource access, or network capacity, the key problem in training a GAN at scale is constructing a training scheme that can circumvent this calculation and still minimize a distance between $P_{\theta}$ and $P_d$.
+                Even if there were such a formula, there is another problem that has been glossed over up to this point: calculating the distance between $P_{\theta}$ and $P_d$ requires knowledge of $P_d (x)$, which we would typically not be able to calculate exactly. This in turn prevents us from calculating both the distance $d(P_{\theta}, P_d)$ and its gradient. No matter the computation power, resource access, or network capacity, the key problem in training a GAN at scale is constructing a training scheme that can circumvent this calculation and still minimize a distance between $P_{\theta}$ and $P_d$.
             </p>
             <p>
                 In the original, and now famous method, a discriminator network $D(x)$ has the goal of predicting whether a given sample was generated by $P_d$. It is trained to maximize the joint log-likelihood of predicting false on $x \sim P_{\theta}(x)$ and true on $x^* \sim P_d(x)$, while the generator network $G(x)$ that induces $P_{\theta}$ is simultaneously trained to maximize the likelihood that $x$ is predicted as true. 

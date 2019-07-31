@@ -98,6 +98,13 @@ function setupIntro() {
     $(".up").click(() => { userInput("up"); });
     $(".down").click(() => { userInput("down"); });
 
+    window.addEventListener("keydown", function(e) {
+        // space and arrow keys
+        if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+            e.preventDefault();
+        }
+    }, false);
+    
     // Setup boxes
     let cNames = [".maroon", ".red", ".orange", ".yellow", ".lime", ".green", ".blue", ".violet"]
     let colors = Array.from({length: 8}, (v, k) => d3.interpolateSpectral(k/7));
