@@ -48,9 +48,9 @@
             </div>
         </div>
             
-        <button id="gan-comp-easy-play">Play</button>
-        <button id="gan-comp-easy-pause">Pause</button>
-        <button id="gan-comp-easy-reset">Reset</button>
+        <a id="gan-comp-easy-play"><img class="anim-btn" src="images/play.svg" /></a>
+        <a id="gan-comp-easy-pause"><img class="anim-btn" src="images/pause.svg" /></a>
+        <a id="gan-comp-easy-reset"><img class="anim-btn" src="images/reset.svg" /></a>
         <div id="intro">
             <h2>
                 Introduction
@@ -77,11 +77,14 @@
             </p>
             <p>Here, we simply use the magnitude of difference between each bin to say how far apart the distributions are. In the figure, this corresponds to the length of each line above or below a bin.</p>
             
-            <div id="chisqr-1" class="vis-inset col-12">
-                <div class="row h-100">          
-                    <svg id="chisqr-1-left-svg" class="col-6"></svg>
-                    <svg id="chisqr-1-right-svg" class="col-6"></svg>
+            <div class="fig">
+                <div id="chisqr-1" class="vis-inset col-12">
+                    <div class="row h-100">          
+                        <svg id="chisqr-1-left-svg" class="col-6"></svg>
+                        <svg id="chisqr-1-right-svg" class="col-6"></svg>
+                    </div>
                 </div>
+                <p class="figdesc">The grey markers indicate where these two distributions differ. One can compare the two distributions by summing the the total line length.</p>
             </div>
             
             <p>When each bin matches exactly, the distance is zero, since the distribution over bins is the same. More importantly, if we make a small change to distribution $X$, by taking an <svg class="orange box"></svg> for example, this distance will reflect that change and decrease. We can use the distance as a guide to iteratively update $X$ until it matches $Y$. This is the approach that GANs take when approximating $P_d$, the true distribution over data, by the generator distribution $P_\theta$. The parameters $\theta$ are like the boxes, and the statistical distance function is the guide for manipulating $\theta$ to make $P_\theta$ faithful to $P_d$. </p>
@@ -96,15 +99,16 @@
             
             <p>The Jenson Shannon Divergence (JSD) between two distributions is a distance function that has its roots in information entropy <b>R</b>. The intuition is that two distributions are similar whe you can communicate their events in similar ways. To formalize this idea, the abstraction at play is the "information channel." An observer Bob has an open channel to Alice, so that he can tell her about samples that he draws from a distribution $P_d$. For simplicity, we assume that Bob is communicating with bits, and that he and Alice have agreed ahead of time on their choice of codes. Under this abstraction, entropy is the minimum number of bits on average that Bob needs to tell Alice about which samples he observes from $P_d$. </p>
             <p>This quantity depends completely on the "shape" of $P_d$, and in turn it serves as a representation of that shape. For example, under a distribution where <svg class="maroon box"></svg>  and <svg class="blue box"></svg> are the only events that can happen, a single bit is enough for unambiguous communication, so the entropy is $1$.</p>
-            <p>
+            <div class="fig">
                 <div id="simple-entropy" class="vis-inset col-12">
                     <div class="h-100">
                         <svg id="simple-entropy-ex" class="col-12 h-100"></svg>
                     </div>
                 </div>
-            </p>
+                <p class="figdesc">Since there are only two possible events in this distribution, its outcomes can be described with a single bit.</p>
+            </div>
             <p>As a general rule of thumb, any distribution where most of the probability mass is consolidated around relatively few events has lower entropy than a distribution with evenly distributed probability mass.</p>
-            <p>
+            <div class="fig">
                 <div id="entropy-ex" class="vis-inset col-12">
                     <div class="h-100">
                         <svg id="entropy-ex-active" class="col-12 h-100"></svg>
@@ -113,16 +117,20 @@
                 <button id="entropy-ex-low">Low Entropy</button>
                 <button id="entropy-ex-med">Medium Entropy</button>
                 <button id="entropy-ex-high">High Entropy</button>
-                <p>$H$ = <span id="entropy-ex-val"></span></p>
-            </p>
+                <p class="figdesc">An example of a distribution with $H$ = <span id="entropy-ex-val"></span>.</p>
+            </div>
             <p>To understand why, we can explore the process behind constructing an optimal code. First, since entropy is an average over codes for different events, it is helpful to focus on a single event $x_i$ and assume the other events $x_j$ are are just copies that occur with equal likelihood. Then, interpreting $P(x_i)$ as a ratio $\frac{s_{x_i}}{N}$, we see that $\frac{1}{P(x)} = \frac{N}{s_{x_i}}$ is the number of unique outcomes that we need to distinguish with our code<span id="fn_bayesian" class="fn"><a href="#fn_bayesian_t">2</a></span>. Each outcome corresponds to all events of a particular $x_i$, which we assume occurs with frequency $s_{x_i}$ out of $N$ trials. </p>
             <p>To distinguish between these outcomes, we want binary codes of minimal length that can represent $N^* = \frac{1}{P(x_i)}$ different outcomes. The codes can be visualized as paths in a binary decision tree:</p>
             
-            <div id="labeled-tree" class="vis-inset-medium col-8 offset-2">
-                <svg id="labeled-tree-ex" class="h-100 w-100">
-                    
-                </svg>
+            <div class="fig">
+                <div id="labeled-tree" class="vis-inset-medium col-8 offset-2">
+                    <svg id="labeled-tree-ex" class="h-100 w-100">
+                        
+                    </svg>
+                </div>
+                <p class="figdesc">Paths in a binary tree are equivalent to binary codes. Each $1$ is equivalent to a path taking the right branch, and each $0$ corresponds to a path which takes the left branch.</p>
             </div>
+
             
             <p>Each layer of the tree represents one bit, and the leaves are distinct outcomes. Adding a layer increases the number of leaves exponentially, so the minimal code length is $d = \log_2 N^* $.</p>
             
@@ -130,14 +138,21 @@
             
             <p>We start with the least likely event, say $\xp{1}{}$. As in the previous example, we can construct a uniform distribution of copy outcomes $\xp{1}{i}$ and assign codes with a decision tree of depth $\log_2 \frac{1}{\xp{1}{}}$. Then, to represent an outcome more likely than $\xp{1}{}$ – say, $\xp{2}{}$ – we can simply merge a few of the copies $\xp{1}{i}$, so that a path to any of them is an equivalent way to communicate $\xp{2}{}$. This is advantageous whenever we can find sibling copies to merge, since it allows us to save a bit by opting not to distinguish those siblings at all.</p>
             
-            <p><img src="images/tree_replace.svg" class="col-md-10 offset-md-1 col-xs-12"/></p>
+            <div class="fig">
+                <img src="images/tree_replace.svg" class="col-md-10 offset-md-1 col-xs-12"/>
+                <p class="figdesc">Replacing two sibling $x_1$ events with an $x_2$ event eliminates a bit.</p>
+            </div>
+
             
             <p>Huffman codes implement this idea by constructing a tree from the bottom up, starting with nodes corresponding to the least likely events, $\xp{1}{i}$ and $\xp{1}{j}$. The algorithm creates an internal node to hold these outcomes as leafs, and it is returned to the pool of potential events as a representative of the union outcome $\xp{1}{i} \cup \xp{1}{j}$. Then, the procedure repeats. When, finally, an $\xp{2}{}$ is sucked in as a leaf, its sibling will be a union outcome that has greater depth, since $\xp{2}{}$ is hiding some implicit merged children. In the tree below, these implicit nodes are transparent, where the fully colored nodes are actual outcomes. </p>
             
-            <div id="entropy-interactive" class="vis-inset-long col-8 offset-2">
-                <div id="entropy-ex-interactive" class="h-100">
-                    
+            <div class="fig">
+                <div id="entropy-interactive" class="vis-inset-long col-8 offset-2">
+                    <div id="entropy-ex-interactive" class="h-100">
+                        
+                    </div>
                 </div>
+                <p class="figdesc"></p>
             </div>
             
             <p>Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log(\frac{1}{P(\xp{n}{})})$, which will be an integer quantity. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events<span id="fn_arthm_coding" class="fn"><a href="#fn_arthm_coding_t">3</a></span>, and the lower bound on the expected number of bits transferred is the entropy:
@@ -284,9 +299,9 @@
                 </div>
             </div>
                 
-            <button id="gan-comp-manifold-play">Play</button>
-            <button id="gan-comp-manifold-pause">Pause</button>
-            <button id="gan-comp-manifold-reset">Reset</button>
+            <a id="gan-comp-manifold-play"><img class="anim-btn" src="images/play.svg" /></a>
+            <a id="gan-comp-manifold-pause"><img class="anim-btn" src="images/pause.svg" /></a>
+            <a id="gan-comp-manifold-reset"><img class="anim-btn" src="images/reset.svg" /></a>
         </div>
         <div id="convergence">
             <h2>How does this distinction affect training of generative models?</h2>

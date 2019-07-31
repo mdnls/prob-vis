@@ -50,6 +50,10 @@ b {
 .anim svg {
   border: 2px solid black; }
 
+.figdesc {
+  color: #808080;
+  font-size: 0.8em; }
+
 .fn {
   vertical-align: super;
   font-size: smaller; }

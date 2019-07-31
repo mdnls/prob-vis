@@ -48,9 +48,9 @@
             </div>
         </div>
             
-        <button id="gan-comp-easy-play">Play</button>
-        <button id="gan-comp-easy-pause">Pause</button>
-        <button id="gan-comp-easy-reset">Reset</button>
+        <a id="gan-comp-easy-play"><img class="anim-btn" src="images/play.svg" /></a>
+        <a id="gan-comp-easy-pause"><img class="anim-btn" src="images/pause.svg" /></a>
+        <a id="gan-comp-easy-reset"><img class="anim-btn" src="images/reset.svg" /></a>
         <div id="intro">
             <h2>
                 Introduction
@@ -77,11 +77,14 @@
             </p>
             <p>Here, we simply use the magnitude of difference between each bin to say how far apart the distributions are. In the figure, this corresponds to the length of each line above or below a bin.</p>
             
-            <div id="chisqr-1" class="vis-inset col-12">
-                <div class="row h-100">          
-                    <svg id="chisqr-1-left-svg" class="col-6"></svg>
-                    <svg id="chisqr-1-right-svg" class="col-6"></svg>
+            <div class="fig">
+                <div id="chisqr-1" class="vis-inset col-12">
+                    <div class="row h-100">          
+                        <svg id="chisqr-1-left-svg" class="col-6"></svg>
+                        <svg id="chisqr-1-right-svg" class="col-6"></svg>
+                    </div>
                 </div>
+                <p class="figdesc">The grey markers indicate where these two distributions differ. One can compare the two distributions by summing the the total line length.</p>
             </div>
             
             <p>When each bin matches exactly, the distance is zero, since the distribution over bins is the same. More importantly, if we make a small change to distribution $X$, by taking an <svg class="orange box"></svg> for example, this distance will reflect that change and decrease. We can use the distance as a guide to iteratively update $X$ until it matches $Y$. This is the approach that GANs take when approximating $P_d$, the true distribution over data, by the generator distribution $P_\theta$. The parameters $\theta$ are like the boxes, and the statistical distance function is the guide for manipulating $\theta$ to make $P_\theta$ faithful to $P_d$. </p>
@@ -96,15 +99,16 @@
             
             <p>The Jenson Shannon Divergence (JSD) between two distributions is a distance function that has its roots in information entropy <b>R</b>. The intuition is that two distributions are similar whe you can communicate their events in similar ways. To formalize this idea, the abstraction at play is the "information channel." An observer Bob has an open channel to Alice, so that he can tell her about samples that he draws from a distribution $P_d$. For simplicity, we assume that Bob is communicating with bits, and that he and Alice have agreed ahead of time on their choice of codes. Under this abstraction, entropy is the minimum number of bits on average that Bob needs to tell Alice about which samples he observes from $P_d$. </p>
             <p>This quantity depends completely on the "shape" of $P_d$, and in turn it serves as a representation of that shape. For example, under a distribution where <svg class="maroon box"></svg>  and <svg class="blue box"></svg> are the only events that can happen, a single bit is enough for unambiguous communication, so the entropy is $1$.</p>
-            <p>
+            <div class="fig">
                 <div id="simple-entropy" class="vis-inset col-12">
                     <div class="h-100">
                         <svg id="simple-entropy-ex" class="col-12 h-100"></svg>
                     </div>
                 </div>
-            </p>
+                <p class="figdesc">Since there are only two possible events in this distribution, its outcomes can be described with a single bit.</p>
+            </div>
             <p>As a general rule of thumb, any distribution where most of the probability mass is consolidated around relatively few events has lower entropy than a distribution with evenly distributed probability mass.</p>
-            <p>
+            <div class="fig">
                 <div id="entropy-ex" class="vis-inset col-12">
                     <div class="h-100">
                         <svg id="entropy-ex-active" class="col-12 h-100"></svg>
@@ -113,16 +117,20 @@
                 <button id="entropy-ex-low">Low Entropy</button>
                 <button id="entropy-ex-med">Medium Entropy</button>
                 <button id="entropy-ex-high">High Entropy</button>
-                <p>$H$ = <span id="entropy-ex-val"></span></p>
-            </p>
+                <p class="figdesc">An example of a distribution with $H$ = <span id="entropy-ex-val"></span>.</p>
+            </div>
             <p>To understand why, we can explore the process behind constructing an optimal code. First, since entropy is an average over codes for different events, it is helpful to focus on a single event $x_i$ and assume the other events $x_j$ are are just copies that occur with equal likelihood. Then, interpreting $P(x_i)$ as a ratio $\frac{s_{x_i}}{N}$, we see that $\frac{1}{P(x)} = \frac{N}{s_{x_i}}$ is the number of unique outcomes that we need to distinguish with our code<span id="fn_bayesian" class="fn"><a href="#fn_bayesian_t">2</a></span>. Each outcome corresponds to all events of a particular $x_i$, which we assume occurs with frequency $s_{x_i}$ out of $N$ trials. </p>
             <p>To distinguish between these outcomes, we want binary codes of minimal length that can represent $N^* = \frac{1}{P(x_i)}$ different outcomes. The codes can be visualized as paths in a binary decision tree:</p>
             
-            <div id="labeled-tree" class="vis-inset-medium col-8 offset-2">
-                <svg id="labeled-tree-ex" class="h-100 w-100">
-                    
-                </svg>
+            <div class="fig">
+                <div id="labeled-tree" class="vis-inset-medium col-8 offset-2">
+                    <svg id="labeled-tree-ex" class="h-100 w-100">
+                        
+                    </svg>
+                </div>
+                <p class="figdesc">Paths in a binary tree are equivalent to binary codes. Each $1$ is equivalent to a path taking the right branch, and each $0$ corresponds to a path which takes the left branch.</p>
             </div>
+
             
             <p>Each layer of the tree represents one bit, and the leaves are distinct outcomes. Adding a layer increases the number of leaves exponentially, so the minimal code length is $d = \log_2 N^* $.</p>
             
@@ -130,15 +138,23 @@
             
             <p>We start with the least likely event, say $\xp{1}{}$. As in the previous example, we can construct a uniform distribution of copy outcomes $\xp{1}{i}$ and assign codes with a decision tree of depth $\log_2 \frac{1}{\xp{1}{}}$. Then, to represent an outcome more likely than $\xp{1}{}$ – say, $\xp{2}{}$ – we can simply merge a few of the copies $\xp{1}{i}$, so that a path to any of them is an equivalent way to communicate $\xp{2}{}$. This is advantageous whenever we can find sibling copies to merge, since it allows us to save a bit by opting not to distinguish those siblings at all.</p>
             
-            <p><img src="images/tree_replace.svg" class="col-md-10 offset-md-1 col-xs-12"/></p>
+            <div class="fig">
+                <img src="images/tree_replace.svg" class="col-md-10 offset-md-1 col-xs-12"/>
+                <p class="figdesc">Replacing two sibling $x_1$ events with an $x_2$ event eliminates a bit.</p>
+            </div>
+
             
             <p>Huffman codes implement this idea by constructing a tree from the bottom up, starting with nodes corresponding to the least likely events, $\xp{1}{i}$ and $\xp{1}{j}$. The algorithm creates an internal node to hold these outcomes as leafs, and it is returned to the pool of potential events as a representative of the union outcome $\xp{1}{i} \cup \xp{1}{j}$. Then, the procedure repeats. When, finally, an $\xp{2}{}$ is sucked in as a leaf, its sibling will be a union outcome that has greater depth, since $\xp{2}{}$ is hiding some implicit merged children. In the tree below, these implicit nodes are transparent, where the fully colored nodes are actual outcomes. </p>
             
-            <div id="entropy-interactive" class="vis-inset-long col-8 offset-2">
-                <div id="entropy-ex-interactive" class="h-100">
-                    
+            <div class="fig">
+                <div id="entropy-interactive" class="vis-inset-long col-8 offset-2">
+                    <div id="entropy-ex-interactive" class="h-100">
+                        
+                    </div>
                 </div>
+                <p class="figdesc">For a given distribution, the Huffman Tree allocates the shortest codes to the most likely events.</p>
             </div>
+
             
             <p>Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log(\frac{1}{P(\xp{n}{})})$, which will be an integer quantity. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events<span id="fn_arthm_coding" class="fn"><a href="#fn_arthm_coding_t">3</a></span>, and the lower bound on the expected number of bits transferred is the entropy:
                 
@@ -163,12 +179,15 @@
             
             <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. Still, getting the KL to zero requires equalizing the distributions. You can verify this yourself with the diagram below:</p>
             
-            <div id="xentropy-interactive" class="col-12">
-                <div id="xentropy-ex-interactive" class="h-100">
-                    
+            <div class="fig">
+                <div id="xentropy-interactive" class="col-12">
+                    <div id="xentropy-ex-interactive" class="h-100">
+                        
+                    </div>
                 </div>
+                <p class="figdesc">The left distribution $P$ has $KL(P\vert \vert Q)$ = <span id="kl-ex-val">_</span> with respect to the right distribution. Select an event to see its path in the Huffman Tree.</p>
             </div>
-            <p>$KL(P\vert \vert Q)$ = <span id="kl-ex-val">_</span></p>
+
             
             <h3>Jenson Shannon Divergence</h3>
             <p>The last measurement, Jenson Shannon Divergence, is intended to solve a numerical stability problem with both Cross Entropy and KL, namely that neither are defined when either of $P(x)$ or $Q(x)$ is 0. When $P(x) = 0$, a simple solution is to just omit $x$ from the sum, as though $(0)(\log(0)) = 0$<span id="fn_math" class="fn"><a href="#fn_math_t">4</a></span>. But if $Q(x) = 0$, this trick doesn't apply.</p>
@@ -190,22 +209,31 @@
             
             <p>Like entropy, Earth Mover's distance relies on an abstraction to determine the distance between probability distributions, and in this case, that abstraction is the "transport plan."  Simply put, a transport plan is a literal blueprint for turning one distribution into another – for each event in the source distribution, it defines the locations and quantities in the target distribution to which some amount of "mass" should be transported.</p>
             
-            <div id="transport-interactive" class="col-6 mx-auto vis-inset">
-                <div class="h-75">
-                    <div id="transport-ex-interactive" class="h-100">
-                        
+            <div class="fig">
+
+                <div id="transport-interactive" class="col-6 mx-auto vis-inset">
+                    <div class="h-75">
+                        <div id="transport-ex-interactive" class="h-100">
+                            
+                        </div>
                     </div>
                 </div>
+                <p class="figdesc">A transport plan defines how one probability distribution can be transformed into another.</p>
             </div>
+
             
             
             <p>In other words, the transport plan gives each of the source events its own distribution over the target events, shown in black in the diagram above. It may not be obvious at first, but these types of transport plans are exactly equivalent to a probabalistic joint distribution, where the source and target distributions are marginals. Here's the same transport plan, but this time represented as marginals of a joint distribution.</p>
             
-            <div id="transport-matrix-interactive" class="col-6 mx-auto vis-inset-long" style="margin: 20px">
-                <div id="transport-matrix-ex-interactive" class="h-100">
-                    
+            <div class="fig">
+                <div id="transport-matrix-interactive" class="col-6 mx-auto vis-inset-long" style="margin: 20px">
+                    <div id="transport-matrix-ex-interactive" class="h-100">
+                        
+                    </div>
                 </div>
+                <p class="figdesc">A transport plan from distribution $P$ to $Q$ is equivalent to a joint distribution with marginals $P$ and $Q$.</p>
             </div>
+
             
             
             <p>For each cell, its location $(i, j)$ indicates that the cell corresponds to source event $x_i$ and target event $x_j$. The joint distribution assigns a value $p(i, j) = s$, which can be interpreted as a transfer of $s$ units of "probability mass" from $x_i$ to $x_j$.</p>
@@ -229,11 +257,15 @@
             <p>where $\Gamma(P, Q)$ is the set of all joint distributions whose marginals are $P$ and $Q$.</p>
             <p>For comparison, we can take the same two distributions in the previous example, and compute an optimal transport plan between them by searching over $\Gamma(P, Q)$.</p>
             
-            <div id="opt-transport-matrix-interactive" class="col-6 mx-auto vis-inset-long" style="margin: 20px">
-                <div id="opt-transport-matrix-ex-interactive" class="h-100">
-                    
+            <div class="fig">
+                <div id="opt-transport-matrix-interactive" class="col-6 mx-auto vis-inset-long" style="margin: 20px">
+                    <div id="opt-transport-matrix-ex-interactive" class="h-100">
+                        
+                    </div>
                 </div>
+                <p class="figdesc">An optimal transport plan for the given two distributions.</p>
             </div>
+
             <p>This plan has a total cost of $30$ box-columns, where the original plan costs $70$ box-columns. Under the optimal plan, we see that the nonzero cells in the joint distributions are clustered around the diagonal, since minimizing the transportation distance means bringing $i$ as close to $j$ as possible.</p>
             
             <p>As a bonus, the EM Distance is more robust than the entropy based measurements. If $P(x_i) = 0$, then the transport plan just doesn't move any mass away from $x_i$, and if $Q(x_j) = 0$, the plan just doesn't move any mass to $x_j$. In either case, the only effect is that $p(x_i, x_j) = 0$ for all $x_i$ with $P(x_i) = 0$ and for all $Q(x_j) = 0$. This is a general property of joint distributions.</p>
@@ -284,9 +316,9 @@
                 </div>
             </div>
                 
-            <button id="gan-comp-manifold-play">Play</button>
-            <button id="gan-comp-manifold-pause">Pause</button>
-            <button id="gan-comp-manifold-reset">Reset</button>
+            <a id="gan-comp-manifold-play"><img class="anim-btn" src="images/play.svg" /></a>
+            <a id="gan-comp-manifold-pause"><img class="anim-btn" src="images/pause.svg" /></a>
+            <a id="gan-comp-manifold-reset"><img class="anim-btn" src="images/reset.svg" /></a>
         </div>
         <div id="convergence">
             <h2>How does this distinction affect training of generative models?</h2>
