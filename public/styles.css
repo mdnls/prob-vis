@@ -31,13 +31,13 @@ b {
   font-weight: 700; }
 
 .vis-inset {
-  height: 250px; }
+  height: 20vw; }
 
 .vis-inset-medium {
-  height: 350px; }
+  height: 25vw; }
 
 .vis-inset-long {
-  height: 500px; }
+  height: 35vw; }
 
 .box {
   height: 1.25em;
@@ -50,3 +50,7 @@ b {
 
 .anim svg {
   border: 2px solid black; }
+
+.fn {
+  vertical-align: super;
+  font-size: smaller; }

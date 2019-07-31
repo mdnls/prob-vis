@@ -62,6 +62,11 @@ function userInput(dir: string) {
 }
 
 function setupIntro() {
+    // resize views when window is resized - use the resize on end trick
+
+    $(window).resize(Model.globalRefresh);
+
+
     // key handler
     document.addEventListener("keydown", event => {
         switch(event.key.toLowerCase()) {

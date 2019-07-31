@@ -1,14 +1,13 @@
 import { Model, ModelListener } from "./model";
 
 
-export class Line2D implements Model { 
-
-    private listeners: ModelListener[];
+export class Line2D extends Model { 
     
     protected m: number[];
     protected b: number[];
 
     constructor(slope: number[], intercept: number[]) {
+        super();
         this.m = slope;
         this.b = intercept;
     }
@@ -28,8 +27,7 @@ export class Line2D implements Model {
         this.listeners.forEach((l) => l.refresh());
     }
 }
-export class Gaussian2D implements Model {
-    private listeners: ModelListener[];
+export class Gaussian2D extends Model {
 
     protected mean: number[];
     protected cov: number[][];
@@ -37,6 +35,7 @@ export class Gaussian2D implements Model {
     protected eigvals: number[]; // principal components
 
     constructor(mean: number[], cov: number[][]) {
+        super();
         this.listeners = [];
         this.assign(mean, cov);
     }

@@ -38,6 +38,7 @@ export class SVGBinaryTree implements ModelListener {
     constructor(svgElement: string, initialDepth: number, conf: CONF) {
        this.svg = svgElement;
        this.tree = TreeNode.fullTree(initialDepth);
+       this.tree.addListener(this);
        this.conf = conf;
        this.nodeColor = () => "#000";
        this.leafColor = () => "#000";
@@ -69,6 +70,7 @@ export class SVGBinaryTree implements ModelListener {
      */
     setDepth(n: number) {
        this.tree = TreeNode.fullTree(n);
+       this.tree.addListener(this);
        this.refresh();
     }
  

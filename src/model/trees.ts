@@ -4,7 +4,10 @@ import {Model, ModelListener} from 'model/model'
 /**
  * Represents items in a binary tree. These can be either nodes or leafs.
  */
-export interface TreeItem extends Item, Model {
+export abstract class TreeItem extends Model implements Item {
+    x: number;
+    y: number; 
+    itemType: string;
 
     /**
      * The color of this tree item.
@@ -14,12 +17,12 @@ export interface TreeItem extends Item, Model {
     /**
      * Return the number of leafs in this tree.
      */
-    numLeaves(): number;
+    abstract numLeaves(): number;
   
     /**
      * Return the depth of this tree. Leafs have depth 0.
      */
-    depth(): number;
+    abstract depth(): number;
   
     /**
      * Return all TreeItems in this tree which are n-th children of this TreeItem.
@@ -28,7 +31,7 @@ export interface TreeItem extends Item, Model {
      * cannot be updated to reflect external children mutation. Instance access to children is necessary
      * for d3 data binding.
      */
-    layer(n: number): TreeItem[];
+    abstract layer(n: number): TreeItem[];
   
     /**
      * Helper for treeMap.
@@ -38,7 +41,7 @@ export interface TreeItem extends Item, Model {
      * @param nodeFn function to be applied to a node in the tree, given the node's heap index
      * @param leafFn function to be applied to a leaf in the tree, given the leaf's heap index
      */
-    _treeMap(layerIdx: number, nodeIdx: number, 
+    abstract _treeMap(layerIdx: number, nodeIdx: number, 
       nodeFn: (layerIdx: number, nodeIdx: number, node: TreeNode) => any,
       leafFn: (layerIdx: number, nodeIdx: number, leaf: TreeLeaf) => any): void;
     
@@ -50,14 +53,14 @@ export interface TreeItem extends Item, Model {
      * @param nodeFn function to be applied to a node in the tree, given the node's heap index
      * @param leafFn function to be applied to a leaf in the tree, given the leaf's heap index
      */
-    treeMap(nodeFn: (layerIdx: number, nodeIdx: number, node: TreeNode) => any,
+    abstract treeMap(nodeFn: (layerIdx: number, nodeIdx: number, node: TreeNode) => any,
             leafFn: (layerIdx: number, nodeIdx: number, leaf: TreeLeaf) => any): void;
   }
   
   /**
    * Represents an item that can be stored in a tree as a node.
    */
-  export class TreeNode implements TreeItem {
+  export class TreeNode extends TreeItem {
     /**
      * Generate a full tree of depth d.
      * @param d depth of the full tree.
@@ -182,16 +185,11 @@ export interface TreeItem extends Item, Model {
       return huffTree;
     }
   
-    x: number;
-    y: number; 
-    color: string;
-    itemType: string;
   
     private leftChild: TreeItem;
     private rightChild: TreeItem;
     private leafs: number;
     private d: number;
-    private listeners: ModelListener[];
   
     /**
      * Create a new tree node.
@@ -199,6 +197,7 @@ export interface TreeItem extends Item, Model {
      * @param rightChild the right child of this node.
      */
     constructor(leftChild: TreeItem, rightChild: TreeItem) {
+      super();
       this.leftChild = leftChild;
       this.rightChild = rightChild;
       this.updateState();
@@ -279,12 +278,11 @@ export interface TreeItem extends Item, Model {
   /**
    * Represents an item that can be stored in a tree as a leaf.
    */
-  export class TreeLeaf implements Item {
+  export class TreeLeaf extends TreeItem {
     x: number;
     y: number;
     itemType: string;
     color: string;
-    private listeners: ModelListener[];
   
     addListener(listener: ModelListener) {
       this.listeners.push(listener);

@@ -49,24 +49,23 @@ export class BinItem implements Item {
 /**
  * Represents a set of bins containing items.
  */
-export interface Bins extends Model {
-    addItem(bin: number): void;
-    removeItem(bin: number): void;
-    addBin(): void;
-    removeBin(): void;
-    getBin(bin: number): Item[];
-    bins(): Item[][];
-    numBins(): number;
-    selectBin(selection: number): void;
-    selectedBin(): number;
+export abstract class Bins extends Model {
+    abstract addItem(bin: number): void;
+    abstract removeItem(bin: number): void;
+    abstract addBin(): void;
+    abstract removeBin(): void;
+    abstract getBin(bin: number): Item[];
+    abstract bins(): Item[][];
+    abstract numBins(): number;
+    abstract selectBin(selection: number): void;
+    abstract selectedBin(): number;
 }
 
 /**
  * Represents a histogram.
  */
-export class Histogram implements Bins {
+export class Histogram extends Bins {
     private histBins: BinItem[][];
-    private listeners: ModelListener[];
     private selection: number;
     private itemType: string = "default";
 
@@ -93,6 +92,7 @@ export class Histogram implements Bins {
      * @param numBins Create a histogram with the specified number of bins.
      */
     constructor(numBins: number) {
+      super();
       this.histBins = Array.from({length: numBins}, () => new Array<BinItem>());
       this.listeners = new Array<ModelListener>();
       this.selection = -1;

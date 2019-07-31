@@ -1,6 +1,23 @@
 define("model/model", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    class Model {
+        constructor() {
+            this.listeners = [];
+            Model.globalModels.push(this);
+        }
+        addListener(listener) {
+            this.listeners.push(listener);
+        }
+        refresh() {
+            this.listeners.forEach(l => l.refresh());
+        }
+        static globalRefresh() {
+            Model.globalModels.forEach(m => m.refresh());
+        }
+    }
+    Model.globalModels = new Array();
+    exports.Model = Model;
     class CONF {
         constructor(gridBoxSize, colors, padding) {
             this.gridBoxSize = gridBoxSize;
@@ -10,7 +27,7 @@ define("model/model", ["require", "exports"], function (require, exports) {
     }
     exports.CONF = CONF;
 });
-define("model/bins", ["require", "exports"], function (require, exports) {
+define("model/bins", ["require", "exports", "model/model"], function (require, exports, model_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class BinItem {
@@ -24,8 +41,12 @@ define("model/bins", ["require", "exports"], function (require, exports) {
         }
     }
     exports.BinItem = BinItem;
-    class Histogram {
+    class Bins extends model_1.Model {
+    }
+    exports.Bins = Bins;
+    class Histogram extends Bins {
         constructor(numBins) {
+            super();
             this.itemType = "default";
             this.histBins = Array.from({ length: numBins }, () => new Array());
             this.listeners = new Array();
@@ -119,8 +140,9 @@ define("model/heatmap", ["require", "exports", "model/bins", "papaparse"], funct
         Slice[Slice["ROW"] = 2] = "ROW";
         Slice[Slice["COL"] = 3] = "COL";
     })(Slice = exports.Slice || (exports.Slice = {}));
-    class MatrixSlice {
+    class MatrixSlice extends bins_1.Bins {
         constructor(matrix, mode, index) {
+            super();
             this.matrix = matrix;
             this.mode = mode;
             if (mode == Slice.ROW || mode == Slice.COL) {
@@ -595,10 +617,13 @@ define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], f
     }
     exports.SVGPhantomHistogram = SVGPhantomHistogram;
 });
-define("model/trees", ["require", "exports"], function (require, exports) {
+define("model/trees", ["require", "exports", "model/model"], function (require, exports, model_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class TreeNode {
+    class TreeItem extends model_2.Model {
+    }
+    exports.TreeItem = TreeItem;
+    class TreeNode extends TreeItem {
         static fullTree(d) {
             if (d <= 1) {
                 return new TreeLeaf();
@@ -684,6 +709,7 @@ define("model/trees", ["require", "exports"], function (require, exports) {
             return huffTree;
         }
         constructor(leftChild, rightChild) {
+            super();
             this.leftChild = leftChild;
             this.rightChild = rightChild;
             this.updateState();
@@ -729,7 +755,7 @@ define("model/trees", ["require", "exports"], function (require, exports) {
         }
     }
     exports.TreeNode = TreeNode;
-    class TreeLeaf {
+    class TreeLeaf extends TreeItem {
         addListener(listener) {
             this.listeners.push(listener);
         }
@@ -766,6 +792,7 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
         constructor(svgElement, initialDepth, conf) {
             this.svg = svgElement;
             this.tree = trees_1.TreeNode.fullTree(initialDepth);
+            this.tree.addListener(this);
             this.conf = conf;
             this.nodeColor = () => "#000";
             this.leafColor = () => "#000";
@@ -781,6 +808,7 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
         }
         setDepth(n) {
             this.tree = trees_1.TreeNode.fullTree(n);
+            this.tree.addListener(this);
             this.refresh();
         }
         setTree(tree) {
@@ -1385,11 +1413,12 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
     }
     exports.SVGIndicatorTransport = SVGIndicatorTransport;
 });
-define("model/gaussian", ["require", "exports"], function (require, exports) {
+define("model/gaussian", ["require", "exports", "model/model"], function (require, exports, model_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class Line2D {
+    class Line2D extends model_3.Model {
         constructor(slope, intercept) {
+            super();
             this.m = slope;
             this.b = intercept;
         }
@@ -1407,8 +1436,9 @@ define("model/gaussian", ["require", "exports"], function (require, exports) {
         }
     }
     exports.Line2D = Line2D;
-    class Gaussian2D {
+    class Gaussian2D extends model_3.Model {
         constructor(mean, cov) {
+            super();
             this.listeners = [];
             this.assign(mean, cov);
         }
@@ -1743,7 +1773,7 @@ define("view/gaussian", ["require", "exports", "model/gaussian", "d3", "jquery"]
     }
     exports.SVGAnimatedPoints = SVGAnimatedPoints;
 });
-define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/heatmap", "view/textbinder", "data", "view/histogram", "view/entropy", "view/transport", "view/gaussian", "model/model", "model/gaussian", "view/binarytree"], function (require, exports, d3, $, bins_3, heatmap_3, textbinder_1, data_1, histogram_3, entropy_1, transport_1, gaussian_2, model_1, gaussian_3, binarytree_2) {
+define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/heatmap", "view/textbinder", "data", "view/histogram", "view/entropy", "view/transport", "view/gaussian", "model/model", "model/gaussian", "view/binarytree"], function (require, exports, d3, $, bins_3, heatmap_3, textbinder_1, data_1, histogram_3, entropy_1, transport_1, gaussian_2, model_4, gaussian_3, binarytree_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     let colors = {
@@ -1757,7 +1787,7 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
     };
     let attnHash = {};
     let attn = undefined;
-    const conf = new model_1.CONF(8, colors, 5);
+    const conf = new model_4.CONF(8, colors, 5);
     function main() {
         setupIntro();
     }
@@ -1775,6 +1805,7 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
         }
     }
     function setupIntro() {
+        $(window).resize(model_4.Model.globalRefresh);
         document.addEventListener("keydown", event => {
             switch (event.key.toLowerCase()) {
                 case ("h"):

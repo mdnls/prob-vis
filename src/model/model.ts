@@ -2,9 +2,28 @@
 /**
  * Represents a model, which views can use to draw information.
  */
-export interface Model {
-  addListener(listener: ModelListener): void;
-  refresh(): void;
+export abstract class Model {
+  protected listeners: ModelListener[];
+
+  private static globalModels: Model[] = new Array<Model>();
+
+  constructor() {
+    this.listeners = [];
+    Model.globalModels.push(this);
+  }
+
+  addListener(listener: ModelListener): void {
+    this.listeners.push(listener);
+  }
+
+  refresh(): void {
+    this.listeners.forEach( l => l.refresh() );
+  }
+
+  static globalRefresh(): void {
+    Model.globalModels.forEach(m => m.refresh());
+  }
+
 }
 
 /**

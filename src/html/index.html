@@ -61,7 +61,7 @@
             </p>
             
             <p>
-                At its core, the training process relies on defining some notion of *distance* between a partially trained model and a hypothetical "optimal model" that can connect the factors of variation to the data perfectly. Minimizing this distance implies bringing the two closer together, so that eventually, you have a nearly perfect model. The feasibility of this process at scale depends on how we choose to determine this distance – for example, we *could* decide that two models either have distance zero if they are exactly the same, or infinite distance otherwise. In this case, if we don't already know the optimal model, this distance is neither computable nor informative. 
+                At its core, the training process relies on defining some notion of <i>distance</i> between a partially trained model and a hypothetical "optimal model" that can connect the factors of variation to the data perfectly <span id="fn_dist" class="fn"><a href="#fn_dist_t">1</a></span>. Minimizing this distance implies bringing the two closer together, so that eventually, you have a nearly perfect model. The feasibility of this process at scale depends on how we choose to determine this distance – for example, we could decide that two models either have distance zero if they are exactly the same, or infinite distance otherwise. In this case, if we don't already know the optimal model, this distance is neither computable nor informative. 
             </p>
             
             <p>
@@ -72,7 +72,7 @@
                 The GAN itself is a map, and since the input to this map is a random variable, so is its output. The data itself is also a random variable, since there are certain items that are fairly likely ("heavy rain" or "slight drizzles") and other outcomes that are definitely impossible ("raining cats and dogs"). So, to determine the distance between a given GAN and the optimal model, we're really asking about the distance between two probability distributions.
             </p>
             <p>
-                As a simple example, we can consider distributions in the form of a histogram, where each column represents an event and the boxes in a column represent the relative likelihood of that event. One of the simplest ways to compare histograms is by Euclidean distance*:.
+                As a simple example, we can consider distributions in the form of a histogram, where each column represents an event and the boxes in a column represent the relative likelihood of that event. One of the simplest ways to compare histograms is by total Euclidean distance:
                 $$D(x, y) = \sum_{b \in \text{bins}} \vert b_x - b_y \vert$$
             </p>
             <p>Here, we simply use the magnitude of difference between each bin to say how far apart the distributions are. In the figure, this corresponds to the length of each line above or below a bin.</p>
@@ -94,7 +94,7 @@
                 Entropy
             </h2>
             
-            <p>The Jenson Shannon Divergence (JSD) between two distributions is a distance function that has its roots in information entropy*. The intuition is that two distributions are similar whe you can communicate their events in similar ways. To formalize this idea, the abstraction at play is the "information channel." An observer Bob has an open channel to Alice, so that he can tell her about samples that he draws from a distribution $P_d$. For simplicity, we assume that Bob is communicating with bits, and that he and Alice have agreed ahead of time on their choice of codes. Under this abstraction, entropy is the minimum number of bits on average that Bob needs to tell Alice about which samples he observes from $P_d$. </p>
+            <p>The Jenson Shannon Divergence (JSD) between two distributions is a distance function that has its roots in information entropy <b>R</b>. The intuition is that two distributions are similar whe you can communicate their events in similar ways. To formalize this idea, the abstraction at play is the "information channel." An observer Bob has an open channel to Alice, so that he can tell her about samples that he draws from a distribution $P_d$. For simplicity, we assume that Bob is communicating with bits, and that he and Alice have agreed ahead of time on their choice of codes. Under this abstraction, entropy is the minimum number of bits on average that Bob needs to tell Alice about which samples he observes from $P_d$. </p>
             <p>This quantity depends completely on the "shape" of $P_d$, and in turn it serves as a representation of that shape. For example, under a distribution where <svg class="maroon box"></svg>  and <svg class="blue box"></svg> are the only events that can happen, a single bit is enough for unambiguous communication, so the entropy is $1$.</p>
             <p>
                 <div id="simple-entropy" class="vis-inset col-12">
@@ -115,7 +115,7 @@
                 <button id="entropy-ex-high">High Entropy</button>
                 <p>$H$ = <span id="entropy-ex-val"></span></p>
             </p>
-            <p>To understand why, we can explore the process behind constructing an optimal code. First, since entropy is an average over codes for different events, it is helpful to focus on a single event $x_i$ and assume the other events $x_j$ are are just copies that occur with equal likelihood. Then, interpreting $P(x_i)$ as a ratio* $\frac{s_{x_i}}{N}$, we see that $\frac{1}{P(x)} = \frac{N}{s_{x_i}}$ is the number of unique outcomes that we need to distinguish with our code. Each outcome corresponds to all events of a particular $x_i$, which we assume occurs with frequency $s_{x_i}$ out of $N$ trials. </p>
+            <p>To understand why, we can explore the process behind constructing an optimal code. First, since entropy is an average over codes for different events, it is helpful to focus on a single event $x_i$ and assume the other events $x_j$ are are just copies that occur with equal likelihood. Then, interpreting $P(x_i)$ as a ratio $\frac{s_{x_i}}{N}$, we see that $\frac{1}{P(x)} = \frac{N}{s_{x_i}}$ is the number of unique outcomes that we need to distinguish with our code<span id="fn_bayesian" class="fn"><a href="#fn_bayesian_t">2</a></span>. Each outcome corresponds to all events of a particular $x_i$, which we assume occurs with frequency $s_{x_i}$ out of $N$ trials. </p>
             <p>To distinguish between these outcomes, we want binary codes of minimal length that can represent $N^* = \frac{1}{P(x_i)}$ different outcomes. The codes can be visualized as paths in a binary decision tree:</p>
             
             <div id="labeled-tree" class="vis-inset-medium col-8 offset-2">
@@ -140,7 +140,7 @@
                 </div>
             </div>
             
-            <p>Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log(\frac{1}{P(\xp{n}{})})$*, which will be an integer quantity. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events*, and the lower bound on the expected number of bits transferred is entropy:
+            <p>Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log(\frac{1}{P(\xp{n}{})})$, which will be an integer quantity. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events<span id="fn_arthm_coding" class="fn"><a href="#fn_arthm_coding_t">3</a></span>, and the lower bound on the expected number of bits transferred is the entropy:
                 
                 $$H(P) = \expectedunder{P}{\log{\frac{1}{x}}}$$
             </p>
@@ -161,7 +161,7 @@
             
             <p>This brings us back to the information theoretic perspective on distances between distributions: $P_d$ and $P_\theta$ are similar whe you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
             
-            <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$*. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. Still, getting the KL to zero requires equalizing the distributions. You can verify this yourself with the diagram below:</p>
+            <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. Still, getting the KL to zero requires equalizing the distributions. You can verify this yourself with the diagram below:</p>
             
             <div id="xentropy-interactive" class="col-12">
                 <div id="xentropy-ex-interactive" class="h-100">
@@ -171,7 +171,7 @@
             <p>$KL(P\vert \vert Q)$ = <span id="kl-ex-val">_</span></p>
             
             <h3>Jenson Shannon Divergence</h3>
-            <p>The last measurement, Jenson Shannon Divergence, is intended to solve a numerical stability problem with both Cross Entropy and KL, namely that neither are defined when either of $P(x)$ or $Q(x)$ is 0. When $P(x) = 0$, a simple solution is to just omit $x$ from the sum, as though $(0)(\log(0)) = 0$*. But if $Q(x) = 0$, this trick doesn't apply.</p>
+            <p>The last measurement, Jenson Shannon Divergence, is intended to solve a numerical stability problem with both Cross Entropy and KL, namely that neither are defined when either of $P(x)$ or $Q(x)$ is 0. When $P(x) = 0$, a simple solution is to just omit $x$ from the sum, as though $(0)(\log(0)) = 0$<span id="fn_math" class="fn"><a href="#fn_math_t">4</a></span>. But if $Q(x) = 0$, this trick doesn't apply.</p>
             
             <p>And, following the intuition behind KL, it shouldn't. If we want to know how much further in $Q$'s tree we have to travel to find some event $x$ in $P$'s tree, there is no good answer in this case, because $x$ doesn't exist in $Q$'s tree. JSD solves this problem by introducing a new distribution, $P_m(x)$, that averages over the two. This guarantees that $P_m(x) \not = 0$ whenever either $Q(x) \not = 0$ or $P(x) \not = 0$. The quantity itself is also an average, over the KL divergences $D_{KL}(P \vert \vert P_m)$ and $D_{KL}(Q \vert \vert P_m)$.</p>
             
@@ -316,11 +316,22 @@
             <hr />
             <div id="citations">
                 <h3>Footnotes</h3>
-                
+                <div>
+                    <ol>
+                        <li id="fn_dist_t">The term "distance" is used here as a general term, encompassing statistical distances, divergences, various kinds of entropy, and metrics in the formal sense. <a href="#fn_dist" class="fn_back">↩</a></li>
+                        <li id="fn_bayesian_t">Whether or not probabilities <i>should</i> be interpreted as ratios is debatable, and the Bayesian view of statistics casts probabilities as degrees of certainty instead. Here, the frequentist view is just convenient for explanation.<a href="#fn_bayesian" class="fn_back">↩</a></li>
+                        <li id="fn_arthm_coding_t">There is an alternative, called <a href="https://en.wikipedia.org/wiki/Arithmetic_coding">Arithmetic Coding</a>, which encodes strings of events instead of individual events. <a href="#fn_arthm_coding" class="fn_back">↩</a></li>
+                        <li id="fn_math_t">$0 = 0 \log(0)$ is not true, and exponentiating both sides yields $0 = 1$. But, $ \displaystyle \lim_{x \to 0^+} x \log(x) = 0$, so this is still a sensible choice. <a href="#fn_math" class="fn_back">↩</a></li>
+                    </ol>
+                </div>
                 <h3>Citations</h3>
                 <ol>
                     <li>Goodfellow Paper</li>
                 </ol>
+
+                <h3>Thanks</h3>
+                <p>Thanks to <a href="http://hendrik.strobelt.com/">Hendrik Strobelt</a> and <a href="https://akashgit.github.io/">Akash Srivastava</a>, without whom this post would not have been created. Thanks also to my professors, who helped me learn this material, and to my friends & proof readers, who helped me express it.</p>
+                
             </div>
         </div>
     </body>

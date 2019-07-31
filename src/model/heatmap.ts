@@ -50,12 +50,13 @@ export enum Slice {
 /**
  * Immutable bins which implements a histogram representing the rows or columns of a matrix.
  */
-export class MatrixSlice implements Bins {
+export class MatrixSlice extends Bins {
     protected matrix: Matrix;
     protected histogram: Histogram;
     protected mode: Slice;
     protected index: number;
     constructor(matrix: Matrix, mode: Slice, index?: number) {
+        super();
         this.matrix = matrix;
         this.mode = mode;
         if(mode == Slice.ROW || mode == Slice.COL) {
