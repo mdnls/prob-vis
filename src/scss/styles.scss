@@ -89,6 +89,7 @@ b {
 }
 
 .inputBtn {
+    touch-action: manipulation;
     &:hover {
         cursor: pointer;
     }
@@ -99,6 +100,7 @@ b {
 
 
 .mobilenav {
+    touch-action: manipulation;
     @media screen and (min-width: 600px) {
         display: none;
     }

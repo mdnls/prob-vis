@@ -70,17 +70,19 @@ b {
   float: right; }
 
 .inputBtn {
+  touch-action: manipulation;
   height: 30px;
   width: 30px;
   margin: 10px; }
   .inputBtn:hover {
     cursor: pointer; }
 
-@media screen and (min-width: 600px) {
-  .mobilenav {
-    display: none; } }
-
-.mobilenav a {
-  display: block;
-  clear: both;
-  float: right; }
+.mobilenav {
+  touch-action: manipulation; }
+  @media screen and (min-width: 600px) {
+    .mobilenav {
+      display: none; } }
+  .mobilenav a {
+    display: block;
+    clear: both;
+    float: right; }

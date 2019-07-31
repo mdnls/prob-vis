@@ -138,7 +138,7 @@
             
             <p>Each layer of the tree represents one bit, and the leaves are distinct outcomes. Adding a layer increases the number of leaves exponentially, so we need a minimum of $d = \log_2 N^* $ to guarantee at least $N^*$ unique leaves.</p>
             
-            <p>This means that we can trivially construct an optimal coding when all events have the same likelihood. According to the rule of thumb, this case has the highest entropy of all distributions with $N^*$ outcomes. So, we can now consider the effect of introducing a non-uniform distribution over the outcomes and verify that this is indeed the case. At this point, we will introduce the notation $x^{(1}}_i$, $x^{(2)}_i$, and so on. The upper indices identify a set $x^{(k)}$ of unique events, each having the same probability. We will build an optimal code for each of the different $x^{(k)}_i$ iteratively, and the probability of the $x^{(k)}$ will determine the point at those events have their codes assigned.</p>
+            <p>This means that we can trivially construct an optimal coding when all events have the same likelihood. According to the rule of thumb, this case has the highest entropy of all distributions with $N^*$ outcomes. So, we can now consider the effect of introducing a non-uniform distribution over the outcomes and verify that this is indeed the case. At this point, we will introduce the notation $x^{(1)}_i$, $x^{(2)}_i$, and so on. The upper indices identify a set $x^{(k)}$ of unique events, each having the same probability. We will build an optimal code for each of the different $x^{(k)}_i$ iteratively, and the probability of the $x^{(k)}$ will determine the point at those events have their codes assigned.</p>
             
             <p>We start with the least likely event, say $\xp{1}{1}$. We want to match this event with an <i>outcome</i>, or a unique path to a leaf of the tree, in a way that allocates an optimal number of bits to that event. As in the previous example, we can start with a uniform distribution of copy outcomes $\xp{1}{i}$ and assign codes with a decision tree of depth $\log_2 \frac{1}{\xp{1}{}}$. Then, to represent an outcome more likely than $\xp{1}{}$ – say, $\xp{2}{1}$ – we can simply merge a few of the copies $\xp{1}{i}$, so that a path to any of them is an equivalent way to communicate $\xp{2}{1}$. This is advantageous whenever we can find sibling copies to merge, since it allows us to save a bit by opting not to distinguish those siblings at all.</p>
             
@@ -411,10 +411,6 @@
                     <li><a href="https://vincentherrmann.github.io/blog/wasserstein/">Wasserstein GAN and the Kantorovich-Rubinstein Duality</a> by Vincent Hermann</li>
                     <li><a href="https://colah.github.io/posts/2015-09-Visual-Information/">Visual Information Theory</a> by Chris Olah</li>
                 </ol>
-
-                <h3>Thanks</h3>
-                <p>Thanks to Karthik Boyareddygari, Ilze Greeves, Ben Knower, <a href="https://akashgit.github.io/">Akash Srivastava</a>, <a href="http://hendrik.strobelt.com/">Hendrik Strobelt</a>, and Caroline Zeng, without whom this article would not have been created.</p>
-                
             </div>
         </div>
     </body>
