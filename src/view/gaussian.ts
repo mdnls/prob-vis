@@ -362,6 +362,11 @@ export class SVGAnimatedPoints implements Animated {
     }
 
     reset() {
+        this.curpoints = this.points[0].map((p) => [ p[0], p[1] ]);
         this.frame = 0;
+        if(this.timerId == undefined) {
+            this.play();
+            this.pause();
+        }
     }
 }
