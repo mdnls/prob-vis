@@ -1733,7 +1733,12 @@ define("view/gaussian", ["require", "exports", "model/gaussian", "d3", "jquery"]
             delete this.timerId;
         }
         reset() {
+            this.curpoints = this.points[0].map((p) => [p[0], p[1]]);
             this.frame = 0;
+            if (this.timerId == undefined) {
+                this.play();
+                this.pause();
+            }
         }
     }
     exports.SVGAnimatedPoints = SVGAnimatedPoints;

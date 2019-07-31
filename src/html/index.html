@@ -46,19 +46,18 @@
                     </svg>
                 </div>
             </div>
-            
-            <button id="gan-comp-easy-play">Play</button>
-            <button id="gan-comp-easy-pause">Pause</button>
-            <button id="gan-comp-easy-reset">Reset</button>
         </div>
-        
+            
+        <button id="gan-comp-easy-play">Play</button>
+        <button id="gan-comp-easy-pause">Pause</button>
+        <button id="gan-comp-easy-reset">Reset</button>
         <div id="intro">
             <h2>
                 Introduction
             </h2>
             
             <p>
-                Generative Adversarial Networks are a class of neural architectures that can produce high quality samples of structured, high dimensional data. In particular, GANs make the assumption that this data is controlled by a small number of "factors of variation," which themselves can be modelled with a simple parametric distribution. During training, they learn a map from the factors of variation to the data space – like predicting rain given the humidity and temperature. 
+                Generative Adversarial Networks are a class of neural architectures that can produce high quality samples of structured, high dimensional data. In particular, GANs make the assumption that this data is controlled by a small number of "factors of variation," which themselves can be modeled with a simple parametric distribution. During training, they learn a map from the factors of variation to the data space – like predicting rain given the humidity and temperature. 
             </p>
             
             <p>
@@ -145,9 +144,9 @@
                 
                 $$H(P) = \expectedunder{P}{\log{\frac{1}{x}}}$$
             </p>
-            <h2>
+            <h3>
                 Cross Entropy 
-            </h2>
+            </h3>
             
             <p>Once you understand entropy as a characteristic of probability distributions, the cross entropy, Kullback–Leibler Divergence (KL), and Jenson Shannon Divergences are all short steps away. Starting with the definition of KL divergence, we can immediately see conections to the coding interpretation of entropy:</p>
             
@@ -171,9 +170,10 @@
             </div>
             <p>$KL(P\vert \vert Q)$ = <span id="kl-ex-val">_</span></p>
             
+            <h3>Jenson Shannon Divergence</h3>
             <p>The last measurement, Jenson Shannon Divergence, is intended to solve a numerical stability problem with both Cross Entropy and KL, namely that neither are defined when either of $P(x)$ or $Q(x)$ is 0. When $P(x) = 0$, a simple solution is to just omit $x$ from the sum, as though $(0)(\log(0)) = 0$*. But if $Q(x) = 0$, this trick doesn't apply.</p>
             
-            <p>And, following the intuition behind KL, it shouldn't. If we want to know how much further in $Q$'s tree we have to travel to find some event $x$ in $P$'s tree, there is no good answer in this case, because $x$ doesn't exist in $Q$'s tree. JSD solves this problem by introducing a new distribution, $P_m(x) = \frac{P(x) + Q(x)}{2}$, that averages over the two. This guarantees that $P_m(x) \not = 0$ whenever either $Q(x) \not = 0$ or $P(x) \not = 0$. The quantity itself is also an average, over the KL divergences $D_{KL}(P \vert \vert P_m)$ and $D_{KL}(Q \vert \vert P_m)$.</p>
+            <p>And, following the intuition behind KL, it shouldn't. If we want to know how much further in $Q$'s tree we have to travel to find some event $x$ in $P$'s tree, there is no good answer in this case, because $x$ doesn't exist in $Q$'s tree. JSD solves this problem by introducing a new distribution, $P_m(x)$, that averages over the two. This guarantees that $P_m(x) \not = 0$ whenever either $Q(x) \not = 0$ or $P(x) \not = 0$. The quantity itself is also an average, over the KL divergences $D_{KL}(P \vert \vert P_m)$ and $D_{KL}(Q \vert \vert P_m)$.</p>
             
             <p>
                 $$
@@ -182,10 +182,7 @@
                 $$
             </p>
             
-            
-            <p>Paragraph: there are many other ways to use this idea to create a distance between distributions: JSD, KL, XEnt, etc</p>
-            <p>Paragraph: however, all of these share one problem: when $q(x)=0$, the tree for $q(x)$ assigns no path at all to $x$.</p>
-            <p>Glue paragraph: instead, we can look at transport metrics [IPMs] which handle this issue more nicely</p>
+            <p>Entropy is a very elegant idea for comparing two distributions, and JSD is the band aid fix that makes it robust to edge cases. Cross entropy and KL are also often used in classification tasks, where it's easy to define discrete events for the domain of network's output distribution and it's reasonable to assume that none of those events have exactly $0$ probability. As we will see later, JSD still has an Achilles' heel, in that even though it is defined everywhere, its gradient may not always be useful. </p>
         </div>
         
         <div id="transport">
@@ -239,18 +236,17 @@
             </div>
             <p>This plan has a total cost of $30$ box-columns, where the original plan costs $70$ box-columns. Under the optimal plan, we see that the nonzero cells in the joint distributions are clustered around the diagonal, since minimizing the transportation distance means bringing $i$ as close to $j$ as possible.</p>
             
-            <p>As a bonus, the EM Distance is more robust than the entropy based measurements. If $P(x_i) = 0$, then the transport plan just doesn't move any mass away from $x_i$, and if $Q(x_j) = 0$, the plan just doesn't move any mass to $x_j$. In either case, the only effect is that $p(x_i, x_j) = 0$ for all $x_i$ with $P(x_i) = 0$ and for all $Q(x_j) = 0$ – this is a general property of joint distributions.</p>
+            <p>As a bonus, the EM Distance is more robust than the entropy based measurements. If $P(x_i) = 0$, then the transport plan just doesn't move any mass away from $x_i$, and if $Q(x_j) = 0$, the plan just doesn't move any mass to $x_j$. In either case, the only effect is that $p(x_i, x_j) = 0$ for all $x_i$ with $P(x_i) = 0$ and for all $Q(x_j) = 0$. This is a general property of joint distributions.</p>
         </div>
         
         <div id="manifold">
             <h2>Manifold Learning: The Pathological Case</h2>
             <p>
-                Earlier, we introduced the assumption that typical data tends to lie in a low dimensional manifold. We can now analyze the expected behavior of JSD and EM in this setting. 
+                Earlier, we assumed that typical data tends to lie in a low dimensional manifold. We can now analyze the expected behavior of JSD and EM in this setting. 
             </p>
             
-            <p>$\rangle$</p>
             <p>
-                First, lets consider what a simple manafold distribution might actually look like. Consider a distribution $P$ in $\mathbf{R}^2$ that assigns uniform probability to points in the closed line segment starting at $\vec{a} = \hvec{a_1, a_2}$ and ending at $\vec{b} = \hvec{b_1, b_2}$. This distribution lies on a $1$-dimensional manifold in $\mathbf{R}^2$ – if we want, we can parametetrize line segment as $f_P(t) = t \vec{a} + (1-t) \vec{b}$, for $t \in [0, 1]$, so that $t$ is our single factor of variation. Then, the probability of drawing a point on the segment from $f(t_1)$ to $f(t_2)$ is just $\frac{\vert t_2 - t_1 \vert}{1} = \vert t_2 - t_1 \vert$.  
+                First, lets consider what a simple manifold distribution might actually look like. Consider a distribution $P$ in $\mathbf{R}^2$ that assigns uniform probability to points in the closed line segment starting at $\vec{a} = \hvec{a_1, a_2}$ and ending at $\vec{b} = \hvec{b_1, b_2}$. This distribution lies on a $1$-dimensional manifold in $\mathbf{R}^2$ – if we want, we can parametetrize line segment as $f_P(t) = t \vec{a} + (1-t) \vec{b}$, for $t \in [0, 1]$, so that $t$ is our single factor of variation. Then, the probability of drawing a point on the segment from $f(t_1)$ to $f(t_2)$ is just $\frac{\vert t_2 - t_1 \vert}{1} = \vert t_2 - t_1 \vert$.  
             </p>
             
             <p>
@@ -263,10 +259,6 @@
             
             <p>
                 The effect is that any misalignment causes either $P(x)$ or $Q(x)$ to be $0$ at almost all points, except for the potential singleton point where $f_p(t) = f_q(t)$. This breaks KL, and really mangles JSD - tracing out its definition, we see that JSD is constant ...
-            </p>
-            
-            <p>
-                [math math math]
             </p>
             
             <p>
@@ -290,17 +282,17 @@
                         </svg>
                     </div>
                 </div>
-                
-                <button id="gan-comp-manifold-play">Play</button>
-                <button id="gan-comp-manifold-pause">Pause</button>
-                <button id="gan-comp-manifold-reset">Reset</button>
             </div>
+                
+            <button id="gan-comp-manifold-play">Play</button>
+            <button id="gan-comp-manifold-pause">Pause</button>
+            <button id="gan-comp-manifold-reset">Reset</button>
         </div>
         <div id="convergence">
             <h2>How does this distinction affect training of generative models?</h2>
             
             <p>
-                When discussing entropy, we were able to build a rich understanding of the measurement by constructing the Huffman tree, and were in turn able to derive closed forms for Entropy, KL, and JSD. Unfortunately, Earth Mover's Distane is much mroe difficult to compute exactly, and there is no analogous closed form that we can use to compute EM between $P$ and $Q$ directly.
+                When discussing entropy, we were able to build a rich understanding of the measurement by constructing the Huffman tree, and were in turn able to derive closed forms for Entropy, KL, and JSD. Unfortunately, Earth Mover's Distane is much more difficult to compute exactly, and there is no analogous closed form that we can use to compute EM between $P$ and $Q$ directly.
                 
             </p>
             <p>
@@ -313,7 +305,7 @@
                 The paper shows that, assuming $D(x)$ is optimal, this log likelihood loss is equivalent to JSD, up to a constant. That assumption isn't true during training, but partially maximizing the discriminator gives a good enough approximation that the generator can approach $P_d$.
             </p>
             <p>
-                Similarly, the more recent WGAN paper presents a similar training methodology, where training steps applied to the discriminator turn it into a differentiable approximation of the EM distance between $P_\theta$ and $P_d$.
+                Similarly, the more recent WGAN paper presents a similar training methodology, where training steps applied to the discriminator turn it into a differentiable approximation of the EM distance between $P_{\theta}$ and $P_d$.
             </p>
             
             
@@ -321,7 +313,11 @@
                 <h2>Conclusion</h2>
             </div>
             
+            <hr />
             <div id="citations">
+                <h3>Footnotes</h3>
+                
+                <h3>Citations</h3>
                 <ol>
                     <li>Goodfellow Paper</li>
                 </ol>
