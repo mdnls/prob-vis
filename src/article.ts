@@ -95,6 +95,8 @@ function setupIntro() {
     $(".container").on("swipeup", () => userInput("up"));
     $(".container").on("swipedown", () => userInput("down"));
 
+    $(".up").click(() => { userInput("up"); });
+    $(".down").click(() => { userInput("down"); });
 
     // Setup boxes
     let cNames = [".maroon", ".red", ".orange", ".yellow", ".lime", ".green", ".blue", ".violet"]

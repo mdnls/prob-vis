@@ -1,4 +1,5 @@
 <head>
+    <meta name="viewport" content= "width=device-width, initial-scale=1.0">
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
@@ -51,9 +52,9 @@
             </div>
         </div>
             
-        <a id="gan-comp-easy-play"><img class="anim-btn" src="images/play.svg" /></a>
-        <a id="gan-comp-easy-pause"><img class="anim-btn" src="images/pause.svg" /></a>
-        <a id="gan-comp-easy-reset"><img class="anim-btn" src="images/reset.svg" /></a>
+        <a id="gan-comp-easy-play" class="animcontrol"><img class="anim-btn" src="images/play.svg" /></a>
+        <a id="gan-comp-easy-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
+        <a id="gan-comp-easy-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
         <div id="intro">
             <h2>
                 Introduction
@@ -90,9 +91,9 @@
                 <p class="figdesc">The grey markers indicate where these two distributions differ. One can compare the two distributions by summing the the total line length.</p>
             </div>
             
-            <p>When each bin matches exactly, the distance is zero, since the distribution over bins is the same. More importantly, if we make a small change to distribution $X$, by taking an <svg class="orange box"></svg> for example, this distance will reflect that change and decrease. We can use the distance as a guide to iteratively update $X$ until it matches $Y$. This is the approach that GANs take when approximating $P_d$, the true distribution over data, by the generator distribution $P_\theta$. The parameters $\theta$ are like the boxes, and the statistical distance function is the guide for manipulating $\theta$ to make $P_\theta$ faithful to $P_d$. </p>
+            <p>When each bin matches exactly, the distance is zero, since the distribution over bins is the same. More importantly, if we make a small change to distribution $X$, by taking an <svg class="orange box"></svg> for example, this distance will reflect that change and decrease. We can use the distance as a guide to iteratively update $X$ until it matches $Y$. This is the approach that GANs take when approximating $P_d$, the true distribution over data, by the generator distribution $P_{\theta}$. The parameters $\theta$ are like the boxes, and the statistical distance function is the guide for manipulating $\theta$ to make $P_{\theta}$ faithful to $P_d$. </p>
             
-            <p>The Euclidean distance is good for illustrating this concept, but it isn't used in practice. The original GAN formulation was shown to reduce an upper bound of the Jenson Shannon divergence between $P_d$ and $P_\theta$, an information theoretic distance between distributions based on the idea of entropy. These GANs are infamous for their difficulty to train, and they typically require lots of fine tuning to be implemented successfully. Within the last two years, there has been increasing interest in Earth Mover's distance as a more stable alternative, and the rest of this post is about why.</p>
+            <p>The Euclidean distance is good for illustrating this concept, but it isn't used in practice. The original GAN formulation was shown to reduce an upper bound of the Jenson Shannon divergence between $P_d$ and $P_{\theta}$, an information theoretic distance between distributions based on the idea of entropy. These GANs are infamous for their difficulty to train, and they typically require lots of fine tuning to be implemented successfully. Within the last two years, there has been increasing interest in Earth Mover's distance as a more stable alternative, and the rest of this post is about why.</p>
         </div>
         
         <div id="entropy">
@@ -150,8 +151,13 @@
             <p>Huffman codes implement this idea by constructing a tree from the bottom up, starting with nodes corresponding to the least likely events, $\xp{1}{i}$ and $\xp{1}{j}$. The algorithm creates an internal node to hold these outcomes as leafs, and it is returned to the pool of potential events as a representative of the union outcome $\xp{1}{i} \cup \xp{1}{j}$. Then, the procedure repeats. When, finally, an $\xp{2}{}$ is sucked in as a leaf, its sibling will be a union outcome that has greater depth, since $\xp{2}{}$ is hiding some implicit merged children. In the tree below, these implicit nodes are transparent, where the fully colored nodes are actual outcomes. </p>
             
             <div class="fig">
-                <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" /></a>
-                
+                <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" class="inputBtn" /></a>
+
+                <div class="mobilenav">
+                    <a class="up"><img class="inputBtn" src="images/up.svg" /></a>
+                    <a class="down" style="margin-top: -15px;"><img class="inputBtn" src="images/down.svg" /></a>
+                </div>
+
                 <div id="entropy-interactive" class="vis-inset-long col-8 offset-2">
                     <div id="entropy-ex-interactive" class="h-100">
                         
@@ -179,13 +185,18 @@
                 \end{align}$$
             </p>
             
-            <p>This brings us back to the information theoretic perspective on distances between distributions: $P_d$ and $P_\theta$ are similar whe you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
+            <p>This brings us back to the information theoretic perspective on distances between distributions: $P_d$ and $P_{\theta}$ are similar whe you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
             
             <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. Still, getting the KL to zero requires equalizing the distributions. You can verify this yourself with the diagram below:</p>
             
             <div class="fig">
-                <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" /></a>
-                    
+                <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" class="inputBtn" /></a>
+
+                <div class="mobilenav">
+                    <a class="up"><img class="inputBtn" src="images/up.svg" /></a>
+                    <a class="down" style="margin-top: -15px;"><img class="inputBtn" src="images/down.svg" /></a>
+                </div>
+
                 <div id="xentropy-interactive" class="col-12">
                     <div id="xentropy-ex-interactive" class="h-100">
                         
@@ -215,24 +226,34 @@
             <p>Like entropy, Earth Mover's distance relies on an abstraction to determine the distance between probability distributions, and in this case, that abstraction is the "transport plan."  Simply put, a transport plan is a literal blueprint for turning one distribution into another – for each event in the source distribution, it defines the locations and quantities in the target distribution to which some amount of "mass" should be transported.</p>
             
             <div class="fig">
-                    <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" /></a>
-                    
-                    <div id="transport-interactive" class="col-6 mx-auto vis-inset">
-                        <div class="h-75">
-                            <div id="transport-ex-interactive" class="h-100">
-                                
-                            </div>
+                   
+                <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" class="inputBtn" /></a>
+
+                <div class="mobilenav">
+                    <a class="up"><img class="inputBtn" src="images/up.svg" /></a>
+                    <a class="down" style="margin-top: -15px;"><img class="inputBtn" src="images/down.svg" /></a>
+                </div>
+
+                <div id="transport-interactive" class="col-6 mx-auto vis-inset">
+                    <div class="h-75">
+                        <div id="transport-ex-interactive" class="h-100">
+                            
                         </div>
                     </div>
-                    <p class="figdesc">A transport plan defines how one probability distribution can be transformed into another.</p>
                 </div>
+                <p class="figdesc">A transport plan defines how one probability distribution can be transformed into another.</p>
+            </div>
             
             
             <p>In other words, the transport plan gives each of the source events its own distribution over the target events, shown in black in the diagram above. It may not be obvious at first, but these types of transport plans are exactly equivalent to a probabalistic joint distribution, where the source and target distributions are marginals. Here's the same transport plan, but this time represented as marginals of a joint distribution.</p>
             
             <div class="fig">
-                <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" /></a>
-                    
+                <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" class="inputBtn" /></a>
+
+                <div class="mobilenav">
+                    <a class="up"><img class="inputBtn" src="images/up.svg" /></a>
+                    <a class="down" style="margin-top: -15px;"><img class="inputBtn" src="images/down.svg" /></a>
+                </div>  
                 <div id="transport-matrix-interactive" class="col-6 mx-auto vis-inset-long" style="margin: 20px">
                     <div id="transport-matrix-ex-interactive" class="h-100">
                         
@@ -263,7 +284,12 @@
             <p>For comparison, we can take the same two distributions in the previous example, and compute an optimal transport plan between them by searching over $\Gamma(P, Q)$.</p>
             
             <div class="fig">
-                <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" /></a>
+                <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" class="inputBtn" /></a>
+
+                <div class="mobilenav">
+                    <a class="up"><img class="inputBtn" src="images/up.svg" /></a>
+                    <a class="down" style="margin-top: -15px;"><img class="inputBtn" src="images/down.svg" /></a>
+                </div>
                 
                 <div id="opt-transport-matrix-interactive" class="col-6 mx-auto vis-inset-long" style="margin: 20px">
                     <div id="opt-transport-matrix-ex-interactive" class="h-100">
@@ -289,7 +315,7 @@
             </p>
             
             <p>
-                The distribution $P$ represents $P_d$, the distribution we want to match. For $P_\theta$, we introduce a second manifold distribution, $Q$. Like $P$, we will assume $Q$ is a line segment, this time connecting the points $\vec{u} = (u_1, u_2)$ and $\vec{v} = (v_1, v_2)$. This distribution has its own parametrized line segment, $f_Q(t) = t \vec{u} + (1-t) \vec{v}$.
+                The distribution $P$ represents $P_d$, the distribution we want to match. For $P_{\theta}$, we introduce a second manifold distribution, $Q$. Like $P$, we will assume $Q$ is a line segment, this time connecting the points $\vec{u} = (u_1, u_2)$ and $\vec{v} = (v_1, v_2)$. This distribution has its own parametrized line segment, $f_Q(t) = t \vec{u} + (1-t) \vec{v}$.
             </p>
             
             <p>
@@ -323,9 +349,9 @@
                 </div>
             </div>
                 
-            <a id="gan-comp-manifold-play"><img class="anim-btn" src="images/play.svg" /></a>
-            <a id="gan-comp-manifold-pause"><img class="anim-btn" src="images/pause.svg" /></a>
-            <a id="gan-comp-manifold-reset"><img class="anim-btn" src="images/reset.svg" /></a>
+            <a id="gan-comp-manifold-play" class="animcontrol"><img class="anim-btn" src="images/play.svg" /></a>
+            <a id="gan-comp-manifold-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
+            <a id="gan-comp-manifold-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
         </div>
         <div id="convergence">
             <h2>How does this distinction affect training of generative models?</h2>
@@ -335,10 +361,10 @@
                 
             </p>
             <p>
-                Even if there were such a formula, there is another problem that has been glossed over up to this point: calculating the distance between $P_\theta$ and $P_d$ requires knowledge of $P_d (x)$, which we would typically not be able to calculate exactly. This in turn prevents us from calculating both the distance $d(P_{\theta}, P_d)$ and its gradient. No matter the computation power, reseource access, or network capacity, the key problem in training a GAN at scale is constructing a training scheme that can circumvent this calculation and still minimize a distance between $P_\theta$ and $P_d$.
+                Even if there were such a formula, there is another problem that has been glossed over up to this point: calculating the distance between $P_{\theta}$ and $P_d$ requires knowledge of $P_d (x)$, which we would typically not be able to calculate exactly. This in turn prevents us from calculating both the distance $d(P_{\theta}, P_d)$ and its gradient. No matter the computation power, reseource access, or network capacity, the key problem in training a GAN at scale is constructing a training scheme that can circumvent this calculation and still minimize a distance between $P_{\theta}$ and $P_d$.
             </p>
             <p>
-                In the original, and now famous method, a discriminator network $D(x)$ has the goal of predicting whether a given sample was generated by $P_d$. It is trained to maximize the joint log-likelihood of predicting false on $x \sim P_{\theta}(x)$ and true on $x^* \sim P_d(x)$, while the generator network $G(x)$ that induces $P_theta$ is simultaneously trained to maximize the likelihood that $x$ is predicted as true. 
+                In the original, and now famous method, a discriminator network $D(x)$ has the goal of predicting whether a given sample was generated by $P_d$. It is trained to maximize the joint log-likelihood of predicting false on $x \sim P_{\theta}(x)$ and true on $x^* \sim P_d(x)$, while the generator network $G(x)$ that induces $P_{\theta}$ is simultaneously trained to maximize the likelihood that $x$ is predicted as true. 
             </p>
             <p>
                 The paper shows that, assuming $D(x)$ is optimal, this log likelihood loss is equivalent to JSD, up to a constant. That assumption isn't true during training, but partially maximizing the discriminator gives a good enough approximation that the generator can approach $P_d$.

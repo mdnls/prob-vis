@@ -1608,6 +1608,9 @@ define("view/gaussian", ["require", "exports", "model/gaussian", "d3", "jquery"]
             this.svgTarget.refresh();
         }
         play() {
+            if (this.timerId != undefined) {
+                return;
+            }
             let alpha = 0.3;
             let i = 0;
             let ewma_helper = function (arr, prev) {
@@ -1663,6 +1666,9 @@ define("view/gaussian", ["require", "exports", "model/gaussian", "d3", "jquery"]
                 .attr("id", "targetLine");
         }
         play() {
+            if (this.timerId != undefined) {
+                return;
+            }
             let svgWidth = $(this.svg).width();
             let svgHeight = $(this.svg).height();
             let viewBoxSideLength = Math.min(svgWidth, svgHeight);
@@ -1834,6 +1840,8 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
         $(".container").on("swipeleft", () => { alert("foo2"); userInput("left"); });
         $(".container").on("swipeup", () => userInput("up"));
         $(".container").on("swipedown", () => userInput("down"));
+        $(".up").click(() => { userInput("up"); });
+        $(".down").click(() => { userInput("down"); });
         let cNames = [".maroon", ".red", ".orange", ".yellow", ".lime", ".green", ".blue", ".violet"];
         let colors = Array.from({ length: 8 }, (v, k) => d3.interpolateSpectral(k / 7));
         cNames.forEach((sel, i) => {

@@ -56,10 +56,31 @@ b {
 
 .fn {
   vertical-align: super;
-  font-size: smaller; }
+  font-size: smaller;
+  text-align: center; }
+
+.animcontrol:hover {
+  cursor: pointer; }
+
+.animcontrol img {
+  height: 30px;
+  width: 30px; }
 
 .touchable {
   float: right; }
-  .touchable img {
-    height: 30px;
-    width: 30px; }
+
+.inputBtn {
+  height: 30px;
+  width: 30px;
+  margin: 10px; }
+  .inputBtn:hover {
+    cursor: pointer; }
+
+@media screen and (min-width: 600px) {
+  .mobilenav {
+    display: none; } }
+
+.mobilenav a {
+  display: block;
+  clear: both;
+  float: right; }

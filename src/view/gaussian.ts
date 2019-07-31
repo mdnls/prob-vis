@@ -160,6 +160,9 @@ export class SVGAnimatedGaussian extends SVGGaussian2D implements Animated {
     }
 
     play() {
+        if(this.timerId != undefined) {
+            return;
+        }
         let alpha = 0.3;
         let i = 0;
         let ewma_helper = function(arr: number[], prev: number[]) {
@@ -236,6 +239,9 @@ export class SVGAnimatedPoints implements Animated {
     }
 
     play() {
+        if(this.timerId != undefined) {
+            return;
+        }
         let svgWidth = $(this.svg).width();
         let svgHeight = $(this.svg).height();
 

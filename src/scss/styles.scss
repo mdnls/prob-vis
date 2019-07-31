@@ -71,12 +71,40 @@ b {
 .fn {
     vertical-align: super;
     font-size: smaller;
+    text-align: center;
 }
 
-.touchable {
+.animcontrol {
+    &:hover {
+        cursor: pointer;
+    }
     img {
         height: 30px;
         width: 30px;
     }
+}
+
+.touchable {
     float: right;
+}
+
+.inputBtn {
+    &:hover {
+        cursor: pointer;
+    }
+    height: 30px;
+    width: 30px;
+    margin: 10px;
+}
+
+
+.mobilenav {
+    @media screen and (min-width: 600px) {
+        display: none;
+    }
+    a {
+        display: block;
+        clear: both;
+        float: right;
+    }
 }
