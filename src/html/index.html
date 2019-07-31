@@ -69,7 +69,7 @@
             </p>
             
             <p>
-                Instead, this article will explore some of the more creative ways to define distances for GAN training, and in particular it will focus on the differences between information theoretic distance functions and Earth Mover's distance. EM has recently been proposed as improvement to information theoretic distances which can improve training stability and output quality in regimes that are typical for common GAN applications, and so it is important to understand the intuition behind why this is the case.
+                Instead, this article will explore some of the more creative ways to define distances for GAN training, and in particular it will focus on the differences between information-theoretic distance functions and Earth Mover's distance. EM has recently been proposed as improvement to information-theoretic distances which can improve training stability and output quality in regimes that are typical for common GAN applications, and so it is important to understand the intuition behind why this is the case.
             </p>
             <h3>What does it mean to have a Statistical Distance?</h3>
             <p>
@@ -93,7 +93,7 @@
             
             <p>When each bin matches exactly, the distance is zero, since the distribution over bins is the same. More importantly, if we make a small change to distribution $X$, by taking an <svg class="orange box"></svg> for example, this distance will reflect that change and decrease. We can use the distance as a guide to iteratively update $X$ until it matches $Y$. This is the approach that GANs take when approximating $P_d$, the true distribution over data, by the generator distribution $P_{\theta}$. The parameters $\theta$ are like the boxes, and the statistical distance function is the guide for manipulating $\theta$ to make $P_{\theta}$ faithful to $P_d$. </p>
             
-            <p>The Euclidean distance is good for illustrating this concept, but it isn't used in practice. The original GAN formulation was shown to reduce an upper bound of the Jenson Shannon divergence between $P_d$ and $P_{\theta}$, an information theoretic distance between distributions based on the idea of entropy. These GANs are infamous for their difficulty to train, and they typically require lots of fine tuning to be implemented successfully. Within the last two years, there has been increasing interest in Earth Mover's distance as a more stable alternative, and the rest of this post is about why.</p>
+            <p>The Euclidean distance is good for illustrating this concept, but it isn't used in practice. The original GAN formulation was shown to reduce an upper bound of the Jenson Shannon Divergence between $P_d$ and $P_{\theta}$, an information-theoretic distance between distributions based on the idea of entropy. These GANs are infamous for their difficulty to train, and they typically require lots of fine tuning to be implemented successfully. Within the last two years, there has been increasing interest in Earth Mover's distance as a more stable alternative, and the rest of this post is about why.</p>
         </div>
         
         <div id="entropy">
@@ -101,8 +101,8 @@
                 Entropy
             </h2>
             
-            <p>The Jenson Shannon Divergence (JSD) between two distributions is a distance function that has its roots in information entropy <b>R</b>. The intuition is that two distributions are similar whe you can communicate their events in similar ways. To formalize this idea, the abstraction at play is the "information channel." An observer Bob has an open channel to Alice, so that he can tell her about samples that he draws from a distribution $P_d$. For simplicity, we assume that Bob is communicating with bits, and that he and Alice have agreed ahead of time on their choice of codes. Under this abstraction, entropy is the minimum number of bits on average that Bob needs to tell Alice about which samples he observes from $P_d$. </p>
-            <p>This quantity depends completely on the "shape" of $P_d$, and in turn it serves as a representation of that shape. For example, under a distribution where <svg class="maroon box"></svg>  and <svg class="blue box"></svg> are the only events that can happen, a single bit is enough for unambiguous communication, so the entropy is $1$.</p>
+            <p>The Jenson Shannon Divergence (JSD) between two distributions is a distance function that has its roots in information entropy. The intuition is that two distributions are similar when you can communicate their events in similar ways. To formalize this idea, the abstraction at play is the "information channel." An observer Bob has an open channel to Alice, so that he can tell her about samples that he draws from a distribution $P$. For simplicity, we assume that Bob is communicating with bits, and that he and Alice have agreed ahead of time on their choice of codes. Under this abstraction, entropy is the minimum number of bits on average that Bob needs to tell Alice about which samples he observes from $P$. </p>
+            <p>This quantity depends completely on the "shape" of $P$, and in turn it serves as a representation of that shape. For example, under a distribution where <svg class="maroon box"></svg>  and <svg class="blue box"></svg> are the only events that can happen, a single bit is enough for unambiguous communication, so the entropy is $1$.</p>
             <div class="fig">
                 <div id="simple-entropy" class="vis-inset col-12">
                     <div class="h-100">
@@ -123,7 +123,7 @@
                 <button id="entropy-ex-high">High Entropy</button>
                 <p class="figdesc">An example of a distribution with $H$ = <span id="entropy-ex-val"></span>.</p>
             </div>
-            <p>To understand why, we can explore the process behind constructing an optimal code. First, since entropy is an average over codes for different events, it is helpful to focus on a single event $x_i$ and assume the other events $x_j$ are are just copies that occur with equal likelihood. Then, interpreting $P(x_i)$ as a ratio $\frac{s_{x_i}}{N}$, we see that $\frac{1}{P(x)} = \frac{N}{s_{x_i}}$ is the number of unique outcomes that we need to distinguish with our code<span id="fn_bayesian" class="fn"><a href="#fn_bayesian_t">2</a></span>. Each outcome corresponds to all events of a particular $x_i$, which we assume occurs with frequency $s_{x_i}$ out of $N$ trials. </p>
+            <p>To understand why, we can explore the process behind constructing an optimal code. First, since entropy is an average over codes for different events, it is helpful to focus on a single event $x_i$ and assume the other events $x_j$ are just copies that occur with equal likelihood. Then, interpreting $P(x_i)$ as a ratio $\frac{s_{x_i}}{N}$, we see that $\frac{1}{P(x)} = \frac{N}{s_{x_i}}$ is the number of unique outcomes that we need to distinguish with our code<span id="fn_bayesian" class="fn"><a href="#fn_bayesian_t">2</a></span>. Each outcome corresponds to all events of a particular $x_i$, which we assume occurs with frequency $s_{x_i}$ out of $N$ trials. </p>
             <p>To distinguish between these outcomes, we want binary codes of minimal length that can represent $N^* = \frac{1}{P(x_i)}$ different outcomes. The codes can be visualized as paths in a binary decision tree:</p>
             
             <div class="fig">
@@ -136,11 +136,11 @@
             </div>
 
             
-            <p>Each layer of the tree represents one bit, and the leaves are distinct outcomes. Adding a layer increases the number of leaves exponentially, so the minimal code length is $d = \log_2 N^* $.</p>
+            <p>Each layer of the tree represents one bit, and the leaves are distinct outcomes. Adding a layer increases the number of leaves exponentially, so we need a minimum of $d = \log_2 N^* $ to guarantee at least $N^*$ unique leaves..</p>
             
-            <p>This means that we can trivially construct an optimal coding when all events have the same likelihood. According to the rule of thumb, this case has the highest entropy of all distributions with $N^*$ outcomes. So, we can now consider the effect of introducing a non-uniform distribution over the outcomes and verify that this is indeed the case.</p>
+            <p>This means that we can trivially construct an optimal coding when all events have the same likelihood. According to the rule of thumb, this case has the highest entropy of all distributions with $N^*$ outcomes. So, we can now consider the effect of introducing a non-uniform distribution over the outcomes and verify that this is indeed the case. At this point, we will introduce the notation $x^{(1}}_i$, $x^{(2)}_i$, and so on. The upper indices identify a set $x^{(k)}$ of unique events, each having the same probability. We will build an optimal code for each of the different $x^{(k)}_i$ iteratively, and the probability of the $x^{(k)}$ will determine the point at those events have their codes assigned.</p>
             
-            <p>We start with the least likely event, say $\xp{1}{}$. As in the previous example, we can construct a uniform distribution of copy outcomes $\xp{1}{i}$ and assign codes with a decision tree of depth $\log_2 \frac{1}{\xp{1}{}}$. Then, to represent an outcome more likely than $\xp{1}{}$ – say, $\xp{2}{}$ – we can simply merge a few of the copies $\xp{1}{i}$, so that a path to any of them is an equivalent way to communicate $\xp{2}{}$. This is advantageous whenever we can find sibling copies to merge, since it allows us to save a bit by opting not to distinguish those siblings at all.</p>
+            <p>We start with the least likely event, say $\xp{1}{1}$. We want to match this event with an <i>outcome</i>, or a unique path to a leaf of the tree, in a way that allocates an optimal number of bits to that event. As in the previous example, we can start with a uniform distribution of copy outcomes $\xp{1}{i}$ and assign codes with a decision tree of depth $\log_2 \frac{1}{\xp{1}{}}$. Then, to represent an outcome more likely than $\xp{1}{}$ – say, $\xp{2}{1}$ – we can simply merge a few of the copies $\xp{1}{i}$, so that a path to any of them is an equivalent way to communicate $\xp{2}{1}$. This is advantageous whenever we can find sibling copies to merge, since it allows us to save a bit by opting not to distinguish those siblings at all.</p>
             
             <div class="fig">
                 <img src="images/tree_replace.svg" class="col-md-10 offset-md-1 col-xs-12"/>
@@ -148,7 +148,7 @@
             </div>
 
             
-            <p>Huffman codes implement this idea by constructing a tree from the bottom up, starting with nodes corresponding to the least likely events, $\xp{1}{i}$ and $\xp{1}{j}$. The algorithm creates an internal node to hold these outcomes as leafs, and it is returned to the pool of potential events as a representative of the union outcome $\xp{1}{i} \cup \xp{1}{j}$. Then, the procedure repeats. When, finally, an $\xp{2}{}$ is sucked in as a leaf, its sibling will be a union outcome that has greater depth, since $\xp{2}{}$ is hiding some implicit merged children. In the tree below, these implicit nodes are transparent, where the fully colored nodes are actual outcomes. </p>
+            <p>By repeatedly merging nodes in this way, we can add all the $\xp{k}{}$ so that the most likely events always have the shortest codes. This procedure is called the Huffman Algorith, and the resulting codes are Huffman codes. The algorithm creates an internal node to hold these outcomes as leafs, and it is returned to the pool of potential events as a representative of the union outcome $\xp{1}{i} \cup \xp{1}{j}$. Then, the procedure repeats. When, finally, an $\xp{2}{}$ is sucked in as a leaf, its sibling will be a union outcome that has greater depth, since $\xp{2}{}$ is hiding some implicit merged children. In the tree below, these implicit nodes are transparent, where the fully colored nodes are actual outcomes. </p>
             
             <div class="fig">
                 <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" class="inputBtn" /></a>
@@ -185,7 +185,7 @@
                 \end{align}$$
             </p>
             
-            <p>This brings us back to the information theoretic perspective on distances between distributions: $P_d$ and $P_{\theta}$ are similar whe you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
+            <p>This brings us back to the information-theoretic perspective on distances between distributions: $P_d$ and $P_{\theta}$ are similar when you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
             
             <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. Still, getting the KL to zero requires equalizing the distributions. You can verify this yourself with the diagram below:</p>
             
@@ -208,7 +208,7 @@
             <h3>Jenson Shannon Divergence</h3>
             <p>The last measurement, Jenson Shannon Divergence, is intended to solve a numerical stability problem with both Cross Entropy and KL, namely that neither are defined when either of $P(x)$ or $Q(x)$ is 0. When $P(x) = 0$, a simple solution is to just omit $x$ from the sum, as though $(0)(\log(0)) = 0$<span id="fn_math" class="fn"><a href="#fn_math_t">4</a></span>. But if $Q(x) = 0$, this trick doesn't apply.</p>
             
-            <p>And, following the intuition behind KL, it shouldn't. If we want to know how much further in $Q$'s tree we have to travel to find some event $x$ in $P$'s tree, there is no good answer in this case, because $x$ doesn't exist in $Q$'s tree. JSD solves this problem by introducing a new distribution, $P_m(x)$, that averages over the two. This guarantees that $P_m(x) \not = 0$ whenever either $Q(x) \not = 0$ or $P(x) \not = 0$. The quantity itself is also an average, over the KL divergences $D_{KL}(P \vert \vert P_m)$ and $D_{KL}(Q \vert \vert P_m)$.</p>
+            <p>And, following the intuition behind KL, it shouldn't. If we want to know how much further in $Q$'s tree we have to travel to find some event $x$ in $P$'s tree, there is no good answer in this case, because $x$ doesn't exist in $Q$'s tree. JSD solves this problem by introducing a new distribution, $P_m(x)$, that averages over the two. This guarantees that $P_m(x) \not = 0$ whenever either $Q(x) \not = 0$ or $P(x) \not = 0$. The quantity itself is also an average, over the KL Divergences $D_{KL}(P \vert \vert P_m)$ and $D_{KL}(Q \vert \vert P_m)$.</p>
             
             <p>
                 $$
