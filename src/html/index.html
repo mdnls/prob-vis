@@ -191,9 +191,8 @@
                         
                     </div>
                 </div>
-                <p class="figdesc">The left distribution $P$ has $KL(P\vert \vert Q)$ = <span id="kl-ex-val">_</span> with respect to the right distribution. Select an event to see its path in the Huffman Tree.</p>
+                <p class="figdesc">The left distribution $P$ has <b>$KL(P\vert \vert Q)$ = <span id="kl-ex-val">_</span></b> with respect to the right distribution. Select an event to see its path in the Huffman Tree.</p>
             </div>
-            <p>$KL(P\vert \vert Q)$ = <span id="kl-ex-val">_</span></p>
             
             <h3>Jenson Shannon Divergence</h3>
             <p>The last measurement, Jenson Shannon Divergence, is intended to solve a numerical stability problem with both Cross Entropy and KL, namely that neither are defined when either of $P(x)$ or $Q(x)$ is 0. When $P(x) = 0$, a simple solution is to just omit $x$ from the sum, as though $(0)(\log(0)) = 0$<span id="fn_math" class="fn"><a href="#fn_math_t">4</a></span>. But if $Q(x) = 0$, this trick doesn't apply.</p>
