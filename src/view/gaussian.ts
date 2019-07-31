@@ -342,7 +342,7 @@ export class SVGAnimatedPoints implements Animated {
                     .attr("d", lineFn(c))
                     .attr("id", "dataLine")
                     .attr("stroke", colors[0])
-                    .attr("stroke-width", 2)
+                    .attr("stroke-width", 4)
                     .attr("fill", "none");
                     
                 this.curpoints = c;

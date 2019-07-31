@@ -19,7 +19,9 @@ let colors = {
     "default": Array.from({length: 8}, (v, k) => d3.interpolateSpectral(k/7)),
     "rowHist": Array.from({length: 8}, (v, k) => d3.interpolateSpectral(k/7)),
     "colHist": Array.from({length: 8}, (v, k) => d3.interpolateSpectral(k/7)),
-    "colOverlay": ["#000"]
+    "colOverlay": ["#000"],
+    "wgan-manifold": ["rgb(158, 1, 66)"],
+    "gan-manifold": ["rgb(75, 160, 177)"]
 }
 
 let attnHash: {[id: string] : (key: string) => any} = {};
@@ -335,7 +337,7 @@ function setupIntro() {
     let gMTargetSlope = optimizers["ganManifold"]["targetSlope"];
     let gMTarget = new Line2D(gMTargetSlope, gMTargetMean);
 
-    let svgGMAnim = new SVGAnimatedPoints("wgan-manifold", "#wgan-manifold-optim-ex", 15, gMPoints, gMTarget, [[-2, 4], [-2, 4]], conf);
+    let svgGMAnim = new SVGAnimatedPoints("gan-manifold", "#gan-manifold-optim-ex", 15, gMPoints, gMTarget, [[-2, 4], [-2, 4]], conf);
 
     $("#gan-comp-manifold-play").click(() => { svgWMAnim.play(); svgGMAnim.play(); });
     $("#gan-comp-manifold-pause").click(() => { svgWMAnim.pause(); svgGMAnim.pause(); });
