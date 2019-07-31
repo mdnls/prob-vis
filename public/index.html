@@ -166,13 +166,12 @@
                 <p class="figdesc">For a given distribution, the Huffman Tree allocates the shortest codes to the most likely events.</p>
             </div>
             
-            <p></p>
             <p>This procedure is called the Huffman Algorithm, and it can be used to efficiently construct optimal codes for the events in $P$. Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log_2(\frac{1}{P(\xp{n}{})})$, which will be an integer quantity. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events<span id="fn_arthm_coding" class="fn"><a href="#fn_arthm_coding_t">3</a></span>, and the lower bound on the expected number of bits transferred is the entropy:
                 
                 $$H(P) = \expectedunder{P}{\log_2{\frac{1}{P(x)}}}$$
             </p>
             <h3>
-                Cross Entropy 
+                Kullback-Leibler, Cross Entropy, and Jenson Shannon Divergence
             </h3>
             
             <p>Once you understand entropy as a characteristic of probability distributions, the cross entropy, Kullback–Leibler Divergence (KL), and Jenson Shannon Divergences are all short steps away. Starting with the definition of KL divergence, we can immediately see conections to the coding interpretation of entropy:</p>
@@ -320,43 +319,20 @@
             </p>
             
             <p>
-                Because these two distributions lie in $1$ dimensional manifolds, they obviously can't have an intersection with more than $1$ dimension. This can only happen when $\vec{a}$, $\vec{b}$, $\vec{u}$, and $\vec{v}$ all lie on the same line together. Otherwise, even if they're just slightly misaligned, the intersection is either a single point or none at all.
+                Because these two distributions lie in $1$ dimensional manifolds, they obviously can't have an intersection with more than $1$ dimension. The intersection can only be $1$-dimensional when $\vec{a}$, $\vec{b}$, $\vec{u}$, and $\vec{v}$ all lie on the same line together. Otherwise, even if they're just slightly misaligned, the intersection is either a single point or the empty set.
             </p>
             
             <p>
-                The effect is that any misalignment causes either $P(x)$ or $Q(x)$ to be $0$ at almost all points, except for the potential singleton point where $f_p(t) = f_q(t)$. This breaks KL, and really mangles JSD - tracing out its definition, we see that JSD is constant ...
+                The effect is that any misalignment causes either $P(x)$ or $Q(x)$ to be $0$ at almost all points, except for the potential singleton point where $f_p(t) = f_q(t)$. In this case, JSD attains its maximum value, $\log_2(2) = 1$ – the distributions are "as far apart as possible". But, any incremental step $Q \gets Q'$ that can't immediately fix the misalignment will also have $JSD(P\vert \vert Q')= \log_2(2)$, and this means that the gradient of JSD becomes $0$. It no longer gives any information about how to incrementally bring $Q$ to $P$, and so for manifold distributions JSD becomes as helpful as the binary distance. 
             </p>
-            
+
             <p>
-                Any incremental step of $Q \gets Q'$ that can't immediately fix the misalignment will also have $JSD(P\vert \vert Q')= \log_2(2)$, and this means that the gradient of JSD becomes $0$. It no longer gives any information about how to incrementally bring $Q$ to $P$, and so for manifold distributions JSD becomes as helpful as the binary distance. 
+                This is the Achilles' heel of JSD, mentioned earlier. Even though JSD fixes the numerical instabilities of KL, its relationship to entropy means that two distributions whose events are only negligibly intersecting are, where entropy is concerned, as different as they can possibly be. Meanwhile, as long the Euclidean distance between events is defined, this case is nothing special for Earth Mover's distance.
             </p>
-            
-            <p>
-                Meanwhile, this case is nothing special for Earth Mover's distance. As long as the euclidean distance is defined between pair
-            </p>
-                        
-            <div id="gan-comp-manifold" class="col-12 vis-inset-long">
-                <div class="row h-100 anim">
-                    <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
-                        <svg id="wgan-manifold-optim-ex" class="col-12 h-100" style="padding: 0px">
-                            
-                        </svg>
-                    </div>
-                    <div class="col-6 h-100" style="padding: 20px 20px 20px 10px">
-                        <svg id="gan-manifold-optim-ex" class="col-12 h-100" style="padding: 0px">
-                            
-                        </svg>
-                    </div>
-                </div>
-            </div>
-                
-            <a id="gan-comp-manifold-play" class="animcontrol"><img class="anim-btn" src="images/play.svg" /></a>
-            <a id="gan-comp-manifold-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
-            <a id="gan-comp-manifold-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
-        </div>
+
         <div id="convergence">
             <h2>How does this distinction affect training of generative models?</h2>
-            
+            \
             <p>
                 When discussing entropy, we were able to build a rich understanding of the measurement by constructing the Huffman tree, and were in turn able to derive closed forms for Entropy, KL, and JSD. Unfortunately, Earth Mover's Distance is much more difficult to compute exactly, and there is no analogous closed form that we can use to compute EM between $P$ and $Q$ directly.
                 
@@ -373,8 +349,28 @@
             <p>
                 Similarly, the more recent WGAN paper presents a similar training methodology, where training steps applied to the discriminator turn it into a differentiable approximation of the EM distance between $P_{\theta}$ and $P_d$.
             </p>
-            
-            
+            <div id="gan-comp-manifold" class="col-12 vis-inset-long">
+                    <div class="row h-100 anim">
+                        <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
+                            <svg id="wgan-manifold-optim-ex" class="col-12 h-100" style="padding: 0px">
+                                
+                            </svg>
+                        </div>
+                        <div class="col-6 h-100" style="padding: 20px 20px 20px 10px">
+                            <svg id="gan-manifold-optim-ex" class="col-12 h-100" style="padding: 0px">
+                                
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                    
+                <a id="gan-comp-manifold-play" class="animcontrol"><img class="anim-btn" src="images/play.svg" /></a>
+                <a id="gan-comp-manifold-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
+                <a id="gan-comp-manifold-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
+            </div>
+
+
+        
             <div id="conclusion">
                 <h2>Conclusion</h2>
             </div>
