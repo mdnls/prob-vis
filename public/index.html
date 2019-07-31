@@ -136,7 +136,7 @@
             </div>
 
             
-            <p>Each layer of the tree represents one bit, and the leaves are distinct outcomes. Adding a layer increases the number of leaves exponentially, so we need a minimum of $d = \log_2 N^* $ to guarantee at least $N^*$ unique leaves..</p>
+            <p>Each layer of the tree represents one bit, and the leaves are distinct outcomes. Adding a layer increases the number of leaves exponentially, so we need a minimum of $d = \log_2 N^* $ to guarantee at least $N^*$ unique leaves.</p>
             
             <p>This means that we can trivially construct an optimal coding when all events have the same likelihood. According to the rule of thumb, this case has the highest entropy of all distributions with $N^*$ outcomes. So, we can now consider the effect of introducing a non-uniform distribution over the outcomes and verify that this is indeed the case. At this point, we will introduce the notation $x^{(1}}_i$, $x^{(2)}_i$, and so on. The upper indices identify a set $x^{(k)}$ of unique events, each having the same probability. We will build an optimal code for each of the different $x^{(k)}_i$ iteratively, and the probability of the $x^{(k)}$ will determine the point at those events have their codes assigned.</p>
             
@@ -166,9 +166,9 @@
                 <p class="figdesc">For a given distribution, the Huffman Tree allocates the shortest codes to the most likely events.</p>
             </div>
             
-            <p>Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log(\frac{1}{P(\xp{n}{})})$, which will be an integer quantity. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events<span id="fn_arthm_coding" class="fn"><a href="#fn_arthm_coding_t">3</a></span>, and the lower bound on the expected number of bits transferred is the entropy:
+            <p>Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log_2(\frac{1}{P(\xp{n}{})})$, which will be an integer quantity. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events<span id="fn_arthm_coding" class="fn"><a href="#fn_arthm_coding_t">3</a></span>, and the lower bound on the expected number of bits transferred is the entropy:
                 
-                $$H(P) = \expectedunder{P}{\log{\frac{1}{x}}}$$
+                $$H(P) = \expectedunder{P}{\log_2{\frac{1}{P(x)}}}$$
             </p>
             <h3>
                 Cross Entropy 
@@ -179,8 +179,8 @@
             <p>
                 $$
                 \begin{align}
-                D_{KL}(P \vert \vert Q) & = - \sum_{x} P(x) \log \frac{Q(x)}{P(x)} \\
-                & = \expectedunder{x \sim P}{\log \frac{1}{Q(x)} - \log \frac{1}{P(x)}} \\
+                D_{KL}(P \vert \vert Q) & = - \sum_{x} P(x) \log_2 \frac{Q(x)}{P(x)} \\
+                & = \expectedunder{x \sim P}{\log_2 \frac{1}{Q(x)} - \log_2 \frac{1}{P(x)}} \\
                 & = \expectedunder{x \sim P}{d(q(x)) - d(p(x))}
                 \end{align}$$
             </p>
@@ -206,7 +206,7 @@
             </div>
             
             <h3>Jenson Shannon Divergence</h3>
-            <p>The last measurement, Jenson Shannon Divergence, is intended to solve a numerical stability problem with both Cross Entropy and KL, namely that neither are defined when either of $P(x)$ or $Q(x)$ is 0. When $P(x) = 0$, a simple solution is to just omit $x$ from the sum, as though $(0)(\log(0)) = 0$<span id="fn_math" class="fn"><a href="#fn_math_t">4</a></span>. But if $Q(x) = 0$, this trick doesn't apply.</p>
+            <p>The last measurement, Jenson Shannon Divergence, is intended to solve a numerical stability problem with both Cross Entropy and KL, namely that neither are defined when either of $P(x)$ or $Q(x)$ is 0. When $P(x) = 0$, a simple solution is to just omit $x$ from the sum, as though $(0)(\log_2(0)) = 0$<span id="fn_math" class="fn"><a href="#fn_math_t">4</a></span>. But if $Q(x) = 0$, this trick doesn't apply.</p>
             
             <p>And, following the intuition behind KL, it shouldn't. If we want to know how much further in $Q$'s tree we have to travel to find some event $x$ in $P$'s tree, there is no good answer in this case, because $x$ doesn't exist in $Q$'s tree. JSD solves this problem by introducing a new distribution, $P_m(x)$, that averages over the two. This guarantees that $P_m(x) \not = 0$ whenever either $Q(x) \not = 0$ or $P(x) \not = 0$. The quantity itself is also an average, over the KL Divergences $D_{KL}(P \vert \vert P_m)$ and $D_{KL}(Q \vert \vert P_m)$.</p>
             
@@ -327,7 +327,7 @@
             </p>
             
             <p>
-                Any incremental step of $Q \gets Q'$ that can't immediately fix the misalignment will also have $JSD(P\vert \vert Q')= \log(2)$, and this means that the gradient of JSD becomes $0$. It no longer gives any information about how to incrementally bring $Q$ to $P$, and so for manifold distributions JSD becomes as helpful as the binary distance. 
+                Any incremental step of $Q \gets Q'$ that can't immediately fix the misalignment will also have $JSD(P\vert \vert Q')= \log_2(2)$, and this means that the gradient of JSD becomes $0$. It no longer gives any information about how to incrementally bring $Q$ to $P$, and so for manifold distributions JSD becomes as helpful as the binary distance. 
             </p>
             
             <p>
@@ -386,7 +386,7 @@
                         <li id="fn_dist_t">The term "distance" is used here as a general term, encompassing statistical distances, divergences, various kinds of entropy, and metrics in the formal sense. <a href="#fn_dist" class="fn_back">↩</a></li>
                         <li id="fn_bayesian_t">Whether or not probabilities <i>should</i> be interpreted as ratios is debatable, and the Bayesian view of statistics casts probabilities as degrees of certainty instead. Here, the frequentist view is just convenient for explanation.<a href="#fn_bayesian" class="fn_back">↩</a></li>
                         <li id="fn_arthm_coding_t">There is an alternative, called <a href="https://en.wikipedia.org/wiki/Arithmetic_coding">Arithmetic Coding</a>, which encodes strings of events instead of individual events. <a href="#fn_arthm_coding" class="fn_back">↩</a></li>
-                        <li id="fn_math_t">$0 = 0 \log(0)$ is not true, and exponentiating both sides yields $0 = 1$. But, $ \displaystyle \lim_{x \to 0^+} x \log(x) = 0$, so this is still a sensible choice. <a href="#fn_math" class="fn_back">↩</a></li>
+                        <li id="fn_math_t">$0 = 0 \log_2(0)$ is not true, and exponentiating both sides yields $0 = 1$. But, $ \displaystyle \lim_{x \to 0^+} x \log_2(x) = 0$, so this is still a sensible choice. <a href="#fn_math" class="fn_back">↩</a></li>
                     </ol>
                 </div>
                 <h3>Citations</h3>
