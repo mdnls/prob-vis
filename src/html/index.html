@@ -127,7 +127,7 @@
             </div>
 
             
-            <p>Iterating this process, we can create a leaf for any $\xp{k}{}$ event by merging two $\xp{k-1}{}$ leaves. From the bottom up, this means starting with a tree of all $\xp{1}{}$ leaves and merging as many as possible, keeping only enough $\xp{1}{}$ leafs to represent the $\xp{1}{}$ events in $P$. Then, in the next layer, the algorithm freezes leaves for any $\xp{2}{}$ events in $P$, merging the leftover nodes. This repeats until all $\xp{k}{i}$ have a place in the tree. In the diagram below, we can see all the merged nodes for events in the histogram, along with the fully colored nodes representing actual $\xp{k}{i}$ leafs. </p>
+            <p>Iterating this process, we can create a leaf for any $\xp{k}{}$ event by merging two $\xp{k-1}{}$ leaves. From the bottom up, this means starting with a tree of all $\xp{1}{}$ leaves and merging as many as possible, keeping only enough $\xp{1}{}$ leafs to represent the $\xp{1}{}$ events in $P$. Then, in the next layer, the algorithm freezes leaves for any $\xp{2}{}$ events in $P$, merging the leftover nodes. This repeats until all $\xp{k}{i}$ have a place in the tree. In the diagram below, we can see all the merged nodes for events in the histogram, along with the fully colored nodes representing actual $\xp{k}{i}$ leaves. </p>
             
             <div class="fig">
                 <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" class="inputBtn" /></a>
@@ -145,7 +145,7 @@
                 <p class="figdesc">The fully colored nodes represent leaves at which an event is unambiguously specified in the tree. Assigning shorter paths to more common events reduces the expected number of bits for communication.</p>
             </div>
             
-            <p>This procedure is called the Huffman Algorithm, and it can be used to efficiently construct optimal codes for the events in $P$. Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log_2(\frac{1}{P(\xp{n}{})})$, which will be an integer quantity. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events<span id="fn_arthm_coding" class="fn"><a href="#fn_arthm_coding_t">3</a></span>, and the lower bound on the expected number of bits transferred is the entropy:
+            <p>This procedure is called the Huffman Algorithm, and it can be used to efficiently construct optimal codes for the events in $P$. Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log_2(\frac{1}{P(\xp{n}{})})$, which will be an integer quantity. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events<span id="fn_arthm_coding" class="fn"><a href="#fn_arthm_coding_t">3</a></span>, and the lower bound on the expected number of bits transferred is the entropy, $H$:
                 
                 $$H(P) = \expectedunder{P}{\log_2{\frac{1}{P(x)}}}$$
             </p>
@@ -153,7 +153,7 @@
                 Kullback-Leibler, Cross Entropy, and Jenson Shannon Divergence
             </h3>
             
-            <p>Once you understand entropy as a characteristic of probability distributions, the cross entropy, Kullback–Leibler Divergence (KL), and Jenson Shannon Divergences are all short steps away. Starting with the definition of KL divergence, we can immediately see conections to the coding interpretation of entropy:</p>
+            <p>Once you understand entropy as a characteristic of probability distributions, the cross entropy, Kullback–Leibler Divergence, and Jenson Shannon Divergence are all short steps away. Starting with the definition of KL divergence, we can immediately see conections to the coding interpretation of entropy:</p>
             
             <p>
                 $$
