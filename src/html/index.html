@@ -79,8 +79,9 @@
                 Entropy
             </h2>
             
-            <p>The Jenson Shannon Divergence (JSD) between two distributions is a distance function that has its roots in information entropy. The intuition is that two distributions are similar when you can communicate their events in similar ways. To formalize this idea, the abstraction at play is the "information channel." An observer Bob has an open channel to Alice, so that he can tell her about samples that he draws from a distribution $P$. For simplicity, we assume that Bob is communicating with bits, and that he and Alice have agreed ahead of time on their choice of codes. Under this abstraction, entropy is the minimum number of bits on average that Bob needs to tell Alice about which samples he observes from $P$. </p>
-            <p>This quantity depends completely on the "shape" of $P$, and in turn it serves as a representation of that shape. For example, under a distribution where <svg class="maroon box"></svg>  and <svg class="blue box"></svg> are the only events that can happen, a single bit is enough for unambiguous communication, so the entropy is $1$.</p>
+            <p>The Jenson Shannon Divergence (JSD) between two distributions is a distance function that has its roots in information entropy. To understand JSD, we must first introduce the notion of an "information channel." An observer Bob has an open channel to Alice, so that he can tell her about samples that he draws from a probability distribution $P$. For simplicity, we assume that Bob is communicating with bits, and that he and Alice have agreed ahead of time on their choice of codes. The intuition is that two distributions are similar when you can communicate their events in similar ways. Under this abstraction, entropy is the minimum number of bits on average that Bob needs to tell Alice about which samples he observes from $P$. </p>
+
+            <p>This quantity depends completely on the "shape" of $P$, and in turn it serves as a representation of that shape. For example, under a distribution where <svg class="maroon box"></svg> and <svg class="blue box"></svg> are the only events that can happen, a single bit is enough for unambiguous communication, so the entropy is $1$.</p>
             <div class="fig">
                 <div id="simple-entropy" class="vis-inset col-12">
                     <div class="h-100">
@@ -101,7 +102,7 @@
                 <button id="entropy-ex-high">High Entropy</button>
                 <p class="figdesc">An example of a distribution with $H$ = <span id="entropy-ex-val"></span>.</p>
             </div>
-            <p>To understand why, we can explore the process behind constructing an optimal code. First, since entropy is an average over codes for different events, it is helpful to focus on a single event $x_i$ and assume the other events $x_j$ are just copies that occur with equal likelihood. Then, interpreting $P(x_i)$ as a ratio $\frac{s_{x_i}}{N}$, we see that $\frac{1}{P(x)} = \frac{N}{s_{x_i}}$ is the number of unique events that we need to distinguish with our code<span id="fn_bayesian" class="fn"><a href="#fn_bayesian_t">2</a></span>. Each outcome corresponds to all events of a particular $x_i$, which we assume occurs with frequency $s_{x_i}$ out of $N$ trials. </p>
+            <p>To understand why, we can explore the process behind constructing an optimal code. First, since entropy is an average over codes for different events, it's helpful to start with a special case where constructing the optimal codes is easy: the uniform distribution over events $x_i$. Then, interpreting $P(x_i)$ as a ratio $\frac{s_{x_i}}{N}$ of success to trials, we see that $\frac{1}{P(x)} = \frac{N}{s_{x_i}}$ is the number of unique events that we need to distinguish with our code<span id="fn_bayesian" class="fn"><a href="#fn_bayesian_t">2</a></span>. Each outcome corresponds to all events of a particular $x_i$, which we assume occurs with frequency $s_{x_i}$ out of $N$ trials. </p>
             <p>To distinguish between the events, we want at least $N^* = \frac{1}{P(x_i)}$ unique binary codes to assign to different events. These codes can be visualized as paths in a binary decision tree:</p>
             
             <div class="fig">
@@ -141,7 +142,7 @@
                         
                     </div>
                 </div>
-                <p class="figdesc">For a given distribution, the Huffman Tree allocates the shortest codes to the most likely events.</p>
+                <p class="figdesc">The fully colored nodes represent leaves at which an event is unambiguously specified in the tree. Assigning shorter paths to more common events reduces the expected number of bits for communication.</p>
             </div>
             
             <p>This procedure is called the Huffman Algorithm, and it can be used to efficiently construct optimal codes for the events in $P$. Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log_2(\frac{1}{P(\xp{n}{})})$, which will be an integer quantity. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events<span id="fn_arthm_coding" class="fn"><a href="#fn_arthm_coding_t">3</a></span>, and the lower bound on the expected number of bits transferred is the entropy:
@@ -165,7 +166,11 @@
             
             <p>This brings us back to the information-theoretic perspective on distances between distributions: $P_d$ and $P_{\theta}$ are similar when you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
             
-            <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. Cross entropy is the <i>total</i> expected number of bits when communicating events from $P$ using the code for $Q$, and it can be defined as the $H(P) + D_{KL}(P \vert \vert Q)$ – the entropy of $P$, plus the extra bits we have to send when the code for $Q$ is not optimal for $P$. Minimizing either of these differences forces $P$ to be similar to $Q$, which is exactly what we need to train a GAN. You can try minimizing KL yourself by manipulating the left distribution in the figure below: </p>
+            <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. Cross entropy is just the <i>total</i> expected number of bits when communicating events from $P$ using the code for $Q$. Defining it in terms of $D_{KL}$ is simple:</p>
+            <p>
+            $$H(P) + D_{KL}(P \vert \vert Q)$$
+            </p>
+            <p>This is the entropy of $P$, plus the extra bits we have to send when the code for $Q$ is not optimal for $P$. Minimizing either of these differences forces $P$ to be similar to $Q$, which is exactly what we need to train a GAN. You can try minimizing KL yourself by manipulating the left distribution in the figure below: </p>
             
             <div class="fig">
                 <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" class="inputBtn" /></a>

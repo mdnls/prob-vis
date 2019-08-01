@@ -870,6 +870,7 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
                 let highlight = (childCheck(pLayer, pIndex) && childCheck(cLayer, cIndex));
                 let color = highlight ? "#0074D9" : "gray";
                 let width = highlight ? hScale(itemSize / 3) : hScale(itemSize / 5);
+                let childIsImplicit = (child.itemType != undefined && child.itemType[0] == "c");
                 d3.select(svg)
                     .append("line")
                     .attr("id", "treeEdge")
@@ -877,6 +878,7 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
                     .attr("x2", (d) => absX(child.x + itemSize / 2))
                     .attr("y1", (d) => absY(parent.y + itemSize / 2))
                     .attr("y2", (d) => absY(child.y + itemSize / 2))
+                    .attr("stroke-dasharray", childIsImplicit ? "4" : "none")
                     .attr("stroke-width", width)
                     .attr("stroke", color);
             }

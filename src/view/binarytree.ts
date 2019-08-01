@@ -163,9 +163,10 @@ export class SVGBinaryTree implements ModelListener {
        function addEdge(svg: string, parent: TreeItem, child: TreeItem, cLayer: number, cIndex: number) {
          let pLayer = cLayer - 1;
          let pIndex = Math.floor(cIndex/2);
-         let highlight = (childCheck(pLayer, pIndex) && childCheck(cLayer, cIndex))
+         let highlight = (childCheck(pLayer, pIndex) && childCheck(cLayer, cIndex));
          let color = highlight ? "#0074D9" : "gray";
          let width = highlight ? hScale(itemSize/3) : hScale(itemSize/5);
+         let childIsImplicit = (child.itemType != undefined && child.itemType[0] == "c");
          d3.select(svg)
              .append("line")
              .attr("id", "treeEdge")
@@ -173,6 +174,7 @@ export class SVGBinaryTree implements ModelListener {
              .attr("x2", (d) => absX(child.x + itemSize/2))
              .attr("y1", (d) => absY(parent.y + itemSize/2))
              .attr("y2", (d) => absY(child.y + itemSize/2))
+             .attr("stroke-dasharray", childIsImplicit ? "4" : "none")
              .attr("stroke-width", width)
              .attr("stroke", color);
        }
