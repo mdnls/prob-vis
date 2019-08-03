@@ -97,10 +97,11 @@
                         <svg id="entropy-ex-active" class="col-12 h-100"></svg>
                     </div>
                 </div>
+                <p>$H$ = <span id="entropy-ex-val"></span></p>
                 <button id="entropy-ex-low">Low Entropy</button>
                 <button id="entropy-ex-med">Medium Entropy</button>
                 <button id="entropy-ex-high">High Entropy</button>
-                <p class="figdesc">An example of a distribution with $H$ = <span id="entropy-ex-val"></span>.</p>
+                <p class="figdesc">Example distributions and their entropies.</p>
             </div>
             <p>To understand why, we can explore the process behind constructing an optimal code. First, since entropy is an average over codes for different events, it's helpful to start with a special case where constructing the optimal codes is easy: the uniform distribution over events $x_i$. Then, interpreting $P(x_i)$ as a ratio $\frac{s_{x_i}}{N}$ of success to trials, we see that $\frac{1}{P(x)} = \frac{N}{s_{x_i}}$ is the number of unique events that we need to distinguish with our code<span id="fn_bayesian" class="fn"><a href="#fn_bayesian_t">2</a></span>. Each outcome corresponds to all events of a particular $x_i$, which we assume occurs with frequency $s_{x_i}$ out of $N$ trials. </p>
             <p>To distinguish between the events, we want at least $N^* = \frac{1}{P(x_i)}$ unique binary codes to assign to different events. These codes can be visualized as paths in a binary decision tree:</p>
@@ -185,7 +186,8 @@
                         
                     </div>
                 </div>
-                <p class="figdesc">The left distribution $P$ has <b>$KL(P\vert \vert Q)$ = <span id="kl-ex-val">_</span></b> with respect to the right distribution. Select an event to see its path in the Huffman Tree.</p>
+                <p>$KL(P\vert \vert Q)$ = <span id="kl-ex-val">_</span></p>
+                <p class="figdesc">KL Divergence is the expected <i>difference</i> in path lengths for items in each tree. Select an event to see its path in the Huffman Tree.</p>
             </div>
             
             <h3>Jenson Shannon Divergence</h3>
@@ -336,6 +338,14 @@
                 As a control example, we can observe the training of a GAN and WGAN on "nice" distributions, in this case a fixed Gaussian distribution. The following animation plots the output statistics of points sampled from two separate generator networks with the same architecture, as the left generator is trained to minimize the approximate upper bound of Earth Mover's Distance and the right is trained to minimize the approximate upper bound of the Jenson Shannon Divergence.
             </p>
             
+            <div class="row" style="text-align: center">
+                <div class="col-6">
+                    <p style="margin-bottom: 0px">EM Minimization</p>
+                </div>
+                <div class="col-6">
+                    <p style="margin-bottom: 0px">JSD Minimization</p>
+                </div>
+            </div>
             <div id="gan-comp-easy" class="col-12 vis-inset-long">
                 <div class="row h-100 anim">
                     <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
@@ -357,6 +367,14 @@
 
             <p>As we can see, both generators have a fairly easy time learning the target distribution. But, if we instead try to fit the generators to to a $1$-dimensional manifold distribution, we see that the minimizing the EM upper bound is successful where minimizing the JSD upper bound is not.</p>
 
+            <div class="row" style="text-align: center">
+                <div class="col-6">
+                    <p style="margin-bottom: 0px">EM Minimization</p>
+                </div>
+                <div class="col-6">
+                    <p style="margin-bottom: 0px">JSD Minimization</p>
+                </div>
+            </div>
             <div id="gan-comp-manifold" class="col-12 vis-inset-long">
                     <div class="row h-100 anim">
                         <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
@@ -377,9 +395,21 @@
                 <a id="gan-comp-manifold-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
             </div>
 
-        
+            When minimizing JSD, the generator output stays in its initial distribution throughout optimization, because no change to the generator's parameters can reduce the estimated JSD. Technically, this is intentional – the optimization makes no changes because we are already at a local minimim. JSD is flawed in that there are many undesirable local minima where the generator distribution has only a trivial intersection with the true distribution.
             <div id="conclusion">
                 <h2>Conclusion</h2>
+                <p>
+                    As we have seen, statistical distances play a key role in GAN training by giving information about how to incrementally shift $P_{\theta}$, a GAN output distribution, into $P_d$, the data generating distribution. In <i>nice</i> cases, where both distributions assign probability to significantly overlapping events, both JSD and EM distance can fill this role. But, under the assumption that typical data lies on a manifold, having relatively few factors of variation with respect to the data dimensionality, JSD is no longer able to provide useful gradients. 
+                </p>
+                <p>
+                    In theory, this should make many of the most impressive demonstrations of GAN technology impossible. Instead, because of both the noise introduced in minimizing an upper bound of JSD and the many tricks applied to reduce training instability, traditional GAN training is just difficult, but possible. 
+                </p>
+                <p>
+                    At the same time, it seems in theory that EM gives improved training stability for free, which is also not the empirical case. The proposed framework for minimizing EM's approximated upper bound requires severe constraints to be imposed on the discriminator, and so finding alternative methods to minimize EM distance is an open area for exploration<span id="fn_disc" class="fn"><a href="#fn_disc_t">4</a></span>. 
+                </p>
+                <p>
+                    For the interested reader, we provide a few recommended resources for digging deeper into the information presented here. We also recommend two papers which provide a more general view of the JSD and EM distances, as special cases in the classes of $f$-divergences and Integral Probability Metrics respectively. Finally, we include a link to the recent BEGAN architecture, which is a good example of an architecture designed to avoid imposing harmful constraints on the discriminator.
+                </p>
             </div>
             
             <hr />
@@ -391,6 +421,7 @@
                         <li id="fn_bayesian_t">Whether or not probabilities <i>should</i> be interpreted as ratios is debatable, and the Bayesian view of statistics casts probabilities as degrees of certainty instead. Here, the frequentist view is just convenient for explanation.<a href="#fn_bayesian" class="fn_back">↩</a></li>
                         <li id="fn_arthm_coding_t">There is an alternative, called <a href="https://en.wikipedia.org/wiki/Arithmetic_coding">Arithmetic Coding</a>, which encodes strings of events instead of individual events. <a href="#fn_arthm_coding" class="fn_back">↩</a></li>
                         <li id="fn_math_t">$0 = 0 \log_2(0)$ is not true, and exponentiating both sides yields $0 = 1$. But, $ \displaystyle \lim_{x \to 0^+} x \log_2(x) = 0$, so this is still a sensible choice. <a href="#fn_math" class="fn_back">↩</a></li>
+                        <li id="fn_disc_t">In particular, the discrinimator must approximate a Lipschitz continuous function, and so the Lipschitz continuity must be enforced as a constraint. Arjovsky's WGAN formulation accomplishes this through either weight clipping or gradient clipping in the discriminator.<a href="#fn_disc" class="fn_back">↩</a></li>
                     </ol>
                 </div>
                 <h3>Citations</h3>
@@ -398,18 +429,38 @@
                     <li><b>Generative adversarial nets</b>
                         <br/>
                         Ian Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, and Yoshua Bengio.  In Z. Ghahramani, M. Welling, C. Cortes, N. D. Lawrence, and K. Q. Weinberger, editors, Advances in Neural Information Processing Systems 27, pages 2672–2680. Curran Associates, Inc., 2014</li>
-                    <li><b>Wasserstein generative  adversarial networks.</b> 
+                    <li><b>Wasserstein generative adversarial networks</b> 
                         <br />
                         Martin Arjovsky, Soumith Chintala, and Léon Bottou. In  Doina  Precup  and  Yee  Whye  Teh,  editors,Proceedings of the 34th International Conference on Machine Learning, volume 70 of Proceedings of Machine Learning Research, pages 214–223, International Convention Centre, Sydney, Australia, 06–11 Aug 2017. PMLR</li>
+                    <li><b>BEGAN: boundary equilibrium generative adversarial networks</b>
+                        <br />
+                        David Berthelot, Tom Schumm, and Luke Metz. CoRR, abs/1703.10717, 2017</li>
+                    <li><b>A note on integral probability metrics and $\phi$-divergences</b>
+                        <br />
+                        Bharath K. Sriperumbudur, Arthur Gretton, Kenji Fukumizu, Gert R. G.Lanckriet, and Bernhard Schölkopf. CoRR, abs/0901.2698, 2009.</li>
+                    <li>
+                        <b>f-gan: Training generative neural samplers using variational divergence minimization</b>
+                        <br />
+                        Sebastian  Nowozin,  Botond  Cseke,  and  Ryota  Tomioka. In D. D. Lee, M. Sugiyama, U. V. Luxburg, I. Guyon, and R. Garnett, editors, Advances in Neural Information Processing Systems 29,  pages  271–279.Curran Associates, Inc., 2016.
+                    </li>
                     <li><b>Elements of Information Theory.</b>
                         <br />
                         Thomas  M.  Cover  and  Joy  A.  Thomas. (Wiley Series in Telecommunications and Signal Processing). Wiley-Interscience, New York, NY, USA, 2006</li>
                     <li><b>Optimal Transport: Old and New.</b>
                         <br />
-                        C. Villani.  Grundlehren der mathematischen Wissenschaften. Springer Berlin Heidelberg, 2008</li>
+                        C. Villani. Grundlehren der mathematischen Wissenschaften. Springer Berlin Heidelberg, 2008</li>
+                    <li><b>Probability and random processes</b>
+                        <br />
+                        G.R. Grimmett and D.R. Stirzaker. volume 80. Oxford university press, 2001.
+                    </li>
                 </ol>
                 
                 <h3>Further Reading</h3>
+                <p>For learning more about the material in this article, the beginning chapters of <a href="#citations">[6]</a> are a great introduction to formal probability theory, which underlies analysis of EM distance. Wasserman's notes (below, see other articles) give a clear and concise introduction at this level. </p>
+                
+                <p>The papers </p>
+
+                Here are other examples of fantastic articles on entropy and Earth Mover's (Wasserstein) distance.
                 <ol>
                     <li><a href="http://www.stat.cmu.edu/~larry/=sml/Opt.pdf">Optimal Transport and Wasserstein Distance</a> by Larry Wasserman</li>
                     <li><a href="https://vincentherrmann.github.io/blog/wasserstein/">Wasserstein GAN and the Kantorovich-Rubinstein Duality</a> by Vincent Hermann</li>

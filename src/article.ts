@@ -134,35 +134,6 @@ function setupIntro() {
     });
     mLeft1.addListener(chisqrval);
 
-    // Chi Squared Histogram 2
-    let mLeft2 = Histogram.fromArray(chisqr2["leftHistBins"]);
-    let mCenter2 = Histogram.fromArray(chisqr2["centerHistBins"]);
-    let mRight2 = Histogram.fromArray(chisqr2["rightHistBins"]);
-    let hLeft2 = new SVGPhantomHistogram("chisqr-hist-2-left", "#chisqr-2-left-svg", mLeft2, mCenter2, conf);
-    let hCenter2 = new SVGHistogram("chisqr-hist-2-center", "#chisqr-2-center-svg", mCenter2, conf);
-    let hRight2 = new SVGPhantomHistogram("chisqr-hist-2-right", "#chisqr-2-right-svg", mRight2, mCenter2, conf);
-    hLeft2.refresh();
-    hCenter2.refresh();
-    hRight2.refresh();
-
-    let chisqrvalL = new LooseTextBinder<Histogram[]>("#chisqr-2-left-val", [mLeft2, mCenter2], function (m: Histogram[]) { 
-        let test = (a: number, b: number) => { return Math.pow((a-b), 2) / b };
-        let c = Array.from({length: m[0].numBins()},
-                        (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
-                    .reduce((prev, cur) => prev + cur, 0)
-        return "" + Math.round(c * 100) / 100;
-    });
-
-    let chisqrvalR = new LooseTextBinder<Histogram[]>("#chisqr-2-right-val", [mRight2, mCenter2], function (m: Histogram[]) { 
-        let test = (a: number, b: number) => { return Math.pow((a-b), 2) / b };
-        let c = Array.from({length: m[0].numBins()},
-                        (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
-                    .reduce((prev, cur) => prev + cur, 0);
-        return "" + Math.round(c * 100) / 100;
-    });
-    mLeft2.addListener(chisqrvalL);
-    mRight2.addListener(chisqrvalR);
-
     // Simple entropy example
     let mSimpleHist = Histogram.fromArray(simpleHist["hist"]);
     let hSimpleHist = new SVGHistogram("simple-entropy-ex", "#simple-entropy-ex", mSimpleHist, conf);
@@ -184,7 +155,7 @@ function setupIntro() {
         let total = m.bins().reduce((p, c) => c.length + p, 0);
         let nats = (a: number) => Math.log2(total / a);
         let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
-        return "" + Math.round(entropy * 100) / 100;
+        return "" + Math.round(entropy * 1000) / 1000;
     });
     tLowEnt.refresh();
 
@@ -192,7 +163,7 @@ function setupIntro() {
         let total = m.bins().reduce((p, c) => c.length + p, 0);
         let nats = (a: number) => Math.log2(total / a);
         let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
-        return "" + Math.round(entropy * 100) / 100;
+        return "" + Math.round(entropy * 1000) / 1000;
     });
     tMedEnt.refresh();
 
@@ -200,7 +171,7 @@ function setupIntro() {
         let total = m.bins().reduce((p, c) => c.length + p, 0);
         let nats = (a: number) => Math.log2(total / a);
         let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
-        return "" + Math.round(entropy * 100) / 100;
+        return "" + Math.round(entropy * 1000) / 1000;
     });
     tHighEnt.refresh();
 
@@ -247,7 +218,7 @@ function setupIntro() {
         let natsP = (a: number) => Math.log2(totalP / a);
         let natsQ = (a: number) => Math.log2(totalQ / a);
         let kl = p.bins().reduce((prev, c, i) => (c.length / totalP) * (natsQ(q.getBin(i).length) - natsP(c.length)) + prev, 0);
-        return "" + Math.round(kl * 100) / 100;
+        return "" + Math.round(kl * 1000) / 1000;
     });
     relEnt.refresh();
 

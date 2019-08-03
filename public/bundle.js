@@ -870,6 +870,7 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
                 let highlight = (childCheck(pLayer, pIndex) && childCheck(cLayer, cIndex));
                 let color = highlight ? "#0074D9" : "gray";
                 let width = highlight ? hScale(itemSize / 3) : hScale(itemSize / 5);
+                let childIsImplicit = (child.itemType != undefined && child.itemType[0] == "c");
                 d3.select(svg)
                     .append("line")
                     .attr("id", "treeEdge")
@@ -877,6 +878,7 @@ define("view/binarytree", ["require", "exports", "model/trees", "d3", "jquery"],
                     .attr("x2", (d) => absX(child.x + itemSize / 2))
                     .attr("y1", (d) => absY(parent.y + itemSize / 2))
                     .attr("y2", (d) => absY(child.y + itemSize / 2))
+                    .attr("stroke-dasharray", childIsImplicit ? "4" : "none")
                     .attr("stroke-width", width)
                     .attr("stroke", color);
             }
@@ -1869,29 +1871,6 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
             return "" + Math.round(c * 100) / 100;
         });
         mLeft1.addListener(chisqrval);
-        let mLeft2 = bins_3.Histogram.fromArray(data_1.chisqr2["leftHistBins"]);
-        let mCenter2 = bins_3.Histogram.fromArray(data_1.chisqr2["centerHistBins"]);
-        let mRight2 = bins_3.Histogram.fromArray(data_1.chisqr2["rightHistBins"]);
-        let hLeft2 = new histogram_3.SVGPhantomHistogram("chisqr-hist-2-left", "#chisqr-2-left-svg", mLeft2, mCenter2, conf);
-        let hCenter2 = new histogram_3.SVGHistogram("chisqr-hist-2-center", "#chisqr-2-center-svg", mCenter2, conf);
-        let hRight2 = new histogram_3.SVGPhantomHistogram("chisqr-hist-2-right", "#chisqr-2-right-svg", mRight2, mCenter2, conf);
-        hLeft2.refresh();
-        hCenter2.refresh();
-        hRight2.refresh();
-        let chisqrvalL = new textbinder_1.LooseTextBinder("#chisqr-2-left-val", [mLeft2, mCenter2], function (m) {
-            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
-            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
-                .reduce((prev, cur) => prev + cur, 0);
-            return "" + Math.round(c * 100) / 100;
-        });
-        let chisqrvalR = new textbinder_1.LooseTextBinder("#chisqr-2-right-val", [mRight2, mCenter2], function (m) {
-            let test = (a, b) => { return Math.pow((a - b), 2) / b; };
-            let c = Array.from({ length: m[0].numBins() }, (v, k) => test(m[0].getBin(k).length, m[1].getBin(k).length))
-                .reduce((prev, cur) => prev + cur, 0);
-            return "" + Math.round(c * 100) / 100;
-        });
-        mLeft2.addListener(chisqrvalL);
-        mRight2.addListener(chisqrvalR);
         let mSimpleHist = bins_3.Histogram.fromArray(data_1.simpleHist["hist"]);
         let hSimpleHist = new histogram_3.SVGHistogram("simple-entropy-ex", "#simple-entropy-ex", mSimpleHist, conf);
         let labeledBinTree = new binarytree_2.SVGLabeledBinaryTree("#labeled-tree-ex", 4, conf);
@@ -1906,21 +1885,21 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
             let total = m.bins().reduce((p, c) => c.length + p, 0);
             let nats = (a) => Math.log2(total / a);
             let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
-            return "" + Math.round(entropy * 100) / 100;
+            return "" + Math.round(entropy * 1000) / 1000;
         });
         tLowEnt.refresh();
         let tMedEnt = new textbinder_1.TextBinder("#entropy-ex-val", mMedEnt, function (m) {
             let total = m.bins().reduce((p, c) => c.length + p, 0);
             let nats = (a) => Math.log2(total / a);
             let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
-            return "" + Math.round(entropy * 100) / 100;
+            return "" + Math.round(entropy * 1000) / 1000;
         });
         tMedEnt.refresh();
         let tHighEnt = new textbinder_1.TextBinder("#entropy-ex-val", mHighEnt, function (m) {
             let total = m.bins().reduce((p, c) => c.length + p, 0);
             let nats = (a) => Math.log2(total / a);
             let entropy = m.bins().reduce((p, c) => (c.length / total) * nats(c.length) + p, 0);
-            return "" + Math.round(entropy * 100) / 100;
+            return "" + Math.round(entropy * 1000) / 1000;
         });
         tHighEnt.refresh();
         let mActiveEnt = mMedEnt;
@@ -1959,7 +1938,7 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
             let natsP = (a) => Math.log2(totalP / a);
             let natsQ = (a) => Math.log2(totalQ / a);
             let kl = p.bins().reduce((prev, c, i) => (c.length / totalP) * (natsQ(q.getBin(i).length) - natsP(c.length)) + prev, 0);
-            return "" + Math.round(kl * 100) / 100;
+            return "" + Math.round(kl * 1000) / 1000;
         });
         relEnt.refresh();
         let interactiveXEntHandler = function (dir) {
