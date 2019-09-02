@@ -154,18 +154,26 @@
                 Kullback-Leibler, Cross Entropy, and Jenson Shannon Divergence
             </h3>
             
-            <p>Once you understand entropy as a characteristic of probability distributions, the cross entropy, Kullback–Leibler Divergence, and Jenson Shannon Divergence are all short steps away. Starting with the definition of KL divergence, we can immediately see conections to the coding interpretation of entropy:</p>
+            <p>Once you understand entropy as a characteristic of probability distributions, the cross entropy, Kullback–Leibler Divergence, and Jenson Shannon Divergence are all short steps away. We can start with the typical definition of KL Divergence: </p>
             
+            <p>
+                $$
+                \begin{align}
+                D_{KL}(P \vert \vert Q) & = - \sum_{x} P(x) \log_2 \frac{Q(x)}{P(x)} \\ 
+                \end{align}
+                $$
+            </p>
+            We can coerce this equation into one which aligns with the path-length understanding of entropy:
             <p>
                 $$
                 \begin{align}
                 D_{KL}(P \vert \vert Q) & = - \sum_{x} P(x) \log_2 \frac{Q(x)}{P(x)} \\
                 & = \expectedunder{x \sim P}{\log_2 \frac{1}{Q(x)} - \log_2 \frac{1}{P(x)}} \\
-                & = \expectedunder{x \sim P}{d(q(x)) - d(p(x))}
+                & = \expectedunder{x \sim P}{d_q(x) - d_p(x)}
                 \end{align}$$
             </p>
             
-            <p>This brings us back to the information-theoretic perspective on distances between distributions: $P_d$ and $P_{\theta}$ are similar when you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
+            <p>For each event $x$, $d_q(x) - d_p(x)$ is the difference in the code length assigned to $x$ under distributions $P$ and $Q$. The KL Divergence is the expected difference over all events $x$, under the distribution $P$<span id="fn_negative_kl" class="fn"><a href="#fn_negative_kl_t">4</a></span>. This brings us back to the information-theoretic perspective on distances between distributions: $P_d$ and $P_{\theta}$ are similar when you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
             
             <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. Cross entropy is just the <i>total</i> expected number of bits when communicating events from $P$ using the code for $Q$. Defining it in terms of $D_{KL}$ is simple:</p>
             <p>
@@ -191,7 +199,7 @@
             </div>
             
             <h3>Jenson Shannon Divergence</h3>
-            <p>The last measurement, Jenson Shannon Divergence, is intended to solve a numerical stability problem with both Cross Entropy and KL, namely that neither are defined when either of $P(x)$ or $Q(x)$ is 0. When $P(x) = 0$, a simple solution is to just omit $x$ from the sum, as though $(0)(\log_2(0)) = 0$<span id="fn_math" class="fn"><a href="#fn_math_t">4</a></span>. But if $Q(x) = 0$, this trick doesn't apply.</p>
+            <p>The last measurement, Jenson Shannon Divergence, is intended to solve a numerical stability problem with both Cross Entropy and KL, namely that neither are defined when either of $P(x)$ or $Q(x)$ is 0. When $P(x) = 0$, a simple solution is to just omit $x$ from the sum, as though $(0)(\log_2(0)) = 0$<span id="fn_math" class="fn"><a href="#fn_math_t">5</a></span>. But if $Q(x) = 0$, this trick doesn't apply.</p>
             
             <p>And, following the intuition behind KL, it shouldn't. If we want to know how much further in $Q$'s tree we have to travel to find some event $x$ in $P$'s tree, there is no good answer in this case, because $x$ doesn't exist in $Q$'s tree. JSD solves this problem by introducing a new distribution, $P_m(x)$, that averages over the two. This guarantees that $P_m(x) \not = 0$ whenever either $Q(x) \not = 0$ or $P(x) \not = 0$. The quantity itself is also an average, over the KL Divergences $D_{KL}(P \vert \vert P_m)$ and $D_{KL}(Q \vert \vert P_m)$.</p>
             
@@ -308,7 +316,7 @@
             </p>
 
             <div class="fig">
-                <img src="images/manifold_distribution.svg" class="col-md-6 offset-md-3 col-xs-4"/>
+                <img src="images/manifold_distribution.svg" class="col-md-4 offset-md-4 col-xs-6 offset-xs-3"/>
                 <p class="figdesc">Two low dimensional manifold distributions can have an <i>even lower dimensional</i> intersection, which is trivial.</p>
             </div>
 
@@ -370,7 +378,13 @@
             <a id="gan-comp-easy-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
             <a id="gan-comp-easy-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
 
+            <p>
+                In the original WGAN paper, 
+            </p>
+
             <p>As we can see, both generators have a fairly easy time learning the target distribution. But, if we instead try to fit the generators to to a $1$-dimensional manifold distribution, we see that the minimizing the EM upper bound is successful where minimizing the JSD upper bound is not.</p>
+
+            <p>This result has been presented in various treatments as a thought experiment, but the animations above were generated directly by training simple neural networks on synthetic data. The scripts to do so are available <a href="https://gitlab.com/qnkxsovc/prob-vis/tree/master/optimizers">in this article's repository</a>.</p>
 
             <div class="row" style="text-align: center">
                 <div class="col-6">
@@ -400,7 +414,10 @@
                 <a id="gan-comp-manifold-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
             </div>
 
-            When minimizing JSD, the generator output stays in its initial distribution throughout optimization, because no change to the generator's parameters can reduce the estimated JSD. Technically, this is intentional – the optimization makes no changes because we are already at a local minimim. JSD is flawed in that there are many undesirable local minima where the generator distribution has only a trivial intersection with the true distribution.
+            <p>When minimizing JSD, the generator output stays in its initial distribution throughout optimization, because no change to the generator's parameters can reduce the estimated JSD. Technically, this is intentional – the optimization makes no changes because it has already found a local minimum. JSD is flawed in that there are many undesirable local minima where the generator distribution has only a trivial intersection with the true distribution.</p>
+
+            <p>In the original </p>
+
             <div id="conclusion">
                 <h2>Conclusion</h2>
                 <p>
@@ -410,7 +427,7 @@
                     In theory, this should make many of the most impressive demonstrations of GAN technology impossible. Instead, because of both the noise introduced in minimizing an upper bound of JSD and the many tricks applied to reduce training instability, traditional GAN training is just difficult, but possible. 
                 </p>
                 <p>
-                    At the same time, it seems in theory that EM gives improved training stability for free, which is also not the empirical case. The proposed framework for minimizing EM's approximated upper bound requires severe constraints to be imposed on the discriminator, and so finding alternative methods to minimize EM distance is an open area for exploration<span id="fn_disc" class="fn"><a href="#fn_disc_t">4</a></span>. 
+                    At the same time, it seems in theory that EM gives improved training stability for free, which is also not the empirical case. The proposed framework for minimizing EM's approximated upper bound requires severe constraints to be imposed on the discriminator, and so finding alternative methods to minimize EM distance is an open area for exploration<span id="fn_disc" class="fn"><a href="#fn_disc_t">6</a></span>. 
                 </p>
                 <p>
                     For the interested reader, we provide a few recommended resources for digging deeper into the information presented here. We also recommend two papers which provide a more general view of the JSD and EM distances, as special cases in the classes of $f$-divergences and Integral Probability Metrics respectively. Finally, we include a link to the recent BEGAN architecture, which is a good example of an architecture designed to avoid imposing harmful constraints on the discriminator.
@@ -425,6 +442,7 @@
                         <li id="fn_dist_t">The term "distance" is used here as a general term, encompassing statistical distances, divergences, various kinds of entropy, and metrics in the formal sense. <a href="#fn_dist" class="fn_back">↩</a></li>
                         <li id="fn_bayesian_t">Whether or not probabilities <i>should</i> be interpreted as ratios is debatable, and the Bayesian view of statistics casts probabilities as degrees of certainty instead. Here, the frequentist view is just convenient for explanation.<a href="#fn_bayesian" class="fn_back">↩</a></li>
                         <li id="fn_arthm_coding_t">There is an alternative, called <a href="https://en.wikipedia.org/wiki/Arithmetic_coding">Arithmetic Coding</a>, which encodes strings of events instead of individual events. <a href="#fn_arthm_coding" class="fn_back">↩</a></li>
+                        <li id="fn_negative_kl_t">It is natural to ask whether the KL divergence could be negative, since any individual event might have a shorter code in $Q$'s tree than in $P$'s tree. If this were the case, then transmitting events drawn from $P$ with codes from $Q$ would require fewer bits on average than transmitting events using $P$'s own code. But we assume that events from $P$ are transmitted optimally, so this is impossible.</li> <a href="#fn_negative_kl" class="fn_back">↩</a></li>
                         <li id="fn_math_t">$0 = 0 \log_2(0)$ is not true, and exponentiating both sides yields $0 = 1$. But, $ \displaystyle \lim_{x \to 0^+} x \log_2(x) = 0$, so this is still a sensible choice. <a href="#fn_math" class="fn_back">↩</a></li>
                         <li id="fn_disc_t">In particular, the discrinimator must approximate a Lipschitz continuous function, and so the Lipschitz continuity must be enforced as a constraint. Arjovsky's WGAN formulation accomplishes this through either weight clipping or gradient clipping in the discriminator.<a href="#fn_disc" class="fn_back">↩</a></li>
                     </ol>
