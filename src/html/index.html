@@ -378,10 +378,6 @@
             <a id="gan-comp-easy-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
             <a id="gan-comp-easy-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
 
-            <p>
-                In the original WGAN paper, 
-            </p>
-
             <p>As we can see, both generators have a fairly easy time learning the target distribution. But, if we instead try to fit the generators to to a $1$-dimensional manifold distribution, we see that the minimizing the EM upper bound is successful where minimizing the JSD upper bound is not.</p>
 
             <p>This result has been presented in various treatments as a thought experiment, but the animations above were generated directly by training simple neural networks on synthetic data. The scripts to do so are available <a href="https://gitlab.com/qnkxsovc/prob-vis/tree/master/optimizers">in this article's repository</a>.</p>
@@ -415,8 +411,8 @@
             </div>
 
             <p>When minimizing JSD, the generator output stays in its initial distribution throughout optimization, because no change to the generator's parameters can reduce the estimated JSD. Technically, this is intentional – the optimization makes no changes because it has already found a local minimum. JSD is flawed in that there are many undesirable local minima where the generator distribution has only a trivial intersection with the true distribution.</p>
-
-            <p>In the original </p>
+            
+            <p>This result has been presented in various treatments as a thought experiment, but the animations above were generated directly by training simple neural networks on synthetic data. The scripts to do so are available <a href="https://gitlab.com/qnkxsovc/prob-vis/tree/master/optimizers">in this article's repository</a>.</p>
 
             <div id="conclusion">
                 <h2>Conclusion</h2>
