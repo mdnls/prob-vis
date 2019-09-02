@@ -31,7 +31,7 @@
 <body>
     <div class="container">
         <h1>Statistical Distances and Their Implications to GAN Training</h1>
-        
+        <p><b>Max Daniels</b> <br /> <i style="font-size: 12px; color: #808080;">Northeastern University</i></p>
         
         <div id="intro">
             <h2>
@@ -296,17 +296,22 @@
             </p>
             
             <p>
-                First, lets consider what a simple manifold distribution might actually look like. Consider a distribution $P$ in $\mathbf{R}^2$ that assigns uniform probability to points in the closed line segment starting at $\vec{a} = \hvec{a_1, a_2}$ and ending at $\vec{b} = \hvec{b_1, b_2}$. This distribution lies on a $1$-dimensional manifold in $\mathbf{R}^2$ – if we want, we can parametrize line segment as $f_P(t) = t \vec{a} + (1-t) \vec{b}$, for $t \in [0, 1]$, so that $t$ is our single factor of variation. Then, the probability of drawing a point on the segment from $f(t_1)$ to $f(t_2)$ is just $\frac{\vert t_2 - t_1 \vert}{1} = \vert t_2 - t_1 \vert$.  
+                First, lets consider what a simple manifold distribution might actually look like. Consider a distribution $P$ in $\mathbf{R}^2$ that assigns uniform probability to points in the closed line segment starting at $a$ and ending at $b$. This distribution lies on a $1$-dimensional manifold in $\mathbf{R}^2$ – if we want, we can parametrize the line segment as $f_P(t) = t a + (1-t) b$, for $t \in [0, 1]$, so that $t$ is our single factor of variation. Then, the probability of drawing a point on the segment from $f(t_1)$ to $f(t_2)$ is just $\frac{\vert t_2 - t_1 \vert}{1} = \vert t_2 - t_1 \vert$.  
             </p>
             
             <p>
-                The distribution $P$ represents $P_d$, the distribution we want to match. For $P_{\theta}$, we introduce a second manifold distribution, $Q$. Like $P$, we will assume $Q$ is a line segment, this time connecting the points $\vec{u} = (u_1, u_2)$ and $\vec{v} = (v_1, v_2)$. This distribution has its own parametrized line segment, $f_Q(t) = t \vec{u} + (1-t) \vec{v}$.
+                The distribution $P$ represents $P_d$, the distribution we want to match. For $P_{\theta}$, we introduce a second manifold distribution, $Q$. Like $P$, we will assume $Q$ is a line segment, this time connecting the points $u$ and $v$. This distribution has its own parametrized line segment, $f_Q(t) = t u + (1-t) v$.
             </p>
             
             <p>
-                Because these two distributions lie in $1$ dimensional manifolds, they obviously can't have an intersection with more than $1$ dimension. The intersection can only be $1$-dimensional when $\vec{a}$, $\vec{b}$, $\vec{u}$, and $\vec{v}$ all lie on the same line together. Otherwise, even if they're just slightly misaligned, the intersection is either a single point or the empty set.
+                Because these two distributions lie in $1$ dimensional manifolds, they obviously can't have an intersection with more than $1$ dimension. The intersection can only be $1$-dimensional when $a$, $b$, $u$, and $v$ all lie on the same line together. Otherwise, even if they're just slightly misaligned, the intersection is either a single point or the empty set.
             </p>
-            
+
+            <div class="fig">
+                <img src="images/manifold_distribution.svg" class="col-md-6 offset-md-3 col-xs-4"/>
+                <p class="figdesc">Two low dimensional manifold distributions can have an <i>even lower dimensional</i> intersection, which is trivial.</p>
+            </div>
+
             <p>
                 The effect is that any misalignment causes either $P(x)$ or $Q(x)$ to be $0$ at almost all points, except for the potential singleton point where $f_p(t) = f_q(t)$. In this case, JSD attains its maximum value, $\log_2(2) = 1$ – the distributions are "as far apart as possible". But, any incremental step $Q \gets Q'$ that can't immediately fix the misalignment will also have $JSD(P\vert \vert Q')= \log_2(2)$, and this means that the gradient of JSD becomes $0$. It no longer gives any information about how to incrementally bring $Q$ to $P$, and so for manifold distributions JSD becomes as helpful as the binary distance. 
             </p>
@@ -458,14 +463,15 @@
                 <h3>Further Reading</h3>
                 <p>For learning more about the material in this article, the beginning chapters of <a href="#citations">[6]</a> are a great introduction to formal probability theory, which underlies analysis of EM distance. Wasserman's notes (below, see other articles) give a clear and concise introduction at this level. </p>
                 
-                <p>The papers </p>
-
-                Here are other examples of fantastic articles on entropy and Earth Mover's (Wasserstein) distance.
+                <p>Here are other examples of fantastic articles on entropy and Earth Mover's (Wasserstein) distance.</p>
                 <ol>
                     <li><a href="http://www.stat.cmu.edu/~larry/=sml/Opt.pdf">Optimal Transport and Wasserstein Distance</a> by Larry Wasserman</li>
                     <li><a href="https://vincentherrmann.github.io/blog/wasserstein/">Wasserstein GAN and the Kantorovich-Rubinstein Duality</a> by Vincent Hermann</li>
                     <li><a href="https://colah.github.io/posts/2015-09-Visual-Information/">Visual Information Theory</a> by Chris Olah</li>
                 </ol>
+
+                <h3>Thanks</h3>
+                <p>Thanks to Karthik Boyareddygari, Ilze Greeves, Ben Knower, <a href="https://akashgit.github.io/">Akash Srivastava</a>, <a href="http://hendrik.strobelt.com/">Hendrik Strobelt</a>, and Caroline Zeng, without whom this article would not have been created. Thanks also to my reviewers for their helpful comments.</p>
             </div>
         </div>
     </body>
