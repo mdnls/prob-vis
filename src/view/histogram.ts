@@ -144,12 +144,6 @@ export class SVGInteractiveHistogram extends SVGHistogram {
       this.model.addListener(this);
       this.refresh();
 
-      d3.select(this.svg)
-        .append("text")
-        .text("*")
-        .attr("class", "colHighlight")
-        .attr("text-anchor", "middle")
-        .attr("dominant-baseline", "middle");
    }
 
    refresh() {
@@ -176,11 +170,25 @@ export class SVGInteractiveHistogram extends SVGHistogram {
 
       if(this.model.selectedBin() != -1) {
        let binHeight = this.model.getBin(this.model.selectedBin()).length;
+       let bin = this.model.getBin(this.model.selectedBin());
+       
        d3.select(this.svg)
-       .selectAll(".colHighlight")
-       .attr("x", (d) => absX(this.s * this.model.selectedBin() + 0.5 * this.s ))
-       .attr("y", (d) => absY(this.s * binHeight))
-       .attr("style", "font-size: " + scale(this.s) + "px;");
+         .selectAll(".binHighlight")
+         .remove();
+
+       d3.select(this.svg)
+       .selectAll(".binHighlight")
+       .data(bin)
+       .enter()
+       .append("rect")
+       .attr("width", scale(this.s * 0.85))
+       .attr("height", scale(this.s * 0.85))
+       .attr("x", (d) => absX(d.x * this.s + this.s*0.075))
+       .attr("y", (d) => absY((d.y+1)* this.s - this.s*0.075)) // rectangle extends downward, so the y index is for top left
+       .attr("class", "binHighlight")
+       .attr("fill", "none")
+       .attr("stroke", "#000")
+       .attr("stroke-width", "2px");
     }
    }
       /**
