@@ -32,7 +32,9 @@ const conf: CONF = new CONF(8, colors, 5);
 
 export function main() {
     console.log("1");
-    $(document).ready(() => setupIntro());
+    //$(document).ready(setupIntro;
+    $(window).on("load", setupIntro);
+    $(window).on("load", () => {console.log("Loaded")});
 }
 
 /**

@@ -1814,7 +1814,8 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
     const conf = new model_4.CONF(8, colors, 5);
     function main() {
         console.log("1");
-        $(document).ready(() => setupIntro());
+        $(window).on("load", setupIntro);
+        $(window).on("load", () => { console.log("Loaded"); });
     }
     exports.main = main;
     function setAttn(id) {
