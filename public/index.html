@@ -377,7 +377,7 @@
             <a id="gan-comp-easy-play" class="animcontrol"><img class="anim-btn" src="images/play.svg" /></a>
             <a id="gan-comp-easy-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
             <a id="gan-comp-easy-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
-
+            <br /> <br />
             <p>As we can see, both generators have a fairly easy time learning the target distribution. But, if we instead try to fit the generators to to a $1$-dimensional manifold distribution, we see that the minimizing the EM upper bound is successful where minimizing the JSD upper bound is not.</p>
 
             <div class="row" style="text-align: center">
@@ -406,6 +406,7 @@
                 <a id="gan-comp-manifold-play" class="animcontrol"><img class="anim-btn" src="images/play.svg" /></a>
                 <a id="gan-comp-manifold-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
                 <a id="gan-comp-manifold-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
+                <br /> <br />
             </div>
 
             <p>When minimizing JSD, the generator output stays in its initial distribution throughout optimization, because no change to the generator's parameters can reduce the estimated JSD. Technically, this is intentional – the optimization makes no changes because it has already found a local minimum. JSD is flawed in that there are many undesirable local minima where the generator distribution has only a trivial intersection with the true distribution.</p>

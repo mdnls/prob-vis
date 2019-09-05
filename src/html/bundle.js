@@ -462,14 +462,18 @@ define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], f
             d3.select(this.svg)
                 .selectAll("." + this.name)
                 .remove();
+            let sideLength = scale(s * 0.85);
+            if (sideLength < 0) {
+                sideLength = 1;
+            }
             d3.select(this.svg)
                 .selectAll("rect ." + this.name)
                 .data(allItems)
                 .enter()
                 .append("rect")
                 .attr("class", this.name)
-                .attr("width", scale(s * 0.85))
-                .attr("height", scale(s * 0.85))
+                .attr("width", sideLength)
+                .attr("height", sideLength)
                 .attr("x", (d) => absX(d.x * s + s * 0.075))
                 .attr("y", (d) => absY((d.y + 1) * s - s * 0.075))
                 .attr("fill", (d) => colors[d.x % colors.length]);
@@ -512,13 +516,17 @@ define("view/histogram", ["require", "exports", "model/bins", "d3", "jquery"], f
                 d3.select(this.svg)
                     .selectAll(".binHighlight")
                     .remove();
+                let sideLength = scale(this.s * 0.85);
+                if (sideLength < 0) {
+                    sideLength = 1;
+                }
                 d3.select(this.svg)
                     .selectAll(".binHighlight")
                     .data(bin)
                     .enter()
                     .append("rect")
-                    .attr("width", scale(this.s * 0.85))
-                    .attr("height", scale(this.s * 0.85))
+                    .attr("width", sideLength)
+                    .attr("height", sideLength)
                     .attr("x", (d) => absX(d.x * this.s + this.s * 0.075))
                     .attr("y", (d) => absY((d.y + 1) * this.s - this.s * 0.075))
                     .attr("class", "binHighlight")
@@ -1820,6 +1828,7 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
         }
     }
     function setupIntro() {
+        let defaultBin = [1, 2, 3, 1, 3, 2, 4, 5];
         $(window).resize(model_4.Model.globalRefresh);
         document.addEventListener("keydown", event => {
             switch (event.key.toLowerCase()) {
@@ -1913,7 +1922,7 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
         $("#entropy-ex-low").click(() => { mActiveEnt = mLowEnt; mLowEnt.refresh(); });
         $("#entropy-ex-med").click(() => { mActiveEnt = mMedEnt; mMedEnt.refresh(); });
         $("#entropy-ex-high").click(() => { mActiveEnt = mHighEnt; mHighEnt.refresh(); });
-        let mInteractiveEnt = bins_3.Histogram.full(8, 1);
+        let mInteractiveEnt = bins_3.Histogram.fromArray(defaultBin);
         let interactiveEnt = new entropy_1.SVGInteractiveEntropy("#entropy-ex-interactive", mInteractiveEnt, conf);
         interactiveEnt.refresh();
         let interactiveEntHandler = function (dir) {
@@ -1934,7 +1943,7 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
         };
         registerAttn("#entropy-interactive", interactiveEntHandler);
         let qModel = bins_3.Histogram.fromArray(data_1.xEntropyExs["q"]);
-        let pModel = bins_3.Histogram.full(8, 1);
+        let pModel = bins_3.Histogram.fromArray(defaultBin);
         let interactiveXEnt = new entropy_1.SVGInteractiveCrossEntropy("#xentropy-ex-interactive", pModel, qModel, conf);
         interactiveXEnt.refresh();
         let relEnt = new textbinder_1.LooseTextBinder("#kl-ex-val", [pModel, qModel], function (m) {

@@ -62,6 +62,8 @@ function userInput(dir: string) {
 }
 
 function setupIntro() {
+    let defaultBin = [1, 2, 3, 1, 3, 2, 4, 5];
+
     // resize views when window is resized 
     $(window).resize(Model.globalRefresh);
 
@@ -181,7 +183,7 @@ function setupIntro() {
     $("#entropy-ex-high").click(() => {mActiveEnt = mHighEnt; mHighEnt.refresh()});
 
     // Interactive entropy diagram
-    let mInteractiveEnt = Histogram.full(8, 1);
+    let mInteractiveEnt = Histogram.fromArray(defaultBin);
     let interactiveEnt = new SVGInteractiveEntropy("#entropy-ex-interactive", mInteractiveEnt, conf);
     interactiveEnt.refresh();
 
@@ -206,7 +208,7 @@ function setupIntro() {
 
     // Interactive cross entropy diagram
     let qModel = Histogram.fromArray(xEntropyExs["q"]);
-    let pModel = Histogram.full(8, 1);
+    let pModel = Histogram.fromArray(defaultBin);
     let interactiveXEnt = new SVGInteractiveCrossEntropy("#xentropy-ex-interactive", pModel, qModel, conf);
     interactiveXEnt.refresh();
 
