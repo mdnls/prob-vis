@@ -1412,7 +1412,8 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
                     let wScale = d3.scaleLinear().domain([0, 100]).range([0, width]);
                     let start = colxOffset + wScale(s * sBin + 0.5 * s);
                     let end = width + 2 * pad + rowxOffset + wScale(s * eBin + 0.5 * s);
-                    let p = `M${start},0  L ${start},20 L ${end},20 L ${end},5`;
+                    let dist = 0.65 * height;
+                    let p = `M${start},0  L ${start},${dist} L ${end},${dist} L ${end},5`;
                     d3.select(arrowBar)
                         .append("path")
                         .attr("d", p)

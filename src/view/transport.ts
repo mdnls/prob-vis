@@ -112,10 +112,6 @@ export class SVGTransportMatrix extends SVGTransport {
 
 export class SVGIndicatorTransport extends SVGTransport {
     svgArrowBar: string;
-
-    // add an svg underneath the two histograms
-    // if selected bin in left isn't 0
-    // then take the tree highest recievers of left and make arrows 
     constructor(divElement: string, model: Matrix, conf: CONF) {
         super(divElement, model, conf);
         let defaultId = "arrowBar";
@@ -169,8 +165,9 @@ export class SVGIndicatorTransport extends SVGTransport {
                 let wScale = d3.scaleLinear().domain([0, 100]).range([0, width]);
                 let start = colxOffset + wScale(s * sBin + 0.5 * s);
                 let end = width + 2 * pad + rowxOffset + wScale(s * eBin + 0.5 * s);
+                let dist = 0.65 * height;
 
-                let p = `M${start},0  L ${start},20 L ${end},20 L ${end},5`;
+                let p = `M${start},0  L ${start},${dist} L ${end},${dist} L ${end},5`;
                 d3.select(arrowBar)
                   .append("path")
                   .attr("d", p)
