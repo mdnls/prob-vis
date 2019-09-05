@@ -31,12 +31,21 @@ b {
 
 .vis-inset {
   height: 20vw; }
+  @media screen and (max-width: 600px) {
+    .vis-inset {
+      height: 20vh; } }
 
 .vis-inset-medium {
   height: 25vw; }
+  @media screen and (max-width: 600px) {
+    .vis-inset-medium {
+      height: 25vh; } }
 
 .vis-inset-long {
   height: 35vw; }
+  @media screen and (max-width: 600px) {
+    .vis-inset-long {
+      height: 35vh; } }
 
 .box {
   height: 1.25em;

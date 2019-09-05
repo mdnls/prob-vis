@@ -31,7 +31,7 @@
 <body>
     <div class="container">
         <h1>Statistical Distances and Their Implications to GAN Training</h1>
-        <p><b>Max Daniels</b> <br /> <p style="font-size: 12px; color: #808080;">Northeastern University</p></p>
+        <p><b>Max Daniels</b> <br /> <span style="font-size: 12px; color: #808080;">Northeastern University</span></p>
         
         <div id="intro">
             <h2>
@@ -122,8 +122,8 @@
             
             <p>We start with the least likely event, say $\xp{1}{1}$. We want to match this event with a unique path to a leaf of the tree, in a way that allocates an optimal number of bits to that event. As in the previous example, we can start with a uniform distribution of copy events $\xp{1}{i}$ and assign codes with a decision tree of depth $\log_2 \frac{1}{\xp{1}{}}$. Then, to represent an event more likely than $\xp{1}{}$ – say, $\xp{2}{1}$ – we can simply merge a few of the copies $\xp{1}{i}$, so that a path to any of them is an equivalent way to communicate $\xp{2}{1}$. This is advantageous whenever we can find sibling copies to merge, since it allows us to save a bit by opting not to distinguish those siblings at all.</p>
             
-            <div class="fig">
-                <img src="images/tree_replace.svg" class="col-md-10 offset-md-1 col-xs-12"/>
+            <div class="fig vis-inset">
+                <img src="images/tree_replace.svg" class="col-md-10 offset-md-1 col-xs-12" style="height: 100%"/>
                 <p class="figdesc">Replacing two sibling $x_1$ events with an $x_2$ event eliminates a bit.</p>
             </div>
 

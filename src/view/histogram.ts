@@ -101,15 +101,20 @@ export class SVGHistogram implements ModelListener {
          .selectAll("." + this.name)
          .remove();
 
+
       // redraw
+      let sideLength = scale(s * 0.85);
+      if(sideLength < 0) {
+         sideLength = 1;
+      }
       d3.select(this.svg)
          .selectAll("rect ." + this.name)
          .data(allItems)
          .enter()
          .append("rect")
          .attr("class", this.name)
-         .attr("width", scale(s * 0.85))
-         .attr("height", scale(s * 0.85))
+         .attr("width", sideLength)
+         .attr("height", sideLength)
          .attr("x", (d) => absX(d.x * s + s*0.075))
          .attr("y", (d) => absY((d.y+1)* s - s*0.075)) // rectangle extends downward, so the y index is for top left
          .attr("fill", (d) => colors[d.x % colors.length]);
@@ -176,13 +181,17 @@ export class SVGInteractiveHistogram extends SVGHistogram {
          .selectAll(".binHighlight")
          .remove();
 
-       d3.select(this.svg)
+      let sideLength = scale(this.s * 0.85);
+      if(sideLength < 0) {
+         sideLength = 1;
+      }
+      d3.select(this.svg)
        .selectAll(".binHighlight")
        .data(bin)
        .enter()
        .append("rect")
-       .attr("width", scale(this.s * 0.85))
-       .attr("height", scale(this.s * 0.85))
+       .attr("width", sideLength)
+       .attr("height", sideLength)
        .attr("x", (d) => absX(d.x * this.s + this.s*0.075))
        .attr("y", (d) => absY((d.y+1)* this.s - this.s*0.075)) // rectangle extends downward, so the y index is for top left
        .attr("class", "binHighlight")
