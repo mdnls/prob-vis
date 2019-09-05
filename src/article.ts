@@ -31,6 +31,7 @@ let attn: (key: string) => any = undefined;
 const conf: CONF = new CONF(8, colors, 5);
 
 export function main() {
+    console.log("1");
     $(document).ready(() => setupIntro());
 }
 
@@ -62,6 +63,7 @@ function userInput(dir: string) {
 }
 
 function setupIntro() {
+
     let defaultBin = [1, 2, 3, 1, 3, 2, 4, 5];
 
     // resize views when window is resized 
@@ -327,6 +329,7 @@ function setupIntro() {
     $("#gan-comp-manifold-play").click(() => { svgWMAnim.play(); svgGMAnim.play(); });
     $("#gan-comp-manifold-pause").click(() => { svgWMAnim.pause(); svgGMAnim.pause(); });
     $("#gan-comp-manifold-reset").click(() => { svgWMAnim.reset(); svgGMAnim.reset(); });
+    console.log("2");
 }   
 
 main();

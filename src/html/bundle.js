@@ -1813,6 +1813,7 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
     let attn = undefined;
     const conf = new model_4.CONF(8, colors, 5);
     function main() {
+        console.log("1");
         $(document).ready(() => setupIntro());
     }
     exports.main = main;
@@ -2046,6 +2047,7 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
         $("#gan-comp-manifold-play").click(() => { svgWMAnim.play(); svgGMAnim.play(); });
         $("#gan-comp-manifold-pause").click(() => { svgWMAnim.pause(); svgGMAnim.pause(); });
         $("#gan-comp-manifold-reset").click(() => { svgWMAnim.reset(); svgGMAnim.reset(); });
+        console.log("2");
     }
     main();
 });
