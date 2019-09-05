@@ -1812,7 +1812,7 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
     let attn = undefined;
     const conf = new model_4.CONF(8, colors, 5);
     function main() {
-        setupIntro();
+        $(document).ready(() => setupIntro());
     }
     exports.main = main;
     function setAttn(id) {

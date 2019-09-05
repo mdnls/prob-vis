@@ -31,7 +31,7 @@ let attn: (key: string) => any = undefined;
 const conf: CONF = new CONF(8, colors, 5);
 
 export function main() {
-    setupIntro();
+    $(document).ready(() => setupIntro());
 }
 
 /**

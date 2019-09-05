@@ -122,10 +122,12 @@
             
             <p>We start with the least likely event, say $\xp{1}{1}$. We want to match this event with a unique path to a leaf of the tree, in a way that allocates an optimal number of bits to that event. As in the previous example, we can start with a uniform distribution of copy events $\xp{1}{i}$ and assign codes with a decision tree of depth $\log_2 \frac{1}{\xp{1}{}}$. Then, to represent an event more likely than $\xp{1}{}$ – say, $\xp{2}{1}$ – we can simply merge a few of the copies $\xp{1}{i}$, so that a path to any of them is an equivalent way to communicate $\xp{2}{1}$. This is advantageous whenever we can find sibling copies to merge, since it allows us to save a bit by opting not to distinguish those siblings at all.</p>
             
-            <div class="fig vis-inset">
-                <img src="images/tree_replace.svg" class="col-md-10 offset-md-1 col-xs-12" style="height: 100%"/>
-                <p class="figdesc">Replacing two sibling $x_1$ events with an $x_2$ event eliminates a bit.</p>
-            </div>
+            <div class="fig">
+                    <div class="vis-inset">
+                        <img src="images/tree_replace.svg" class="col-md-10 offset-md-1 col-xs-12" style="height: 100%"/>
+                    </div>
+                    <p class="figdesc">Replacing two sibling $x_1$ events with an $x_2$ event eliminates a bit.</p>
+                </div>
 
             
             <p>Iterating this process, we can create a leaf for any $\xp{k}{}$ event by merging two $\xp{k-1}{}$ leaves. From the bottom up, this means starting with a tree of all $\xp{1}{}$ leaves and merging as many as possible, keeping only enough $\xp{1}{}$ leafs to represent the $\xp{1}{}$ events in $P$. Then, in the next layer, the algorithm freezes leaves for any $\xp{2}{}$ events in $P$, merging the leftover nodes. This repeats until all $\xp{k}{i}$ have a place in the tree. In the diagram below, we can see all the merged nodes for events in the histogram, along with the fully colored nodes representing actual $\xp{k}{i}$ leaves. </p>
@@ -222,11 +224,6 @@
                    
                 <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" class="inputBtn" /></a>
 
-                <div class="mobilenav">
-                    <a class="up"><img class="inputBtn" src="images/up.svg" /></a>
-                    <a class="down" style="margin-top: -15px;"><img class="inputBtn" src="images/down.svg" /></a>
-                </div>
-
                 <div id="transport-interactive" class="col-6 mx-auto vis-inset">
                     <div class="h-75">
                         <div id="transport-ex-interactive" class="h-100">
@@ -243,10 +240,6 @@
             <div class="fig">
                 <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" class="inputBtn" /></a>
 
-                <div class="mobilenav">
-                    <a class="up"><img class="inputBtn" src="images/up.svg" /></a>
-                    <a class="down" style="margin-top: -15px;"><img class="inputBtn" src="images/down.svg" /></a>
-                </div>  
                 <div id="transport-matrix-interactive" class="col-6 mx-auto vis-inset-long" style="margin: 20px">
                     <div id="transport-matrix-ex-interactive" class="h-100">
                         
@@ -278,11 +271,6 @@
             
             <div class="fig">
                 <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" class="inputBtn" /></a>
-
-                <div class="mobilenav">
-                    <a class="up"><img class="inputBtn" src="images/up.svg" /></a>
-                    <a class="down" style="margin-top: -15px;"><img class="inputBtn" src="images/down.svg" /></a>
-                </div>
                 
                 <div id="opt-transport-matrix-interactive" class="col-6 mx-auto vis-inset-long" style="margin: 20px">
                     <div id="opt-transport-matrix-ex-interactive" class="h-100">
