@@ -1380,12 +1380,15 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
                 .attr("style", "height: " + totalHeight * 0.8 + "px;");
             super(divElement + " #inner", model, conf);
             let defaultId = "arrowBar";
+            this.extraPad = 20;
             this.divArrowBar = divElement;
             this.svgArrowBar = this.divArrowBar + " > #" + defaultId;
             d3.select(this.divArrowBar)
                 .append("svg")
                 .attr("id", defaultId);
             let defs = d3.select(this.svgArrowBar).append("defs");
+            d3.select(this.svgColHist).attr("style", "margin-left: " + this.extraPad + "px;");
+            d3.select(this.svgRowHist).attr("style", "margin-right: " + this.extraPad + "px;");
             defs.append("marker")
                 .attr("id", "arrow")
                 .attr("viewBox", "0 -5, 10, 10")
@@ -1417,10 +1420,11 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
                 let s = this.colHist.s;
                 let pad = this.conf.padding;
                 let arrowBar = this.svgArrowBar;
+                let extraPad = this.extraPad;
                 let arrow = function (sBin, eBin) {
                     let wScale = d3.scaleLinear().domain([0, 100]).range([0, width]);
                     let start = colxOffset + wScale(s * sBin + 0.5 * s);
-                    let end = width + 2 * pad + rowxOffset + wScale(s * eBin + 0.5 * s);
+                    let end = width + 2 * extraPad + 2 * pad + rowxOffset + wScale(s * eBin + 0.5 * s);
                     let dist = 0.50 * height;
                     let p = `M${start},0  L ${start},${dist} L ${end},${dist} L ${end},5`;
                     d3.select(arrowBar)
