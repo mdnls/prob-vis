@@ -112,12 +112,22 @@ export class SVGTransportMatrix extends SVGTransport {
 
 export class SVGIndicatorTransport extends SVGTransport {
     svgArrowBar: string;
+    divArrowBar: string;
     constructor(divElement: string, model: Matrix, conf: CONF) {
-        super(divElement, model, conf);
+        let totalHeight = $(divElement).height();
+
+        d3.select(divElement)
+          .append("div")
+          .attr("id", "inner")
+          .attr("height", "80%");
+
+        super(divElement + " #inner", model, conf);
+
         let defaultId = "arrowBar";
 
-        this.svgArrowBar = this.div + " > #" + defaultId;
-        d3.select(this.div)
+        this.divArrowBar = divElement;
+        this.svgArrowBar = this.divArrowBar + " > #" + defaultId;
+        d3.select(this.divArrowBar)
           .append("svg")
           .attr("id", defaultId);
         
@@ -136,10 +146,9 @@ export class SVGIndicatorTransport extends SVGTransport {
     }
 
     refresh() {
+        let svgWidth = $(this.divArrowBar).width();
+        let svgHeight = $(this.divArrowBar).height();
         super.refresh();
-
-        let svgWidth = $(this.div).width();
-        let svgHeight = $(this.div).height();
 
         let height = svgHeight/5;
 
@@ -165,7 +174,7 @@ export class SVGIndicatorTransport extends SVGTransport {
                 let wScale = d3.scaleLinear().domain([0, 100]).range([0, width]);
                 let start = colxOffset + wScale(s * sBin + 0.5 * s);
                 let end = width + 2 * pad + rowxOffset + wScale(s * eBin + 0.5 * s);
-                let dist = 0.65 * height;
+                let dist = 0.50 * height;
 
                 let p = `M${start},0  L ${start},${dist} L ${end},${dist} L ${end},5`;
                 d3.select(arrowBar)
