@@ -1197,8 +1197,9 @@ define("view/entropy", ["require", "exports", "model/trees", "view/histogram", "
             this.divTargetEnt = divElement + " > #" + defaultIDs[1];
             let d = d3.select(divElement);
             d.attr("class", "row");
-            d.append("div").attr("id", defaultIDs[0]).attr("class", "col-6");
-            d.append("div").attr("id", defaultIDs[1]).attr("class", "col-6");
+            d.append("div").attr("id", defaultIDs[0]).attr("class", "col-sm-6 col-xs-11");
+            d.append("div").attr("class", "w-100 d-block d-sm-none");
+            d.append("div").attr("id", defaultIDs[1]).attr("class", "col-sm-6 col-xs-11");
             this.sourceModel = pModel;
             this.targetModel = qModel;
             this.conf = conf;
