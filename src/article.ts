@@ -30,13 +30,6 @@ let attn: (key: string) => any = undefined;
 
 const conf: CONF = new CONF(8, colors, 5);
 
-export function main() {
-    console.log("1");
-    //$(document).ready(setupIntro;
-    $(window).on("load", setupIntro);
-    $(window).on("load", () => {console.log("Loaded")});
-}
-
 /**
  * Give attention to a particular dom element.
  * @param id a dom element which has attention
@@ -64,8 +57,7 @@ function userInput(dir: string) {
     }
 }
 
-function setupIntro() {
-
+export function main() {
     let defaultBin = [1, 2, 3, 1, 3, 2, 4, 5];
 
     // resize views when window is resized 
@@ -331,7 +323,4 @@ function setupIntro() {
     $("#gan-comp-manifold-play").click(() => { svgWMAnim.play(); svgGMAnim.play(); });
     $("#gan-comp-manifold-pause").click(() => { svgWMAnim.pause(); svgGMAnim.pause(); });
     $("#gan-comp-manifold-reset").click(() => { svgWMAnim.reset(); svgGMAnim.reset(); });
-    console.log("2");
 }   
-
-main();
