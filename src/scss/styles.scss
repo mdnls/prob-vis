@@ -119,3 +119,7 @@ b {
         float: right;
     }
 }
+
+body { 
+    touch-action: manipulation;
+}

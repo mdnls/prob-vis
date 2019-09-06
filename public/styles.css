@@ -95,3 +95,6 @@ b {
     display: block;
     clear: both;
     float: right; }
+
+body {
+  touch-action: manipulation; }
