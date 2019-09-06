@@ -113,6 +113,8 @@ export class SVGTransportMatrix extends SVGTransport {
 export class SVGIndicatorTransport extends SVGTransport {
     svgArrowBar: string;
     divArrowBar: string;
+    extraPad: number;
+
     constructor(divElement: string, model: Matrix, conf: CONF) {
         let totalHeight = $(divElement).height();
 
@@ -125,6 +127,8 @@ export class SVGIndicatorTransport extends SVGTransport {
 
         let defaultId = "arrowBar";
 
+        this.extraPad = 20;
+
         this.divArrowBar = divElement;
         this.svgArrowBar = this.divArrowBar + " > #" + defaultId;
         d3.select(this.divArrowBar)
@@ -132,6 +136,9 @@ export class SVGIndicatorTransport extends SVGTransport {
           .attr("id", defaultId);
         
         let defs = d3.select(this.svgArrowBar).append("defs");
+
+        d3.select(this.svgColHist).attr("style", "margin-left: " + this.extraPad + "px;");
+        d3.select(this.svgRowHist).attr("style", "margin-right: " + this.extraPad + "px;");
 
         defs.append("marker")
             .attr("id", "arrow")
@@ -171,11 +178,12 @@ export class SVGIndicatorTransport extends SVGTransport {
             let s = this.colHist.s;
             let pad = this.conf.padding;
             let arrowBar = this.svgArrowBar;
+            let extraPad = this.extraPad;
 
             let arrow = function(sBin: number, eBin: number) {
                 let wScale = d3.scaleLinear().domain([0, 100]).range([0, width]);
                 let start = colxOffset + wScale(s * sBin + 0.5 * s);
-                let end = width + 2 * pad + rowxOffset + wScale(s * eBin + 0.5 * s);
+                let end = width + 2 * extraPad + 2 * pad + rowxOffset + wScale(s * eBin + 0.5 * s);
                 let dist = 0.50 * height;
 
                 let p = `M${start},0  L ${start},${dist} L ${end},${dist} L ${end},5`;
