@@ -1812,12 +1812,6 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
     let attnHash = {};
     let attn = undefined;
     const conf = new model_4.CONF(8, colors, 5);
-    function main() {
-        console.log("1");
-        $(window).on("load", setupIntro);
-        $(window).on("load", () => { console.log("Loaded"); });
-    }
-    exports.main = main;
     function setAttn(id) {
         attn = attnHash[id];
     }
@@ -1830,7 +1824,7 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
             attn(dir);
         }
     }
-    function setupIntro() {
+    function main() {
         let defaultBin = [1, 2, 3, 1, 3, 2, 4, 5];
         $(window).resize(model_4.Model.globalRefresh);
         document.addEventListener("keydown", event => {
@@ -2048,9 +2042,8 @@ define("article", ["require", "exports", "d3", "jquery", "model/bins", "model/he
         $("#gan-comp-manifold-play").click(() => { svgWMAnim.play(); svgGMAnim.play(); });
         $("#gan-comp-manifold-pause").click(() => { svgWMAnim.pause(); svgGMAnim.pause(); });
         $("#gan-comp-manifold-reset").click(() => { svgWMAnim.reset(); svgGMAnim.reset(); });
-        console.log("2");
     }
-    main();
+    exports.main = main;
 });
 define("main", ["require", "exports", "view/binarytree", "view/histogram", "view/entropy", "view/transport", "view/heatmap", "model/bins", "model/heatmap", "d3", "model/model", "model/gaussian", "view/gaussian", "data"], function (require, exports, tree, hist, ent, transport, hm, histModel, matModel, d3, model, gaussian_4, gaussian_5, data_2) {
     "use strict";
