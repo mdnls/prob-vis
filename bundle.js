@@ -1373,10 +1373,16 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
     exports.SVGTransportMatrix = SVGTransportMatrix;
     class SVGIndicatorTransport extends SVGTransport {
         constructor(divElement, model, conf) {
-            super(divElement, model, conf);
+            let totalHeight = $(divElement).height();
+            d3.select(divElement)
+                .append("div")
+                .attr("id", "inner")
+                .attr("height", "80%");
+            super(divElement + " #inner", model, conf);
             let defaultId = "arrowBar";
-            this.svgArrowBar = this.div + " > #" + defaultId;
-            d3.select(this.div)
+            this.divArrowBar = divElement;
+            this.svgArrowBar = this.divArrowBar + " > #" + defaultId;
+            d3.select(this.divArrowBar)
                 .append("svg")
                 .attr("id", defaultId);
             let defs = d3.select(this.svgArrowBar).append("defs");
@@ -1392,9 +1398,9 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
                 .attr("d", "M0,-5L10,0L0,5");
         }
         refresh() {
+            let svgWidth = $(this.divArrowBar).width();
+            let svgHeight = $(this.divArrowBar).height();
             super.refresh();
-            let svgWidth = $(this.div).width();
-            let svgHeight = $(this.div).height();
             let height = svgHeight / 5;
             d3.select(this.svgArrowBar)
                 .attr("width", svgWidth)
@@ -1413,7 +1419,7 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
                     let wScale = d3.scaleLinear().domain([0, 100]).range([0, width]);
                     let start = colxOffset + wScale(s * sBin + 0.5 * s);
                     let end = width + 2 * pad + rowxOffset + wScale(s * eBin + 0.5 * s);
-                    let dist = 0.65 * height;
+                    let dist = 0.50 * height;
                     let p = `M${start},0  L ${start},${dist} L ${end},${dist} L ${end},5`;
                     d3.select(arrowBar)
                         .append("path")
