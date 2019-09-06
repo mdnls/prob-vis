@@ -1377,7 +1377,7 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
             d3.select(divElement)
                 .append("div")
                 .attr("id", "inner")
-                .attr("height", "80%");
+                .attr("style", "height: " + totalHeight * 0.8 + "px;");
             super(divElement + " #inner", model, conf);
             let defaultId = "arrowBar";
             this.divArrowBar = divElement;
@@ -1400,6 +1400,8 @@ define("view/transport", ["require", "exports", "view/histogram", "view/heatmap"
         refresh() {
             let svgWidth = $(this.divArrowBar).width();
             let svgHeight = $(this.divArrowBar).height();
+            d3.select(this.divArrowBar + " #inner")
+                .attr("style", "height: " + svgHeight * 0.8 + "px;");
             super.refresh();
             let height = svgHeight / 5;
             d3.select(this.svgArrowBar)
