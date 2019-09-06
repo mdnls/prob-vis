@@ -119,7 +119,7 @@ export class SVGIndicatorTransport extends SVGTransport {
         d3.select(divElement)
           .append("div")
           .attr("id", "inner")
-          .attr("height", "80%");
+          .attr("style", "height: " + totalHeight * 0.8 + "px;");
 
         super(divElement + " #inner", model, conf);
 
@@ -148,6 +148,8 @@ export class SVGIndicatorTransport extends SVGTransport {
     refresh() {
         let svgWidth = $(this.divArrowBar).width();
         let svgHeight = $(this.divArrowBar).height();
+        d3.select(this.divArrowBar + " #inner")
+        .attr("style", "height: " + svgHeight * 0.8 + "px;");
         super.refresh();
 
         let height = svgHeight/5;

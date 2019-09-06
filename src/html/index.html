@@ -313,65 +313,59 @@
             <p>
                 As a control example, we can observe the training of a GAN and WGAN on "nice" distributions, in this case a fixed Gaussian distribution. The following animation plots the output statistics of points sampled from two separate generator networks with the same architecture, as the left generator is trained to minimize the approximate upper bound of Earth Mover's Distance and the right is trained to minimize the approximate upper bound of the Jenson Shannon Divergence.
             </p>
-            
-            <div class="row" style="text-align: center">
-                <div class="col-6">
-                    <p style="margin-bottom: 0px">EM Minimization</p>
-                </div>
-                <div class="col-6">
-                    <p style="margin-bottom: 0px">JSD Minimization</p>
-                </div>
-            </div>
+
             <div id="gan-comp-easy" class="col-12 vis-inset-long">
                 <div class="row h-100 anim">
                     <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
+                        <p style="margin-bottom: 20px">EM Minimization</p>
                         <svg id="wgan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
                             
                         </svg>
                     </div>
                     <div class="col-6 h-100" style="padding: 20px 20px 20px 10px">
+                        <p style="margin-bottom: 20px">JSD Minimization</p>
                         <svg id="gan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
                             
                         </svg>
                     </div>
                 </div>
             </div>
-                
+            
+            <br /> <br />
             <a id="gan-comp-easy-play" class="animcontrol"><img class="anim-btn" src="images/play.svg" /></a>
             <a id="gan-comp-easy-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
             <a id="gan-comp-easy-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
             <br /> <br />
             <p>As we can see, both generators have a fairly easy time learning the target distribution. But, if we instead try to fit the generators to to a $1$-dimensional manifold distribution, we see that the minimizing the EM upper bound is successful where minimizing the JSD upper bound is not.</p>
 
-            <div class="row" style="text-align: center">
-                <div class="col-6">
-                    <p style="margin-bottom: 0px">EM Minimization</p>
-                </div>
-                <div class="col-6">
-                    <p style="margin-bottom: 0px">JSD Minimization</p>
-                </div>
-            </div>
             <div id="gan-comp-manifold" class="col-12 vis-inset-long">
-                    <div class="row h-100 anim">
-                        <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
+                <div class="row h-100 anim">
+                    <div class="col-6" style="padding: 0px;">
+                        <p style="margin: 0px 10px 0px 20px">EM Minimization</p>
+
+                        <div class="col-12 h-100 vis-inset-long" style="padding: 20px 10px 20px 20px">
                             <svg id="wgan-manifold-optim-ex" class="col-12 h-100" style="padding: 0px">
                                 
                             </svg>
                         </div>
-                        <div class="col-6 h-100" style="padding: 20px 20px 20px 10px">
+                    </div>
+                    <div class="col-6" style="padding: 0px;">
+                        <p style="margin: 0px 20px 0px 10px">JSD Minimization</p>
+
+                        <div class="col-12 h-100 vis-inset-long" style="padding: 20px 20px 20px 10px">
                             <svg id="gan-manifold-optim-ex" class="col-12 h-100" style="padding: 0px">
                                 
                             </svg>
                         </div>
                     </div>
                 </div>
-                    
-                <a id="gan-comp-manifold-play" class="animcontrol"><img class="anim-btn" src="images/play.svg" /></a>
-                <a id="gan-comp-manifold-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
-                <a id="gan-comp-manifold-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
-                <br /> <br />
             </div>
-
+                
+            <br /><br />
+            <a id="gan-comp-manifold-play" class="animcontrol"><img class="anim-btn" src="images/play.svg" /></a>
+            <a id="gan-comp-manifold-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
+            <a id="gan-comp-manifold-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
+            <br /> <br />
             <p>When minimizing JSD, the generator output stays in its initial distribution throughout optimization, because no change to the generator's parameters can reduce the estimated JSD. Technically, this is intentional – the optimization makes no changes because it has already found a local minimum. JSD is flawed in that there are many undesirable local minima where the generator distribution has only a trivial intersection with the true distribution.</p>
             
             <p>This effect has been discussed in various treatments as a thought experiment, and it is especially well illustrated in <a href="#citations">[2]</a>, Example 1. The animations above were generated directly by training simple neural networks on synthetic data as an empirical demonstration. The scripts to do so are available <a href="https://gitlab.com/qnkxsovc/prob-vis/tree/master/optimizers">in this article's repository</a>.</p>
