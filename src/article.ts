@@ -293,7 +293,7 @@ export function main() {
     let wETargetCov = optimizers["wganEasy"]["targetCov"];
     let wETarget = new Gaussian2D(wETargetMean, wETargetCov);
 
-    let svgWEAnim = new SVGAnimatedGaussian("wgan-easy", "#wgan-easy-optim-ex", 15, wEMean, wECov, wETarget, [[-2, 4], [-2, 4]], conf);
+    let svgWEAnim = new SVGAnimatedGaussian("wgan-easy", "#wgan-easy-optim-ex", 15, wEMean, wECov, wETarget, [[2, 2], [6, 6]], conf);
 
     let gEMean = optimizers["ganEasy"]["mean"];
     let gECov = optimizers["ganEasy"]["cov"];
@@ -301,7 +301,7 @@ export function main() {
     let gETargetCov = optimizers["ganEasy"]["targetCov"];
     let gETarget = new Gaussian2D(gETargetMean, gETargetCov);
 
-    let svgGEAnim = new SVGAnimatedGaussian("gan-easy", "#gan-easy-optim-ex", 15, gEMean, gECov, gETarget, [[-2, 4], [-2, 4]], conf);
+    let svgGEAnim = new SVGAnimatedGaussian("gan-easy", "#gan-easy-optim-ex", 15, gEMean, gECov, gETarget, [[2, 2], [6, 6]], conf);
     $("#gan-comp-easy-play").click(() => { svgWEAnim.play(); svgGEAnim.play(); });
     $("#gan-comp-easy-pause").click(() => { svgWEAnim.pause(); svgGEAnim.pause(); });
     $("#gan-comp-easy-reset").click(() => { svgWEAnim.reset(); svgGEAnim.reset(); });

@@ -77,8 +77,7 @@ export class SVGHeatmap implements ModelListener {
         .attr("width", (d) => scale(s*0.85))
         .attr("height", (d) => scale(s*0.85))
         .attr("fill", (d) => d3.interpolateBlues( 0.1 + 0.9 * (d.quantity / max)))
-        .attr("stroke", (d) => selectedCol != -1 && d.c == selectedCol ? "#222" : "none")
-        .attr("stroke-width", "2px");
+        .attr("stroke", (d) => selectedCol != -1 && d.c == selectedCol ? "#222" : "none");
    }
 
 
