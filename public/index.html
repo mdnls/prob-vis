@@ -26,7 +26,7 @@
             </p>
             
             <p>
-                Instead, this article will explore some of the more creative ways to define distances for GAN training, and in particular it will focus on the differences between information-theoretic distance functions and Earth Mover's distance. EM has recently been proposed as improvement to information-theoretic distances which can improve training stability and output quality in regimes that are typical for common GAN applications, and so it is important to understand the intuition behind why this is the case.
+                Instead, this article will explore some of the more creative ways to define distances for GAN training, and in particular it will focus on the differences between information-theoretic distance functions and Wasserstein distance. Wasserstein distance has recently been proposed as improvement to information-theoretic distances which can improve training stability and output quality in regimes that are typical for common GAN applications, and so it is important to understand the intuition behind why this is the case.
             </p>
             <h3>What does it mean to have a Statistical Distance?</h3>
             <p>
@@ -50,7 +50,7 @@
             
             <p>When each bin matches exactly, the distance is zero, since the distribution over bins is the same. More importantly, if we make a small change to distribution $X$, by taking an <svg class="orange box"></svg> for example, this distance will reflect that change and decrease. We can use the distance as a guide to iteratively update $X$ until it matches $Y$. This is the approach that GANs take when approximating $P_d$, the true distribution over data, by the generator distribution $P_{\theta}$. The parameters $\theta$ are like the boxes, and the statistical distance function is the guide for manipulating $\theta$ to make $P_{\theta}$ faithful to $P_d$. </p>
             
-            <p>The Euclidean distance is good for illustrating this concept, but it isn't used in practice. The original GAN formulation was shown to reduce an upper bound of the Jenson Shannon Divergence between $P_d$ and $P_{\theta}$, an information-theoretic distance between distributions based on the idea of entropy. These GANs are infamous for their difficulty to train, and they typically require lots of fine tuning to be implemented successfully. Within the last two years, there has been increasing interest in Earth Mover's distance as a more stable alternative, and the rest of this post is about why.</p>
+            <p>The Euclidean distance is good for illustrating this concept, but it isn't used in practice. The original GAN formulation was shown to reduce an upper bound of the Jenson Shannon Divergence between $P_d$ and $P_{\theta}$, an information-theoretic distance between distributions based on the idea of entropy. These GANs are infamous for their difficulty to train, and they typically require lots of fine tuning to be implemented successfully. Within the last two years, there has been increasing interest in Wasserstein distance as a more stable alternative.</p>
         </div>
         
         <div id="entropy">
@@ -149,8 +149,8 @@
                 $$
                 \begin{align}
                 D_{KL}(P \vert \vert Q) & = - \sum_{x} P(x) \log_2 \frac{Q(x)}{P(x)} \\
-                & = \expectedunder{x \sim P}{\log_2 \frac{1}{Q(x)} - \log_2 \frac{1}{P(x)}} \\
-                & = \expectedunder{x \sim P}{d_q(x) - d_p(x)}
+                & = \sum_{x} P(x) (\log_2 \frac{1}{Q(x)} - \log_2 \frac{1}{P(x)}) \\
+                & = \sum_{x}{P(x)(d_q(x) - d_p(x))}
                 \end{align}$$
             </p>
             
@@ -197,7 +197,7 @@
         <div id="transport">
             <h2>Transport</h2>
             
-            <p>Like entropy, Earth Mover's distance relies on an abstraction to determine the distance between probability distributions, and in this case, that abstraction is the "transport plan."  Simply put, a transport plan is a literal blueprint for turning one distribution into another – for each event in the source distribution, it defines the locations and quantities in the target distribution to which some amount of "mass" should be transported.</p>
+            <p>Like entropy, Wasserstein distance relies on an abstraction to determine the distance between probability distributions, and in this case, that abstraction is the "transport plan."  Simply put, a transport plan is a literal blueprint for turning one distribution into another – for each event in the source distribution, it defines the locations and quantities in the target distribution to which some amount of "mass" should be transported.</p>
             
             <div class="fig">
                    
@@ -235,7 +235,7 @@
                 $$
             </p>
             
-            <p>Of course, this distance has more to do with a particular transport plan than it does with either of its marginal distributions. In order to define the Earth Mover's distance for probability distributions, we add the condition that $d(P, Q)$ is the minimum cost under all possible transport plans that convert $P$ to $Q$. This makes the quantity representative of the similarities between $P$ and $Q$, similar to how entropy becomes a meaningful value under the stipulation that Bob and Alice communicate to each other using optimal codes. So, the full formulation of EM is given by:
+            <p>Of course, this distance has more to do with a particular transport plan than it does with either of its marginal distributions. In order to define the Wasserstein distance for probability distributions, we add the condition that $d(P, Q)$ is the minimum cost under all possible transport plans that convert $P$ to $Q$. This makes the quantity representative of the similarities between $P$ and $Q$, similar to how entropy becomes a meaningful value under the stipulation that Bob and Alice communicate to each other using optimal codes. So, the full formulation of Wasserstein distance is given by:
             </p>
             
             <p>
@@ -259,13 +259,13 @@
 
             <p>This plan has a total cost of $30$ box-columns, where the original plan costs $70$ box-columns. Under the optimal plan, we see that the nonzero cells in the joint distributions are clustered around the diagonal, since minimizing the transportation distance means bringing $i$ as close to $j$ as possible.</p>
             
-            <p>As a bonus, the EM Distance is more robust than the entropy based measurements. If $P(x_i) = 0$, then the transport plan just doesn't move any mass away from $x_i$, and if $Q(x_j) = 0$, the plan just doesn't move any mass to $x_j$. In either case, the only effect is that $p(x_i, x_j) = 0$ for all $x_i$ with $P(x_i) = 0$ and for all $Q(x_j) = 0$. This is a general property of joint distributions.</p>
+            <p>As a bonus, the Wasserstein distance is more robust than the entropy based measurements. If $P(x_i) = 0$, then the transport plan just doesn't move any mass away from $x_i$, and if $Q(x_j) = 0$, the plan just doesn't move any mass to $x_j$. In either case, the only effect is that $p(x_i, x_j) = 0$ for all $x_i$ with $P(x_i) = 0$ and for all $Q(x_j) = 0$. This is a general property of joint distributions.</p>
         </div>
         
         <div id="manifold">
             <h2>Manifold Learning: The Pathological Case</h2>
             <p>
-                Earlier, we assumed that typical data tends to depend on relatively few factors of variation compared to its actual dimensionality. In other words, we assume most data lies in a low dimensional manifold. We can now analyze the expected behavior of JSD and EM in this setting. 
+                Earlier, we assumed that typical data tends to depend on relatively few factors of variation compared to its actual dimensionality. In other words, we assume most data lies in a low dimensional manifold. We can now analyze the expected behavior of Jenson Shannon Divergence and Wasserstein distance in this setting. 
             </p>
             
             <p>
@@ -286,17 +286,17 @@
             </div>
 
             <p>
-                The effect is that any misalignment causes either $P(x)$ or $Q(x)$ to be $0$ at almost all points, except for the potential singleton point where $f_p(t) = f_q(t)$. In this case, JSD attains its maximum value, $\log_2(2) = 1$, so that the distributions are "as far apart as possible." But, any incremental step $Q \gets Q'$ that can't immediately fix the misalignment will also have $JSD(P\vert \vert Q')= \log_2(2)$, and this means that the gradient of JSD becomes $0$. It no longer gives any information about how to incrementally bring $Q$ to $P$, and so for manifold distributions JSD becomes as helpful as the binary distance. 
+                The effect is that any misalignment causes either $P(x)$ or $Q(x)$ to be $0$ at almost all points, except for the potential singleton point where $f_p(t) = f_q(s)$. In this case, JSD attains its maximum value, $\log_2(2) = 1$, so that the distributions are "as far apart as possible." But, any incremental step $Q \gets Q'$ that can't immediately fix the misalignment will also have $JSD(P\vert \vert Q')= \log_2(2)$, and this means that the gradient of JSD becomes $0$. It no longer gives any information about how to incrementally bring $Q$ to $P$, and so for manifold distributions JSD becomes as helpful as the binary distance. 
             </p>
 
             <p>
-                This is the Achilles' heel of JSD, mentioned earlier. Even though JSD fixes the numerical instabilities of KL, its relationship to entropy means that two distributions whose events are only negligibly intersecting are, where entropy is concerned, as different as they can possibly be. Meanwhile, as long the Euclidean distance between events is defined, this case is nothing special for Earth Mover's distance.
+                This is the Achilles' heel of JSD, mentioned earlier. Even though JSD fixes the numerical instabilities of KL, its relationship to entropy means that two distributions whose events are only negligibly intersecting are, where entropy is concerned, as different as they can possibly be. Meanwhile, as long the Euclidean distance between events is defined, this case is nothing special for Wasserstein distance.
             </p>
 
         <div id="convergence">
             <h2>How does this distinction affect training of generative models?</h2>
             <p>
-                When discussing entropy, we were able to build a rich understanding of the measurement by constructing the Huffman tree, and were in turn able to derive closed forms for Entropy, KL, and JSD. Unfortunately, Earth Mover's Distance is much more difficult to compute exactly, and there is no analogous closed form that we can use to compute EM between $P$ and $Q$ directly.
+                When discussing entropy, we were able to build a rich understanding of the measurement by constructing the Huffman tree, and were in turn able to derive closed forms for Entropy, KL, and JSD. Unfortunately, Wasserstein distance is much more difficult to compute exactly, and there is no analogous closed form that we can use to compute the distance between $P$ and $Q$ directly.
                 
             </p>
             <p>
@@ -309,24 +309,24 @@
                 The paper shows that, assuming $D(x)$ is optimal, this log likelihood loss is equivalent to JSD up to a constant. That assumption isn't true during training, but partially optimizing the discriminator gives a good enough approximation that the generator can approach $P_d$.
             </p>
             <p>
-                Similarly, the more recent WGAN paper presents a similar training methodology, where training steps applied to the discriminator turn it into a differentiable approximation of the EM distance between $P_{\theta}$ and $P_d$ <a href="#citations">[2]</a>.
+                Similarly, the more recent WGAN paper presents a similar training methodology, where training steps applied to the discriminator turn it into a differentiable approximation of the Wasserstein distance between $P_{\theta}$ and $P_d$ <a href="#citations">[2]</a>.
             </p>
 
             <p>
-                As a control example, we can observe the training of a GAN and WGAN on "nice" distributions, in this case a fixed Gaussian distribution. The following animation plots the output statistics of points sampled from two separate generator networks with the same architecture, as the left generator is trained to minimize the approximate upper bound of Earth Mover's Distance and the right is trained to minimize the approximate upper bound of the Jenson Shannon Divergence.
+                As a control example, we can observe the training of a GAN and WGAN on "nice" distributions, in this case a fixed Gaussian distribution. The following animation plots the output statistics of points sampled from two separate generator networks with the same architecture, as the left generator is trained to minimize the approximate upper bound of Wasserstein distance and the right is trained to minimize the approximate upper bound of the Jenson Shannon Divergence.
             </p>
 
             <div id="gan-comp-easy" class="col-12 vis-inset-long">
                 <div class="row h-100 anim">
-                    <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
-                        <p style="margin-bottom: 20px">EM Minimization</p>
-                        <svg id="wgan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
+                    <div class="col-6 h-100" style="padding: 20px 20px 20px 10px">
+                        <p style="margin-bottom: 20px">Minimizing Jenson Shannon Divergence</p>
+                        <svg id="gan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
                             
                         </svg>
                     </div>
-                    <div class="col-6 h-100" style="padding: 20px 20px 20px 10px">
-                        <p style="margin-bottom: 20px">JSD Minimization</p>
-                        <svg id="gan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
+                    <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
+                        <p style="margin-bottom: 20px">Minimizing Wasserstein Distance</p>
+                        <svg id="wgan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
                             
                         </svg>
                     </div>
@@ -338,24 +338,24 @@
             <a id="gan-comp-easy-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
             <a id="gan-comp-easy-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
             <br /> <br />
-            <p>As we can see, both generators have a fairly easy time learning the target distribution. But, if we instead try to fit the generators to to a $1$-dimensional manifold distribution, we see that the minimizing the EM upper bound is successful where minimizing the JSD upper bound is not.</p>
+            <p>As we can see, both generators have a fairly easy time learning the target distribution. But, if we instead try to fit the generators to to a $1$-dimensional manifold embedded in 2 dimensions, we see that the minimizing the Wasserstein upper bound is successful where minimizing the JSD upper bound is not.</p>
 
             <div id="gan-comp-manifold" class="col-12 vis-inset-long">
                 <div class="row h-100 anim">
                     <div class="col-6" style="padding: 0px;">
-                        <p style="margin: 0px 10px 0px 20px">EM Minimization</p>
+                        <p style="margin: 0px 20px 0px 10px">Minimizing Jenson Shannon Divergence</p>
 
-                        <div class="col-12 h-100 vis-inset-long" style="padding: 20px 10px 20px 20px">
-                            <svg id="wgan-manifold-optim-ex" class="col-12 h-100" style="padding: 0px">
+                        <div class="col-12 h-100 vis-inset-long" style="padding: 20px 20px 20px 10px">
+                            <svg id="gan-manifold-optim-ex" class="col-12 h-100" style="padding: 0px">
                                 
                             </svg>
                         </div>
                     </div>
                     <div class="col-6" style="padding: 0px;">
-                        <p style="margin: 0px 20px 0px 10px">JSD Minimization</p>
+                        <p style="margin: 0px 10px 0px 20px">Minimizing Wasserstein Distance</p>
 
-                        <div class="col-12 h-100 vis-inset-long" style="padding: 20px 20px 20px 10px">
-                            <svg id="gan-manifold-optim-ex" class="col-12 h-100" style="padding: 0px">
+                        <div class="col-12 h-100 vis-inset-long" style="padding: 20px 10px 20px 20px">
+                            <svg id="wgan-manifold-optim-ex" class="col-12 h-100" style="padding: 0px">
                                 
                             </svg>
                         </div>
@@ -368,23 +368,23 @@
             <a id="gan-comp-manifold-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
             <a id="gan-comp-manifold-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
             <br /> <br />
-            <p>When minimizing JSD, the generator output stays in its initial distribution throughout optimization, because no change to the generator's parameters can reduce the estimated JSD. Technically, this is intentional – the optimization makes no changes because it has already found a local minimum. JSD is flawed in that there are many undesirable local minima where the generator distribution has only a trivial intersection with the true distribution.</p>
+            <p>When minimizing JSD, the generator output stays in its initial distribution throughout optimization, because no change to the generator's parameters can reduce the estimated JSD. Technically, this is intentional – the optimization makes no changes because it has already found a local minima, which is any of the points in parameter space where the generator distribution has a trivial intersection with the true distribution. This is not a flaw in JSD, as much as it is an application of the distance to probability distributions where its definition doesn't apply.</p>
             
             <p>This effect has been discussed in various treatments as a thought experiment, and it is especially well illustrated in <a href="#citations">[2]</a>, Example 1. The animations above were generated directly by training simple neural networks on synthetic data as an empirical demonstration. The scripts to do so are available <a href="https://gitlab.com/qnkxsovc/prob-vis/tree/master/optimizers">in this article's repository</a>.</p>
 
             <div id="conclusion">
                 <h2>Conclusion</h2>
                 <p>
-                    As we have seen, statistical distances play a key role in GAN training by giving information about how to incrementally shift $P_{\theta}$, a GAN output distribution, into $P_d$, the data generating distribution. In <i>nice</i> cases, where both distributions assign probability to significantly overlapping events, both JSD and EM distance can fill this role. But, under the assumption that typical data lies on a manifold, having relatively few factors of variation with respect to the data dimensionality, JSD is no longer able to provide useful gradients. 
+                    As we have seen, statistical distances play a key role in GAN training by giving information about how to incrementally shift $P_{\theta}$, a GAN output distribution, into $P_d$, the data generating distribution. In <i>nice</i> cases, where both distributions assign probability to significantly overlapping events, both JSD and Wasserstein distance can fill this role. But, under the assumption that typical data lies on a manifold, having relatively few factors of variation with respect to the data dimensionality, JSD is no longer able to provide useful gradients. 
                 </p>
                 <p>
                     In theory, this should make many of the most impressive demonstrations of GAN technology impossible. Instead, because of both the noise introduced in minimizing an upper bound of JSD and the many tricks applied to reduce training instability, traditional GAN training is just difficult, but possible. 
                 </p>
                 <p>
-                    At the same time, it seems in theory that EM gives improved training stability for free, which is also not the empirical case. The proposed framework for minimizing EM's approximated upper bound requires severe constraints to be imposed on the discriminator, and so finding alternative methods to minimize EM distance is an open area for exploration<span id="fn_disc" class="fn"><a href="#fn_disc_t">6</a></span>. 
+                    At the same time, it seems in theory that Wasserstein distance gives improved training stability for free, which is also not the empirical case. The proposed framework for minimizing EM's approximated upper bound requires severe constraints to be imposed on the discriminator, and so finding alternative methods to minimize Wasserstein distance is an open area for exploration<span id="fn_disc" class="fn"><a href="#fn_disc_t">6</a></span>. 
                 </p>
                 <p>
-                    For the interested reader, we provide a few recommended resources for digging deeper into the information presented here. We also recommend two papers <a href="#citations">[4, 5]</a> which provide a more general view of the JSD and EM distances, as special cases in the classes of $f$-divergences and Integral Probability Metrics respectively. Finally, we include a reference to the recent BEGAN architecture <a href="#citations">[3]</a>, which is a good example of an architecture designed to avoid imposing harmful constraints on the discriminator.
+                    For the interested reader, we provide a few recommended resources for digging deeper into the information presented here. We also recommend two papers <a href="#citations">[4, 5]</a> which provide a more general view of the JSD and Wasserstein distances, as special cases in the classes of $f$-divergences and Integral Probability Metrics respectively. Finally, we include a reference to the recent BEGAN architecture <a href="#citations">[3]</a>, which is a good example of an architecture designed to avoid imposing harmful constraints on the discriminator.
                 </p>
             </div>
             
