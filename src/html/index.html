@@ -149,8 +149,8 @@
                 $$
                 \begin{align}
                 D_{KL}(P \vert \vert Q) & = - \sum_{x} P(x) \log_2 \frac{Q(x)}{P(x)} \\
-                & = \expectedunder{x \sim P}{\log_2 \frac{1}{Q(x)} - \log_2 \frac{1}{P(x)}} \\
-                & = \expectedunder{x \sim P}{d_q(x) - d_p(x)}
+                & = \sum_{x} P(x) (\log_2 \frac{1}{Q(x)} - \log_2 \frac{1}{P(x)}) \\
+                & = \sum_{x}{P(x)(d_q(x) - d_p(x))}
                 \end{align}$$
             </p>
             
@@ -240,7 +240,7 @@
             
             <p>
                 $$ 
-                EM(P, Q) = \inf_{p \in \Gamma(P, Q)} [ \sum_{x_i, x_j} d(x_i, x_j) p(x_i, x_j) ]
+                W(P, Q) = \inf_{p \in \Gamma(P, Q)} [ \sum_{x_i, x_j} d(x_i, x_j) p(x_i, x_j) ]
                 $$
             </p>
             <p>where $\Gamma(P, Q)$ is the set of all joint distributions whose marginals are $P$ and $Q$.</p>
@@ -318,15 +318,15 @@
 
             <div id="gan-comp-easy" class="col-12 vis-inset-long">
                 <div class="row h-100 anim">
-                    <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
-                        <p style="margin-bottom: 20px">Minimizing Wasserstein Distance</p>
-                        <svg id="wgan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
-                            
-                        </svg>
-                    </div>
                     <div class="col-6 h-100" style="padding: 20px 20px 20px 10px">
                         <p style="margin-bottom: 20px">Minimizing Jenson Shannon Divergence</p>
                         <svg id="gan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
+                            
+                        </svg>
+                    </div>
+                    <div class="col-6 h-100" style="padding: 20px 10px 20px 20px">
+                        <p style="margin-bottom: 20px">Minimizing Wasserstein Distance</p>
+                        <svg id="wgan-easy-optim-ex" class="col-12 h-100" style="padding: 0px">
                             
                         </svg>
                     </div>
@@ -338,24 +338,24 @@
             <a id="gan-comp-easy-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
             <a id="gan-comp-easy-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
             <br /> <br />
-            <p>As we can see, both generators have a fairly easy time learning the target distribution. But, if we instead try to fit the generators to to a $1$-dimensional manifold distribution, we see that the minimizing the Wasserstein upper bound is successful where minimizing the JSD upper bound is not.</p>
+            <p>As we can see, both generators have a fairly easy time learning the target distribution. But, if we instead try to fit the generators to to a $1$-dimensional manifold embedded in 2 dimensions, we see that the minimizing the Wasserstein upper bound is successful where minimizing the JSD upper bound is not.</p>
 
             <div id="gan-comp-manifold" class="col-12 vis-inset-long">
                 <div class="row h-100 anim">
-                    <div class="col-6" style="padding: 0px;">
-                        <p style="margin: 0px 10px 0px 20px">Minimizing Wasserstein Distance</p>
-
-                        <div class="col-12 h-100 vis-inset-long" style="padding: 20px 10px 20px 20px">
-                            <svg id="wgan-manifold-optim-ex" class="col-12 h-100" style="padding: 0px">
-                                
-                            </svg>
-                        </div>
-                    </div>
                     <div class="col-6" style="padding: 0px;">
                         <p style="margin: 0px 20px 0px 10px">Minimizing Jenson Shannon Divergence</p>
 
                         <div class="col-12 h-100 vis-inset-long" style="padding: 20px 20px 20px 10px">
                             <svg id="gan-manifold-optim-ex" class="col-12 h-100" style="padding: 0px">
+                                
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="col-6" style="padding: 0px;">
+                        <p style="margin: 0px 10px 0px 20px">Minimizing Wasserstein Distance</p>
+
+                        <div class="col-12 h-100 vis-inset-long" style="padding: 20px 10px 20px 20px">
+                            <svg id="wgan-manifold-optim-ex" class="col-12 h-100" style="padding: 0px">
                                 
                             </svg>
                         </div>
@@ -368,7 +368,7 @@
             <a id="gan-comp-manifold-pause" class="animcontrol"><img class="anim-btn" src="images/pause.svg" /></a>
             <a id="gan-comp-manifold-reset" class="animcontrol"><img class="anim-btn" src="images/reset.svg" /></a>
             <br /> <br />
-            <p>When minimizing JSD, the generator output stays in its initial distribution throughout optimization, because no change to the generator's parameters can reduce the estimated JSD. Technically, this is intentional – the optimization makes no changes because it has already found a local minima, which is any of the points in parameter space where the generator distribution has a trivial intersection with the true distribution.</p>
+            <p>When minimizing JSD, the generator output stays in its initial distribution throughout optimization, because no change to the generator's parameters can reduce the estimated JSD. Technically, this is intentional – the optimization makes no changes because it has already found a local minima, which is any of the points in parameter space where the generator distribution has a trivial intersection with the true distribution. This is not a flaw in JSD, as much as it is a demonstration that JSD can break when it is applied outside its definition.</p>
             
             <p>This effect has been discussed in various treatments as a thought experiment, and it is especially well illustrated in <a href="#citations">[2]</a>, Example 1. The animations above were generated directly by training simple neural networks on synthetic data as an empirical demonstration. The scripts to do so are available <a href="https://gitlab.com/qnkxsovc/prob-vis/tree/master/optimizers">in this article's repository</a>.</p>
 
@@ -381,7 +381,7 @@
                     In theory, this should make many of the most impressive demonstrations of GAN technology impossible. Instead, because of both the noise introduced in minimizing an upper bound of JSD and the many tricks applied to reduce training instability, traditional GAN training is just difficult, but possible. 
                 </p>
                 <p>
-                    At the same time, it seems in theory that Wasserstein distance gives improved training stability for free, which is also not the empirical case. The proposed framework for minimizing EM's approximated upper bound requires severe constraints to be imposed on the discriminator, and so finding alternative methods to minimize Wasserstein distance is an open area for exploration<span id="fn_disc" class="fn"><a href="#fn_disc_t">6</a></span>. 
+                    At the same time, it seems in theory that Wasserstein distance gives improved training stability for free, which is also not the empirical case. The proposed framework for minimizing an approximated upper bound requires severe constraints to be imposed on the discriminator, and so finding alternative methods to minimize Wasserstein distance is an open area for exploration<span id="fn_disc" class="fn"><a href="#fn_disc_t">6</a></span>. 
                 </p>
                 <p>
                     For the interested reader, we provide a few recommended resources for digging deeper into the information presented here. We also recommend two papers <a href="#citations">[4, 5]</a> which provide a more general view of the JSD and Wasserstein distances, as special cases in the classes of $f$-divergences and Integral Probability Metrics respectively. Finally, we include a reference to the recent BEGAN architecture <a href="#citations">[3]</a>, which is a good example of an architecture designed to avoid imposing harmful constraints on the discriminator.
@@ -433,7 +433,7 @@
                 </ol>
                 
                 <h3>Further Reading</h3>
-                <p>For learning more about the material in this article, the beginning chapters of <a href="#citations">[8]</a> are a great introduction to formal probability theory, which underlies analysis of EM distance. Wasserman's notes (below, see other articles) give a clear and concise introduction at this level. </p>
+                <p>For learning more about the material in this article, the beginning chapters of <a href="#citations">[8]</a> are a great introduction to formal probability theory, which underlies analysis of Wasserstein distance. Wasserman's notes (below, see other articles) give a clear and concise introduction at this level. </p>
                 
                 <p>Here are other examples of fantastic articles on entropy and Earth Mover's (Wasserstein) distance.</p>
                 <ol>
