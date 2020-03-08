@@ -15,6 +15,41 @@
         <br />
         <p>Here is the associated work: <a href="/prob-vis/">Statistical Distances and Their Implications to GAN Training</a></p>
         <p>You can download the slides <a href="SUMS.pdf" download>here</a>.</p>
+
+        <br />
+        <b>Edit, Mar. 8</b>: For those who are interested, here are some especially interesting resources related to the talk:
+        <ol>
+            <li>
+                Unsupervised Representation Learning:
+                <ol>
+                    <li><a href="https://arxiv.org/abs/1801.03924">The Unreasonable Effectiveness of Deep Features as a Perceptual Metric</a> argues that extraction of semantic features is a general emergent phenomena of deep visual representations. (+1 for Magic of Deep Learning)</li>
+                    <li><a href="https://arxiv.org/abs/1811.12231">Image Classfiers are biased towards textures over shapes</a> argues that deep image classifiers are biased towards texture extraction. (-1 for Magic of Deep Learning)</li>
+                </ol>
+            </li>
+            <li>
+                Word2Vec:
+                <ul>
+                    <li><a href="https://dl.acm.org/doi/10.5555/2188385.2188396">Noise Contrastive Estimation</a> provides some really good insight on why this works at all.</li>
+                    <li><a href="https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf">The actual Word2Vec paper</a> is a list of interesting experimental results, with two (somewhat hard to understand) novel simplifications to adapt NCE to their setting.</li>
+                    <li><a href="https://arxiv.org/abs/1402.3722">Yoav Goldberg's note on Word2Vec explained</a>. This is a better resource than the Word2Vec paper for understanding Word2Vec.</li>
+                </ul>
+            </li>
+            <li>
+                GAN Training:
+                <ul>
+                    <li><a href="https://papers.nips.cc/paper/5423-generative-adversarial-nets">Original GAN Paper</a></li>
+                    <li><a href="https://arxiv.org/pdf/1606.00709.pdf">Generalization to f-Divergences</a> - this is my favorite theoretical explanation of GAN at a high level.</li>
+                    <li><a href="https://arxiv.org/pdf/1701.07875.pdf">Wasserstein GAN</a> + <a href="https://vincentherrmann.github.io/blog/wasserstein/">Vincent Hermann's Expository article</a> - WGAN is hot news in GAN training right now. This paper points out a huge theoretical flaw in the original GAN formulation, derives a principled alternative, and uses it to achieve SOTA experimental results. See also the second resource which is a fantastic expository article about WGAN.</li>
+                </ul>
+            </li>
+            <li>
+                Compressive Sensing: this is what I spend most of my actual time on. Learn more about image compression, JPEG, MRI machines, and signal processing!
+                <ul>
+                    <li><a href="https://ieeexplore.ieee.org/document/1580791">the paper that started the field</a>. Candés and Tao are wonderful authors whose works are always fun to read.<li>
+                    <li><a href="https://openreview.net/pdf?id=B1e5ef-C-">A Compressed Sensing view of Unsupervised Representation Learning</a> - Arora, another wonderful author whose work is fun to read, connects compressive sensing back to unsupervised representation learning, both having the shared goal of extracting minimal representations of meaningful information.</li>
+                </ul>
+            </li>
+        </ol>
     </div>
 
     <!--
