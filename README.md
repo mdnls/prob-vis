@@ -1,0 +1,3 @@
+# Statistical Distances and Their Implications to GAN Training
+
+This repository is an interactive article about *statistical distances* like the Kullback Leibler Divergence or Earth Mover's distance. These distances tell the degree to which two probability distributions are different from each other. Generative Adversarial Networks (GANs) learn to model a data distribution in a way that minimizes a statistical distance between the GAN output distribution and the true data distribution -- then, sampling the GAN approximates sampling new data. Certain distances work better than other under assumptions on the data, so the implicit role that these distances play in GAN training is important for successfully modeling accurate samples.
