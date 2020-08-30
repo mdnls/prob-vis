@@ -26,7 +26,7 @@
             </p>
             
             <p>
-                Instead, this article will explore some of the more creative ways to define distances for GAN training, and in particular it will focus on the differences between information-theoretic distance functions and Wasserstein distance. Wasserstein distance has recently been proposed as improvement to information-theoretic distances which can improve training stability and output quality in regimes that are typical for common GAN applications, and so it is important to understand the intuition behind why this is the case.
+                Instead, this article will explore some of the more creative ways to define distances for GAN training and in particular on the differences between information-theoretic distance functions and Wasserstein distance. Wasserstein distance has recently been proposed as improvement to information-theoretic distances which can improve training stability and output quality in regimes that are typical for common GAN applications, so it is important to understand the intuition behind why this is the case.
             </p>
             <h3>What does it mean to have a Statistical Distance?</h3>
             <p>
@@ -48,9 +48,9 @@
                 <p class="figdesc">The grey markers indicate where these two distributions differ. One can compare the two distributions by summing the the total line length.</p>
             </div>
             
-            <p>When each bin matches exactly, the distance is zero, since the distribution over bins is the same. More importantly, if we make a small change to distribution $X$, by taking an <svg class="orange box"></svg> for example, this distance will reflect that change and decrease. We can use the distance as a guide to iteratively update $X$ until it matches $Y$. This is the approach that GANs take when approximating $P_d$, the true distribution over data, by the generator distribution $P_{\theta}$. The parameters $\theta$ are like the boxes, and the statistical distance function is the guide for manipulating $\theta$ to make $P_{\theta}$ faithful to $P_d$. </p>
+            <p>When each bin matches exactly, the distance is zero, since the distribution over bins is the same. More importantly, if we make a small change to distribution $X$, by taking an <svg class="orange box"></svg> for example, this distance will reflect that change and decrease. We can use the distance as a guide to iteratively update $X$ until it matches $Y$. This is the approach that GANs take when approximating $P_d$, the true distribution over data, by the generator distribution $P_{\theta}$. The parameters $\theta$ are like the boxes and the statistical distance function is the guide for manipulating $\theta$ to make $P_{\theta}$ faithful to $P_d$. </p>
             
-            <p>The Euclidean distance is good for illustrating this concept, but it isn't used in practice. The original GAN formulation was shown to reduce an upper bound of the Jenson Shannon Divergence between $P_d$ and $P_{\theta}$, an information-theoretic distance between distributions based on the idea of entropy. These GANs are infamous for their difficulty to train, and they typically require lots of fine tuning to be implemented successfully. Within the last two years, there has been increasing interest in Wasserstein distance as a more stable alternative.</p>
+            <p>The Euclidean distance is good for illustrating this concept, but it isn't used in practice. The original GAN formulation was shown to reduce an upper bound of the Jenson Shannon Divergence between $P_d$ and $P_{\theta}$, an information-theoretic distance between distributions based on the idea of entropy. These GANs are infamous for their difficulty to train and they typically require lots of fine tuning to be implemented successfully. Within the last two years, there has been increasing interest in Wasserstein distance as a more stable alternative.</p>
         </div>
         
         <div id="entropy">
@@ -58,9 +58,9 @@
                 Entropy
             </h2>
             
-            <p>The Jenson Shannon Divergence (JSD) between two distributions is a distance function that has its roots in information entropy. To understand JSD, we must first introduce the notion of an "information channel." An observer Bob has an open channel to Alice, so that he can tell her about samples that he draws from a probability distribution $P$. For simplicity, we assume that Bob is communicating with bits, and that he and Alice have agreed ahead of time on their choice of codes. The intuition is that two distributions are similar when you can communicate their events in similar ways. Under this abstraction, entropy is the minimum number of bits on average that Bob needs to tell Alice about which samples he observes from $P$. </p>
+            <p>The Jenson Shannon Divergence (JSD) between two distributions is a distance function that has its roots in information entropy. To understand JSD, we must first introduce the notion of an "information channel." An observer Bob has an open channel to Alice, so that he can tell her about samples that he draws from a probability distribution $P$. For simplicity, we assume that Bob is communicating with bits and that he and Alice have agreed ahead of time on their choice of codes. The intuition is that two distributions are similar when you can communicate their events in similar ways. Under this abstraction, entropy is the minimum number of bits on average that Bob needs to tell Alice about which samples he observes from $P$. </p>
 
-            <p>This quantity depends completely on the "shape" of $P$, and in turn it serves as a representation of that shape. For example, under a distribution where <svg class="maroon box"></svg> and <svg class="blue box"></svg> are the only events that can happen, a single bit is enough for unambiguous communication, so the entropy is $1$.</p>
+            <p>This quantity depends completely on the "shape" of $P$ and in turn, it serves as a representation of that shape. For example, under a distribution where <svg class="maroon box"></svg> and <svg class="blue box"></svg> are the only events that can happen, a single bit is enough for unambiguous communication, so the entropy is $1$.</p>
             <div class="fig">
                 <div id="simple-entropy" class="vis-inset col-12">
                     <div class="h-100">
@@ -91,13 +91,13 @@
                         
                     </svg>
                 </div>
-                <p class="figdesc">Paths in a binary tree are equivalent to binary codes. Each $1$ is equivalent to a path taking the right branch, and each $0$ corresponds to a path which takes the left branch.</p>
+                <p class="figdesc">Paths in a binary tree are equivalent to binary codes. Each $1$ is equivalent to a path taking the right branch and each $0$ corresponds to a path which takes the left branch.</p>
             </div>
 
             
-            <p>Each layer of the tree represents one bit, and each leaf corresponds to the binary code for the path to that leaf. Adding a layer increases the number of leaves exponentially, so we need a minimum of $d = \log_2 N^* $ layers to guarantee at least $N^*$ unique codes.</p>
+            <p>Each layer of the tree represents one bit and each leaf corresponds to the binary code for the path to that leaf. Adding a layer increases the number of leaves exponentially, so we need a minimum of $d = \log_2 N^* $ layers to guarantee at least $N^*$ unique codes.</p>
             
-            <p>This means that we can trivially construct an optimal coding when all events have the same likelihood. According to the rule of thumb, this case has the highest entropy of all distributions with $N^*$ events. So, we can now consider the effect of introducing a non-uniform distribution over the events and verify that this is indeed the case. At this point, we will introduce the notation $x^{(1)}_i$, $x^{(2)}_i$, and so on. The upper indices identify a set $x^{(k)}$ of unique events, each having the same probability. We will build an optimal code for each of the different $x^{(k)}_i$ iteratively, and the probability of the $x^{(k)}$ will determine the point at which those events have their codes assigned.</p>
+            <p>This means that we can trivially construct an optimal coding when all events have the same likelihood. According to the rule of thumb, this case has the highest entropy of all distributions with $N^*$ events. So, we can now consider the effect of introducing a non-uniform distribution over the events and verify that this is indeed the case. At this point, we will introduce the notation $x^{(1)}_i$, $x^{(2)}_i$, and so on. The upper indices identify a set $x^{(k)}$ of unique events, each having the same probability. We will build an optimal code for each of the different $x^{(k)}_i$ iteratively, where the probability of the $x^{(k)}$ will determine the point at which those events have their codes assigned.</p>
             
             <p>We start with the least likely event, say $\xp{1}{1}$. We want to match this event with a unique path to a leaf of the tree, in a way that allocates an optimal number of bits to that event. As in the previous example, we can start with a uniform distribution of copy events $\xp{1}{i}$ and assign codes with a decision tree of depth $\log_2 \frac{1}{\xp{1}{}}$. Then, to represent an event more likely than $\xp{1}{}$ – say, $\xp{2}{1}$ – we can simply merge a few of the copies $\xp{1}{i}$, so that a path to any of them is an equivalent way to communicate $\xp{2}{1}$. This is advantageous whenever we can find sibling copies to merge, since it allows us to save a bit by opting not to distinguish those siblings at all.</p>
             
@@ -127,7 +127,7 @@
                 <p class="figdesc">The fully colored nodes represent leaves at which an event is unambiguously specified in the tree. Assigning shorter paths to more common events reduces the expected number of bits for communication.</p>
             </div>
             
-            <p>This procedure is called the Huffman Algorithm, and it can be used to efficiently construct optimal codes for the events in $P$. Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log_2(\frac{1}{P(\xp{n}{})})$, which will be an integer quantity. More realistically, the probabilities won't line up exactly, and so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events<span id="fn_arthm_coding" class="fn"><a href="#fn_arthm_coding_t">3</a></span>, and the lower bound on the expected number of bits transferred is the entropy, $H$:
+            <p>This procedure is called the Huffman Algorithm and it can be used to efficiently construct optimal codes for the events in $P$. Whenever all the probabilities are of the form $\frac{1}{2^k}$, the tree can always be constructed perfectly, in the sense that a node for $\xp{n}{}$ can be constructed out of repeated merges having probability exactly $P(\xp{n}{})$. Then, the path length to $\xp{n}{}$ is always $d(\xp{n}{}) = \log_2(\frac{1}{P(\xp{n}{})})$, which will be an integer quantity. More realistically, the probabilities won't line up exactly, so $d(\xp{n}{})$ will be a real quantity that bounds the optimal attainable path length from below. Despite this, Huffman codes generate the optimal attainable coding for individual events<span id="fn_arthm_coding" class="fn"><a href="#fn_arthm_coding_t">3</a></span> and the lower bound on the expected number of bits transferred is the entropy, $H$:
                 
                 $$H(P) = \expectedunder{P}{\log_2{\frac{1}{P(x)}}}$$
             </p>
@@ -156,7 +156,7 @@
             
             <p>For each event $x$, $d_q(x) - d_p(x)$ is the difference in the code length assigned to $x$ under distributions $P$ and $Q$. The KL Divergence is the expected difference over all events $x$, under the distribution $P$<span id="fn_negative_kl" class="fn"><a href="#fn_negative_kl_t">4</a></span>. This brings us back to the information-theoretic perspective on distances between distributions: $P_d$ and $P_{\theta}$ are similar when you can communicate their events in similar ways. More specifically, they are similar when we expect their codes for each event to have similar lengths.</p>
             
-            <p>It's important to note that this distance is asymmetric, and so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. Cross entropy is just the <i>total</i> expected number of bits when communicating events from $P$ using the code for $Q$. Defining it in terms of $D_{KL}$ is simple:</p>
+            <p>It's important to note that this distance is asymmetric, so it would be more accurate to characterize it as the extra number of bits we expect to send by communicating events from $P$ using codes from $Q$. In fact, KL is also known as the <i>relative entropy</i> between $P$ and $Q$. Cross entropy is just the <i>total</i> expected number of bits when communicating events from $P$ using the code for $Q$. Defining it in terms of $D_{KL}$ is simple:</p>
             <p>
             $$H(P) + D_{KL}(P \vert \vert Q)$$
             </p>
@@ -191,7 +191,7 @@
                 $$
             </p>
             
-            <p>Entropy is a very elegant idea for comparing two distributions, and JSD is the band aid fix that makes it robust to edge cases. Cross entropy and KL are also often used in classification tasks, where it's easy to define discrete events for the domain of network's output distribution and it's reasonable to assume that none of those events have exactly $0$ probability. As we will see later, JSD still has an Achilles' heel, in that even though it is defined everywhere, its gradient may not always be useful. </p>
+            <p>Entropy is a very elegant idea for comparing two distributions and JSD is the band aid fix that makes it robust to edge cases. Cross entropy and KL are also often used in classification tasks, where it's easy to define discrete events for the domain of network's output distribution and it's reasonable to assume that none of those events have exactly $0$ probability. As we will see later, JSD still has an Achilles' heel, in that even though it is defined everywhere, its gradient may not always be useful. </p>
         </div>
         
         <div id="transport">
@@ -227,7 +227,7 @@
             
             <p>For each cell, its location $(i, j)$ indicates that the cell corresponds to source event $x_i$ and target event $x_j$. The joint distribution assigns a value $p(i, j) = s$, which can be interpreted as a transfer of $s$ units of "probability mass" from $x_i$ to $x_j$.</p>
             
-            <p>Before we can use a transport plan as a distance function, we need a way to squeeze a number out of it that represents the actual distance quantity. The most natural way is to assign a cost when each elements is transported, proportional both to the amount of mass being moved and to the distance it is moved over. Think of the actual costs involved in, for example, moving heavy boxes across the city – every mile traveled costs a certain amount of gas, and if you take one trip per box then the cost is multiplied by the total number of boxes. Provided that you can actually define a distance $d(x_i, x_j)$ between statistical events, you can use it define the cost of a transport plan in the same way: </p>
+            <p>Before we can use a transport plan as a distance function, we need a way to squeeze a number out of it that represents the actual distance quantity. The most natural way is to assign a cost when each elements is transported, proportional both to the amount of mass being moved and to the distance it is moved over. Think of the actual costs involved in, for example, moving heavy boxes across the city – every mile traveled costs a certain amount of gas and if you take one trip per box then the cost is multiplied by the total number of boxes. Provided that one can actually define a distance $d(x_i, x_j)$ between statistical events, it can be used to define the cost of a transport plan in the same way: </p>
             
             <p>
                 $$
@@ -244,7 +244,7 @@
                 $$
             </p>
             <p>where $\Gamma(P, Q)$ is the set of all joint distributions whose marginals are $P$ and $Q$.</p>
-            <p>For comparison, we can take the same two distributions in the previous example, and compute an optimal transport plan between them by searching over $\Gamma(P, Q)$.</p>
+            <p>For comparison, we can take the same two distributions in the previous example and compute an optimal transport plan between them by searching over $\Gamma(P, Q)$.</p>
             
             <div class="fig">
                 <a class="touchable" tabindex="0" role="button" data-toggle="popover" data-trigger="focus" data-content="You can interact with this figure by tapping on it, clicking on it, and using the arrow keys."><img src="images/touchable.svg" class="inputBtn" /></a>
@@ -286,7 +286,7 @@
             </div>
 
             <p>
-                The effect is that any misalignment causes either $P(x)$ or $Q(x)$ to be $0$ at almost all points, except for the potential singleton point where $f_p(t) = f_q(s)$. In this case, JSD attains its maximum value, $\log_2(2) = 1$, so that the distributions are "as far apart as possible." But, any incremental step $Q \gets Q'$ that can't immediately fix the misalignment will also have $JSD(P\vert \vert Q')= \log_2(2)$, and this means that the gradient of JSD becomes $0$. It no longer gives any information about how to incrementally bring $Q$ to $P$, and so for manifold distributions JSD becomes as helpful as the binary distance. 
+                The effect is that any misalignment causes either $P(x)$ or $Q(x)$ to be $0$ at almost all points, except for the potential singleton point where $f_p(t) = f_q(s)$. In this case, JSD attains its maximum value, $\log_2(2) = 1$, so that the distributions are "as far apart as possible." But, any incremental step $Q \gets Q'$ that can't immediately fix the misalignment will also have $JSD(P\vert \vert Q')= \log_2(2)$, which means that the gradient of JSD becomes $0$. It no longer gives any information about how to incrementally bring $Q$ to $P$, so for manifold distributions JSD becomes as helpful as the binary distance. 
             </p>
 
             <p>
@@ -296,14 +296,14 @@
         <div id="convergence">
             <h2>How does this distinction affect training of generative models?</h2>
             <p>
-                When discussing entropy, we were able to build a rich understanding of the measurement by constructing the Huffman tree, and were in turn able to derive closed forms for Entropy, KL, and JSD. Unfortunately, Wasserstein distance is much more difficult to compute exactly, and there is no analogous closed form that we can use to compute the distance between $P$ and $Q$ directly.
+                When discussing entropy, we were able to build a rich understanding of the measurement by constructing the Huffman tree and were in turn able to derive closed forms for Entropy, KL, and JSD. Unfortunately, Wasserstein distance is much more difficult to compute exactly and there is no analogous closed form that we can use to compute the distance between $P$ and $Q$ directly.
                 
             </p>
             <p>
                 Even if there were such a formula, there is another problem that has been glossed over up to this point: calculating the distance between $P_{\theta}$ and $P_d$ requires knowledge of $P_d (x)$, which we would typically not be able to calculate exactly. This in turn prevents us from calculating both the distance $d(P_{\theta}, Px_d)$ and its gradient. No matter the computation power, resource access, or network capacity, the key problem in training a GAN at scale is constructing a training scheme that can circumvent this calculation and still minimize a distance between $P_{\theta}$ and $P_d$.
             </p>
             <p>
-                In the original, and now famous method, a discriminator network $D(x)$ has the goal of predicting whether a given sample was generated by $P_d$. It is trained to maximize the joint log-likelihood of predicting false on $x \sim P_{\theta}(x)$ and true on $x^* \sim P_d(x)$, while the generator network $G(x)$ that induces $P_{\theta}$ is simultaneously trained to maximize the likelihood that $x$ is predicted as true <a href="#citations">[1]</a>. 
+                In the original and now famous method, a discriminator network $D(x)$ has the goal of predicting whether a given sample was generated by $P_d$. It is trained to maximize the joint log-likelihood of predicting false on $x \sim P_{\theta}(x)$ and true on $x^* \sim P_d(x)$, while the generator network $G(x)$ that induces $P_{\theta}$ is simultaneously trained to maximize the likelihood that $x$ is predicted as true <a href="#citations">[1]</a>. 
             </p>
             <p>
                 The paper shows that, assuming $D(x)$ is optimal, this log likelihood loss is equivalent to JSD up to a constant. That assumption isn't true during training, but partially optimizing the discriminator gives a good enough approximation that the generator can approach $P_d$.
@@ -370,7 +370,7 @@
             <br /> <br />
             <p>When minimizing JSD, the generator output stays in its initial distribution throughout optimization, because no change to the generator's parameters can reduce the estimated JSD. Technically, this is intentional – the optimization makes no changes because it has already found a local minima, which is any of the points in parameter space where the generator distribution has a trivial intersection with the true distribution. This is not a flaw in JSD, as much as it is a demonstration that JSD can break when it is applied outside its definition.</p>
             
-            <p>This effect has been discussed in various treatments as a thought experiment, and it is especially well illustrated in <a href="#citations">[2]</a>, Example 1. The animations above were generated directly by training simple neural networks on synthetic data as an empirical demonstration. The scripts to do so are available <a href="https://gitlab.com/qnkxsovc/prob-vis/tree/master/optimizers">in this article's repository</a>.</p>
+            <p>This effect has been discussed in various treatments as a thought experiment and it is especially well illustrated in <a href="#citations">[2]</a>, Example 1. The animations above were generated directly by training simple neural networks on synthetic data as an empirical demonstration. The scripts to do so are available <a href="https://gitlab.com/qnkxsovc/prob-vis/tree/master/optimizers">in this article's repository</a>.</p>
 
             <div id="conclusion">
                 <h2>Conclusion</h2>
@@ -381,7 +381,7 @@
                     In theory, this should make many of the most impressive demonstrations of GAN technology impossible. Instead, because of both the noise introduced in minimizing an upper bound of JSD and the many tricks applied to reduce training instability, traditional GAN training is just difficult, but possible. 
                 </p>
                 <p>
-                    At the same time, it seems in theory that Wasserstein distance gives improved training stability for free, which is also not the empirical case. The proposed framework for minimizing an approximated upper bound requires severe constraints to be imposed on the discriminator, and so finding alternative methods to minimize Wasserstein distance is an open area for exploration<span id="fn_disc" class="fn"><a href="#fn_disc_t">6</a></span>. 
+                    At the same time, it seems in theory that Wasserstein distance gives improved training stability for free, which is also not the empirical case. The proposed framework for minimizing an approximated upper bound requires severe constraints to be imposed on the discriminator, so finding alternative methods to minimize Wasserstein distance is an open area for exploration<span id="fn_disc" class="fn"><a href="#fn_disc_t">6</a></span>. 
                 </p>
                 <p>
                     For the interested reader, we provide a few recommended resources for digging deeper into the information presented here. We also recommend two papers <a href="#citations">[4, 5]</a> which provide a more general view of the JSD and Wasserstein distances, as special cases in the classes of $f$-divergences and Integral Probability Metrics respectively. Finally, we include a reference to the recent BEGAN architecture <a href="#citations">[3]</a>, which is a good example of an architecture designed to avoid imposing harmful constraints on the discriminator.
@@ -394,11 +394,11 @@
                 <div>
                     <ol>
                         <li id="fn_dist_t">The term "distance" is used here as a general term, encompassing statistical distances, divergences, various kinds of entropy, and metrics in the formal sense. <a href="#fn_dist" class="fn_back">↩</a></li>
-                        <li id="fn_bayesian_t">Whether or not probabilities <i>should</i> be interpreted as ratios is debatable, and the Bayesian view of statistics casts probabilities as degrees of certainty instead. Here, the frequentist view is just convenient for explanation.<a href="#fn_bayesian" class="fn_back">↩</a></li>
+                        <li id="fn_bayesian_t">Whether or not probabilities <i>should</i> be interpreted as ratios is contentious and the Bayesian view of statistics casts probabilities as degrees of certainty instead. Here, the frequentist view is just convenient for explanation.<a href="#fn_bayesian" class="fn_back">↩</a></li>
                         <li id="fn_arthm_coding_t">There is an alternative, called <a href="https://en.wikipedia.org/wiki/Arithmetic_coding">Arithmetic Coding</a>, which encodes strings of events instead of individual events. <a href="#fn_arthm_coding" class="fn_back">↩</a></li>
                         <li id="fn_negative_kl_t">It is natural to ask whether the KL divergence could be negative, since any individual event might have a shorter code in $Q$'s tree than in $P$'s tree. If this were the case, then transmitting events drawn from $P$ with codes from $Q$ would require fewer bits on average than transmitting events using $P$'s own code. But we assume that events from $P$ are transmitted optimally, so this is impossible.</li> <a href="#fn_negative_kl" class="fn_back">↩</a></li>
-                        <li id="fn_math_t">$0 = 0 \log_2(0)$ is not true, and exponentiating both sides yields $0 = 1$. But, $ \displaystyle \lim_{x \to 0^+} x \log_2(x) = 0$, so this is still a sensible choice. <a href="#fn_math" class="fn_back">↩</a></li>
-                        <li id="fn_disc_t">In particular, the discrinimator must approximate a Lipschitz continuous function, and so the Lipschitz continuity must be enforced as a constraint. Arjovsky's WGAN formulation accomplishes this through either weight clipping or gradient clipping in the discriminator.<a href="#fn_disc" class="fn_back">↩</a></li>
+                        <li id="fn_math_t">$0 = 0 \log_2(0)$ is not true: exponentiating both sides yields $0 = 1$. But, $ \displaystyle \lim_{x \to 0^+} x \log_2(x) = 0$, so this is still a sensible choice. <a href="#fn_math" class="fn_back">↩</a></li>
+                        <li id="fn_disc_t">In particular, the discrinimator must approximate a Lipschitz continuous function, so the Lipschitz continuity must be enforced as a constraint. Arjovsky's WGAN formulation accomplishes this through either weight clipping or gradient clipping in the discriminator.<a href="#fn_disc" class="fn_back">↩</a></li>
                     </ol>
                 </div>
                 <h3 id="citations">Citations</h3>
